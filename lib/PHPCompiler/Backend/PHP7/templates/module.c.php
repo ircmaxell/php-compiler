@@ -29,6 +29,12 @@ foreach ($stringConstants as $constant) {
 ?>
 }
 
+static inline hashtable_release(HashTable* ht) {
+	if (!--GC_REFCOUNT(ht)) {
+		zend_hash_destroy(ht);
+	}
+}
+
 <?php
 
 echo implode("\n", $functionHeaders);

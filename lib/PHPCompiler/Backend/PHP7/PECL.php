@@ -56,6 +56,8 @@ class PECL extends AbstractBackend {
             $zpp .= "\t\t" . $this->compileZppDecl($param) . "\n";
             $code .= $this->clearDecl("\t");
         }
+        $this->state->freeFlags = [];
+        // Do not generate free flags for parameters
         $code .= "\tZEND_PARSE_PARAMETERS_START($required, $total)\n$zpp\tZEND_PARSE_PARAMETERS_END();\n";
         $body = $this->compileBody($func->stmts, "\t");
         $code .= $this->clearDecl("\t");
@@ -85,6 +87,8 @@ class PECL extends AbstractBackend {
                 case 'zend_string*':
                     $freeBlock[] = "if (free_{$name}) { zend_string_release({$name}); }";
                     break;
+                case 'HashTable*':
+                    $freeBlock[] = "if (free_{$name}) { hashtable_release({$name}); }";
                 default:
                     throw new \LogicException("Unknown free type: $type");
             }
@@ -126,6 +130,8 @@ class PECL extends AbstractBackend {
                 return "Z_PARAM_DOUBLE($name)";
             case 'zend_bool':
                 return "Z_PARAM_BOOL($name)";
+            case 'zval':
+                return "Z_PARAM_ZVAL(&{$name})";
         }
         throw new \RuntimeException("Unknown ZPP type found for $param->result->type");
     }
@@ -204,6 +210,9 @@ class PECL extends AbstractBackend {
                             case 'zend_string*':
                                 $return = "\0free-$var\0\n{$indent}RETURN_STR($var);";
                                 break;
+                            case 'zval':
+                                $return = "RETURN_ZVAL(&{$var}, 1, 0);";
+                                break;
                             default:
                                 throw new \LogicException("Unknown C Return Type For $cType");
                         }
@@ -215,6 +224,19 @@ class PECL extends AbstractBackend {
             }
         }
         return $result;
+    }
+
+    protected function getTypeInfo($type) {
+        return [
+            'long' => [
+                'default' => function($name) {
+                    return "$name = 0";
+                },
+                'ztype'      => 'IS_LONG',
+                'stringtype' => 'int',
+                'ztypefetch' => 'Z_LVAL_P',
+            ]
+        ][$type];
     }
 
     protected function compileExpr(Op\Expr $op, $indent) {
@@ -243,6 +265,35 @@ class PECL extends AbstractBackend {
                         $safety .= $indent . "\tfree_{$result} = 1;\n";
                         $safety .= $indent . "}\n$phi";
                         return $safety;
+                    case 'HashTable*':
+                        $dimType = $this->mapToCType($op->dim->type);
+                        $resultType = $this->mapToCType($op->result->type);
+                        if ($dimType === 'long') {
+                            $safety = $indent . "do {\n";
+                            $safety .= $indent . "\tzval* tmp = zend_hash_index_find($var, $dim);\n";
+                            $safety .= $indent . "\tif (tmp == NULL) {\n";
+                            if ($resultType === 'zval') {
+                                $safety .= $indent . "\t\tZVAL_NULL(&{$result});\n";
+                                $safety .= $indent . "\t\tzend_error(E_NOTICE, \"Uninitialized offset: %pd\", $dim);\n";
+                                $safety .= $indent . "\t} else {\n";
+                                $safety .= $indent . "\t\t$result = *tmp;\n";
+                                $safety .= $indent . "\t}\n";
+                                $safety .= $indent . "} while(0);\n";
+                                return $safety;
+                            } else {
+                                $typeInfo = $this->getTypeInfo($resultType);
+                                $safety .= $indent . "\t\t" . $typeInfo['default']($result) . ";\n";
+                                $safety .= $indent . "\t\tzend_error(E_NOTICE, \"Uninitialized offset: %pd\", $dim);\n";
+                                $safety .= $indent . "\t} else if (Z_TYPE_P(tmp) != {$typeInfo['ztype']}) {\n";
+                                $safety .= $indent . "\t\tzend_throw_error(NULL, \"Offset is not an {$typeInfo['stringtype']}: %pd\", $dim);\n";
+                                $safety .= $indent . "\t} else {\n";
+                                $safety .= $indent . "\t\t$result = {$typeInfo['ztypefetch']}(tmp);\n";
+                                $safety .= $indent . "\t}\n";
+                                $safety .= $indent . "} while(0); \n";
+                                return $safety;
+                            }
+                        }
+
                     default:
                         throw new \LogicException("Unknown array dim fetch type {$op->var->type}");
                 }
@@ -413,9 +464,11 @@ class PECL extends AbstractBackend {
             case 'string':
                 return 'zend_string*';
             case 'mixed':
-                return 'zval*';
+                return 'zval';
         }
-        var_dump($type);
-        throw new \RuntimeException("Unknown C Type Encountered: $type");
+        if ($type->type === Type::TYPE_ARRAY) {
+            return 'HashTable*';
+        }
+        return 'zval';
     }
 }
