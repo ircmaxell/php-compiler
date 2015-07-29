@@ -12,7 +12,6 @@
 
 ZEND_BEGIN_MODULE_GLOBALS(<?php echo $name ?>)
 	zend_string* string_constants[<?php echo count($stringConstants); ?>];
-?>
 ZEND_END_MODULE_GLOBALS(<?php echo $name; ?>)
 
 #ifdef ZTS
@@ -31,4 +30,4 @@ extern zend_module_entry <?php echo $name; ?>_module_entry;
 
 PHP_MINFO_FUNCTION(<?php echo $name; ?>);
 
-#endif;
+#endif

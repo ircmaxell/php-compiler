@@ -156,7 +156,7 @@ class PECL extends AbstractBackend {
                 return "Z_PARAM_ARRAY_HT($name)";
             case 'zend_string*':
                 return "Z_PARAM_STR($name)";
-            case 'long':
+            case 'zend_long':
                 return "Z_PARAM_LONG($name)";
             case 'double':
                 return "Z_PARAM_DOUBLE($name)";
@@ -182,7 +182,7 @@ class PECL extends AbstractBackend {
             $byRef = $param->byRef ? "1" : "0";
             $code .= "\tZEND_ARG_INFO($byRef, {$param->name->value})\n";
         }
-        $code .= "ZEND_END_ARG_INFO";
+        $code .= "ZEND_END_ARG_INFO()";
         return $code;
     }
 
@@ -233,7 +233,7 @@ class PECL extends AbstractBackend {
                             case 'double':
                                 $return = "RETURN_DOUBLE($var);";
                                 break;
-                            case 'long':
+                            case 'zend_long':
                                 $return = "RETURN_LONG($var);";
                                 break;
                             case 'zend_bool':
@@ -260,7 +260,7 @@ class PECL extends AbstractBackend {
 
     protected function getTypeInfo($type) {
         return [
-            'long' => [
+            'zend_long' => [
                 'default' => function($name) {
                     return "$name = 0";
                 },
@@ -289,7 +289,7 @@ class PECL extends AbstractBackend {
                 $result = $this->getVarName($op->result);
                 switch ($this->mapToCType($op->var->type)) {
                     case 'zend_string*':
-                        assert($this->mapToCType($op->dim->type) === 'long');
+                        assert($this->mapToCType($op->dim->type) === 'zend_long');
                         $safety = $indent . "if ($dim < 0 || $dim >= ZSTR_LEN({$var})) {\n";
                         $safety .= $indent . "\t$result = ZSTR_EMPTY_ALLOC();\n";
                         $safety .= $indent . "\tzend_error(E_NOTICE, \"Uninitialized string offset: %pd\", $dim);\n";
@@ -303,7 +303,7 @@ class PECL extends AbstractBackend {
                     case 'HashTable*':
                         $dimType = $this->mapToCType($op->dim->type);
                         $resultType = $this->mapToCType($op->result->type);
-                        if ($dimType === 'long') {
+                        if ($dimType === 'zend_long') {
                             $safety = $indent . "do {\n";
                             $safety .= $indent . "\tzval* tmp = zend_hash_index_find($var, $dim);\n";
                             $safety .= $indent . "\tif (tmp == NULL) {\n";
@@ -431,11 +431,11 @@ class PECL extends AbstractBackend {
     protected function compilePrintStatement(Op $op, $indent) {
         $name = $this->getVarName($op->expr);
         switch ($this->mapToCType($op->expr->type)) {
-            case 'long':
+            case 'zend_long':
                 return $indent . "php_printf(\"%ld\", {$name})";
             case 'double':
                 return $indent . "php_printf(\"%.*G\", (int) EG(precision), {$name})";
-            case 'bool':
+            case 'zend_bool':
                 return $indent . "php_printf(\"%s\", ({$name}) ? \"1\" : \"\"";
             case 'zend_string*':
                 return $indent . "PHPWRITE(ZSTR_VAL({$name}), ZSTR_LEN({$name}))";
@@ -455,7 +455,7 @@ class PECL extends AbstractBackend {
         if ($var instanceof Operand\Literal) {
             switch ($this->mapToCType($var->type)) {
                 case 'zend_bool':
-                case 'long':
+                case 'zend_long':
                     return (int) $var->value;
                 case 'double':
                     // TODO: make this locale independent
@@ -495,7 +495,7 @@ class PECL extends AbstractBackend {
             case 'float':
                 return 'double';
             case 'int':
-                return 'long';
+                return 'zend_long';
             case 'string':
                 return 'zend_string*';
             case 'mixed':
