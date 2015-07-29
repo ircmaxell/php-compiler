@@ -133,6 +133,7 @@ class PECL extends AbstractBackend {
             "php_{$this->state->name}.h" => $this->compileFile('module.h'),
             "{$this->state->name}.c"     => $this->compileFile('module.c'),
             "config.m4"                  => $this->compileFile('module.m4'),
+	    "config.w32"		 => $this->compileFile('module.w32'),
         ];
     }
 
