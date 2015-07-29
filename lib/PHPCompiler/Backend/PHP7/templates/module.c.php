@@ -272,5 +272,8 @@ zend_module_entry <?php echo $name; ?>_module_entry = {
 
 #ifdef COMPILE_DL_<?php echo $uppername; ?>
 
+#ifdef ZTS
+		ZEND_TSRMLS_CACHE_DEFINE();
+#endif
 ZEND_GET_MODULE(<?php echo $name; ?>)
 #endif
