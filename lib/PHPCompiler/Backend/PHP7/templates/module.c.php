@@ -156,7 +156,7 @@ foreach ($classEntries as $entry) {
 
     std_props = zend_std_get_properties(object);
     debug_info = zend_array_dup(std_props);
-
+    *is_temp = 1;
     ZEND_HASH_FOREACH_STR_KEY_PTR(&php_<?php echo $name; ?>_<?php echo $entry['id']; ?>_prop_handlers, string_key, entry) {
         zval value;
 
