@@ -271,7 +271,30 @@ class PECL extends AbstractBackend {
                 'ztypeset'   => function($name, $value) {
                     return "ZVAL_LONG($name, $value)";
                 },
-            ]
+            ],
+            'double' => [
+                'default' => function($name) {
+                    return "$name = 0.0";
+                },
+                'ztype'      => 'IS_DOUBLE',
+                'stringtype' => 'double',
+                'ztypefetch' => 'Z_DVAL_P',
+                'ztypeset'   => function($name, $value) {
+                    return "ZVAL_DOUBLE($name, $value)";
+                },
+            ],
+            'zend_string*' => [
+                'default' => function($name) {
+                    /* @TODO HORRID */
+                    return "$name = zend_new_interned_string(ZSTR_EMPTY_ALLOC())";
+                },
+                'ztype'      => 'IS_STRING',
+                'stringtype' => 'string',
+                'ztypefetch' => 'zval_get_string',
+                'ztypeset'   => function($name, $value) {
+                    return "ZVAL_STR($name, $value)";
+                },
+            ],
         ][$type];
     }
 

@@ -10,7 +10,17 @@ class Foo {
     /**
      * @var int
      */
-    public $foo;
+    public $int;
+
+    /**
+    * @var string
+    */
+    public $string;
+    
+    /**
+    * @var double
+    */
+    public $double;
 }
 EOF;
 
@@ -55,3 +65,5 @@ $files = $compiler->compile($blocks);
 foreach ($files as $filename => $content) {
     file_put_contents(__DIR__ . "/ext/$filename", $content);
 }
+
+
