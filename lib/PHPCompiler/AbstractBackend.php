@@ -28,6 +28,9 @@ abstract class AbstractBackend implements Backend {
                 case 'Stmt_Function':
                     $this->compileFunction($child);
                     break;
+                case 'Stmt_Class':
+                    $this->compileClass($child);
+                    break;
                 default:
                     throw new \RuntimeException("Could not compile global operation: " . $child->getType());
             }
@@ -37,6 +40,8 @@ abstract class AbstractBackend implements Backend {
     abstract protected function initState();
 
     abstract protected function compileFunction(Op\Stmt\Function_ $func);
+
+    abstract protected function compileClass(Op\Stmt\Class_ $class);
 
     abstract protected function finish();
 

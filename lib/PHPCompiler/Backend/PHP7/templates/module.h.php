@@ -11,8 +11,9 @@
 #endif
 
 ZEND_BEGIN_MODULE_GLOBALS(<?php echo $name ?>)
-    zend_string* string_constants[<?php echo count($stringConstants); ?>];
-ZEND_END_MODULE_GLOBALS(<?php echo $name ?>)
+	zend_string* string_constants[<?php echo count($stringConstants); ?>];
+?>
+ZEND_END_MODULE_GLOBALS(<?php echo $name; ?>)
 
 #ifdef ZTS
 #define <?php echo $uppername; ?>_G(v) TSRM(<?php echo $name; ?>_globals_id, zend_<?php echo $name; ?>_globals *, v)

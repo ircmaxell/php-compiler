@@ -23,6 +23,9 @@ class PECL extends AbstractBackend {
         $this->state = new \StdClass;
         $this->state->name = "compiled_" . mt_rand();
         $this->state->uppername = strtoupper($this->state->name);
+        $this->state->classEntries = [];
+        $this->state->methodEntries = [];
+
         $this->state->functions = [];
         $this->state->functionHeaders = [];
         $this->state->functionEntry = [];
@@ -65,6 +68,35 @@ class PECL extends AbstractBackend {
 
         $code .= "\t\0free-all-vars\0\n}\n";
         $this->state->functions[] = $this->handleFrees($code);
+    }
+
+    protected function compileClass(Op\Stmt\Class_ $class) {
+        $classId = count($this->state->classEntries) + 1;
+        $name = explode("\\", $class->name->value);
+        $className = array_pop($name);
+        $ns = implode("\\", $name);
+        $props = [];
+        foreach ($class->stmts->children as $stmt) {
+            switch ($stmt->getType()) {
+                case 'Stmt_Property':
+                    $props[] = [
+                        "name"     => $stmt->name->value,
+                        "default"  => $stmt->defaultVar,
+                        "ctype"    => $this->mapToCType($stmt->type),
+                        "typeInfo" => $this->getTypeInfo($this->mapToCType($stmt->type)),
+                    ];
+                    break;
+                default:
+                    throw new \LogicException("Unknown class statment type: " . $stmt->getType());
+            }
+        }
+        $this->state->classEntries[] = [
+            "name"       => $className,
+            "ns"         => $ns,
+            "id"         => $classId,
+            "methods"    => [],
+            "properties" => $props,
+        ];
     }
 
     protected function handleFrees($code) {
@@ -235,6 +267,9 @@ class PECL extends AbstractBackend {
                 'ztype'      => 'IS_LONG',
                 'stringtype' => 'int',
                 'ztypefetch' => 'Z_LVAL_P',
+                'ztypeset'   => function($name, $value) {
+                    return "ZVAL_LONG($name, $value)";
+                },
             ]
         ][$type];
     }
