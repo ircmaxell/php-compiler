@@ -182,6 +182,11 @@ foreach ($classEntries as $entry) {
         echo "\tif (Z_TYPE_P(newval) != {$prop['typeInfo']['ztype']}) {\n";
         echo "\t\tzend_throw_error(NULL, \"Parameter is not an {$prop['typeInfo']['stringtype']}\");\n";
         echo "\t}\n";
+	if (isset($prop['typeInfo']['ztypedtor'])) {
+		echo "\tif (obj->p_{$prop['name']}) {\n";
+		echo "\t\t{$prop['typeInfo']['ztypedtor']}(obj->p_{$prop['name']});\n";
+		echo "\t}\n";
+	}
         echo "\tobj->p_{$prop['name']} = {$prop['typeInfo']['ztypefetch']}(newval);\n";
         echo "\treturn SUCCESS;\n";
         echo "}\n\n";

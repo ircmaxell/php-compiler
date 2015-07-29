@@ -294,6 +294,7 @@ class PECL extends AbstractBackend {
                 'ztypeset'   => function($name, $value) {
                     return "ZVAL_STR($name, $value)";
                 },
+		'ztypedtor'  => 'zend_string_release'
             ],
         ][$type];
     }
