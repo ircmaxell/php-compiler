@@ -160,6 +160,33 @@ foreach ($classEntries as $entry) {
 <?php
     echo "}\n\n";
 
+    echo "static HashTable* php_{$name}_{$entry['id']}_debug_info(zval *object, int *is_temp) {\n";
+?>
+    php_<?php echo $name; ?>_<?php echo $entry['id']; ?>_t *obj = php_<?php echo $name; ?>_<?php echo $entry['id']; ?>_fetch_object(Z_OBJ_P(object));
+    HashTable *debug_info,
+                *std_props;
+    zend_string *string_key;
+    php_<?php echo $name; ?>_<?php echo $entry['id']; ?>_prop_handler *entry;
+
+    std_props = zend_std_get_properties(object);
+    debug_info = zend_array_dup(std_props);
+
+    ZEND_HASH_FOREACH_STR_KEY_PTR(&php_<?php echo $name; ?>_<?php echo $entry['id']; ?>_prop_handlers, string_key, entry) {
+        zval value;
+
+        if (entry->read_func(obj, &value) == FAILURE || !string_key) {
+            continue;
+        }
+
+        zend_hash_add(debug_info, string_key, &value);
+    } ZEND_HASH_FOREACH_END();
+
+    return debug_info;
+
+<?php
+    echo "}\n\n";
+
+
     foreach ($entry['properties'] as $prop) {
         echo "int php_{$name}_{$entry['id']}_{$prop['name']}_read(php_{$name}_{$entry['id']}_t *obj, zval *retval) {\n";
         echo "\t" . $prop['typeInfo']['ztypeset']("retval", "obj->p_{$prop['name']}") . ";\n";
@@ -218,6 +245,7 @@ foreach ($classEntries as $entry) {
     echo "\tmemcpy(&php_{$name}_{$entry['id']}_handlers, zend_get_std_object_handlers(), sizeof(zend_object_handlers));\n";
     echo "\tphp_{$name}_{$entry['id']}_handlers.read_property = php_{$name}_{$entry['id']}_read_property;\n";
     echo "\tphp_{$name}_{$entry['id']}_handlers.write_property = php_{$name}_{$entry['id']}_write_property;\n";
+    echo "\tphp_{$name}_{$entry['id']}_handlers.get_debug_info = php_{$name}_{$entry['id']}_debug_info;\n";
 
     echo "\tzend_hash_init(&php_{$name}_{$entry['id']}_prop_handlers, 0, NULL, php_{$name}_{$entry['id']}_dtor_prop_handler, 1);\n";
     foreach ($entry['properties'] as $prop) {

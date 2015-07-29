@@ -21,7 +21,7 @@ class PECL extends AbstractBackend {
 
     protected function initState() {
         $this->state = new \StdClass;
-        $this->state->name = "compiled_" . mt_rand();
+        $this->state->name = "compiled_123";
         $this->state->uppername = strtoupper($this->state->name);
         $this->state->classEntries = [];
         $this->state->methodEntries = [];
