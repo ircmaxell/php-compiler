@@ -11,5 +11,5 @@ if test "$PHP_<?php echo $uppername; ?>" != "no"; then
 		AC_MSG_RESULT([supported ($PHP_<?php echo $uppername; ?>_FOUND_VERSION)])
 	fi
 	AC_DEFINE(HAVE_<?php echo $uppername; ?>, 1, [Compile with <?php echo $name; ?> support])
-	PHP_NEW_EXTENSION(<?php echo $name;?>, <?php echo $name; ?>.c, $ext_shared)
+	PHP_NEW_EXTENSION(<?php echo $name;?>, <?php echo $name; ?>.c, $ext_shared,, -DZEND_ENABLE_STATIC_TSRMLS_CACHE=1)
 fi
