@@ -210,21 +210,27 @@ foreach ($stringConstants as $constant) {
 
 <?php
 foreach ($classEntries as $entry) {
-    echo "zend_function_entry *php_{$name}_{$entry['id']}_methods[] = {\n";
-    foreach ($entry['methods'] as $method) {
-        echo "\tPHP_ME({$entry['name']}, {$method['name']}, php_{$name}_{$entry['id']}_{$method['name']}_arginfo, ZEND_ACC_PUBLIC)\n";
+    if (count($entry['methods'])) {
+        echo "zend_function_entry *php_{$name}_{$entry['id']}_methods[] = {\n";
+        foreach ($entry['methods'] as $method) {
+            echo "\tPHP_ME({$entry['name']}, {$method['name']}, php_{$name}_{$entry['id']}_{$method['name']}_arginfo, ZEND_ACC_PUBLIC)\n";
+        }
+        echo "\tPHP_FE_END\n";
+        echo "};\n";
     }
-    echo "\tPHP_FE_END\n";
-    echo "};\n";
 }
 ?>
 
 <?php
 foreach ($classEntries as $entry) {
     if ($entry['ns']) {
-        echo "\tINIT_NS_CLASS_ENTRY(ce, \"" . addslashes($entry['ns']) . "\", \"{$entry['name']}\", php_{$name}_{$entry['id']}_methods);\n";
+        if (count($entry['methods'])) {
+		echo "\tINIT_NS_CLASS_ENTRY(ce, \"" . addslashes($entry['ns']) . "\", \"{$entry['name']}\", php_{$name}_{$entry['id']}_methods);\n";
+	} else echo "\tINIT_NS_CLASS_ENTRY(ce, \"" . addslashes($entry['ns']) . "\", \"{$entry['name']}\", NULL);\n";
     } else {
-        echo "\tINIT_CLASS_ENTRY(ce, \"{$entry['name']}\", php_{$name}_{$entry['id']}_methods);\n";
+        if (count($entry['methods'])) {
+            echo "\tINIT_CLASS_ENTRY(ce, \"{$entry['name']}\", php_{$name}_{$entry['id']}_methods);\n";
+        } else echo "\tINIT_CLASS_ENTRY(ce, \"{$entry['name']}\", NULL);\n";
     }
     echo "\tphp_{$name}_{$entry['id']}_ce = zend_register_internal_class(&ce);\n";
     echo "\tphp_{$name}_{$entry['id']}_ce->create_object = php_{$name}_{$entry['id']}_create;\n";
