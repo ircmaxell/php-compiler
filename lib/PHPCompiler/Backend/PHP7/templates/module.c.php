@@ -145,20 +145,6 @@ foreach ($classEntries as $entry) {
 	return &intern->std;
 <?php
     echo "}\n\n";
-    echo "static inline void php_{$name}_{$entry['id']}_destroy(void *zobject) {\n";
-?>
-	php_<?php echo $name; ?>_<?php echo $entry['id']; ?>_t *pobj = (php_<?php echo $name; ?>_<?php echo $entry['id']; ?>_t*) zobject;
-	zend_objects_destroy_object(zobject);
-<?php
-    echo "}\n\n";
-
-    echo "static inline void php_{$name}_{$entry['id']}_free(void *zobject) {\n";
-?>
-	php_<?php echo $name; ?>_<?php echo $entry['id']; ?>_t *pobj = (php_<?php echo $name; ?>_<?php echo $entry['id']; ?>_t*) zobject;
-	zend_object_std_dtor(&pobj->std);
-	efree(pobj);
-<?php
-    echo "}\n\n";
 
     echo "static HashTable* php_{$name}_{$entry['id']}_debug_info(zval *object, int *is_temp) {\n";
 ?>
@@ -246,7 +232,7 @@ foreach ($classEntries as $entry) {
     echo "\tphp_{$name}_{$entry['id']}_handlers.read_property = php_{$name}_{$entry['id']}_read_property;\n";
     echo "\tphp_{$name}_{$entry['id']}_handlers.write_property = php_{$name}_{$entry['id']}_write_property;\n";
     echo "\tphp_{$name}_{$entry['id']}_handlers.get_debug_info = php_{$name}_{$entry['id']}_debug_info;\n";
-
+    echo "\tphp_{$name}_{$entry['id']}_handlers.offset = XtOffsetOf(php_{$name}_{$entry['id']}_t, std);\n";
     echo "\tzend_hash_init(&php_{$name}_{$entry['id']}_prop_handlers, 0, NULL, php_{$name}_{$entry['id']}_dtor_prop_handler, 1);\n";
     foreach ($entry['properties'] as $prop) {
         echo "\tphp_{$name}_{$entry['id']}_register_prop_handler(&php_{$name}_{$entry['id']}_prop_handlers, \"" . addslashes($prop['name']) . "\", php_{$name}_{$entry['id']}_{$prop['name']}_read, php_{$name}_{$entry['id']}_{$prop['name']}_write);\n";
