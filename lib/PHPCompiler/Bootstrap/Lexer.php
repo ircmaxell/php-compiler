@@ -1,4 +1,5 @@
 <?php
+declare(strict_types=1);
 
 namespace PHPCompiler\Bootstrap;
 
@@ -7,20 +8,39 @@ class Lexer {
     private string $file;
     private int $fileLength;
     private int $filePos = 0;
-    private int $lineNumber = 0;
+    private int $lineNumber = 1;
     private int $columnNumber = 0;
     private string $filename;
+
+    private ?Token $next = null;
 
     public function begin(string $file, string $filename): void {
         $this->file = $file;
         $this->fileLength = strlen($file);
         $this->filename = $filename;
         $this->filePos = 0;
-        $this->lineNumber = 0;
+        $this->lineNumber = 1;
         $this->columnNumber = 0;
     }
 
+    public function peek(): Token {
+        $next = $this->next();
+        $this->next = $next;
+        return $next;
+    }
+
     public function next(): Token {
+        $token = $this->_next();
+        return $token;
+    }
+
+
+    public function _next(): Token {
+        if (!is_null($this->next)) {
+            $return = $this->next;
+            $this->next = null;
+            return $return;
+        }
 restart:
         if ($this->filePos >= $this->fileLength) {
             return $this->token(Token::T_END_OF_FILE, '');
@@ -110,6 +130,12 @@ restart:
                     return $this->token(Token::T_DECREMENT, '--');
                 }
                 if ($this->filePos < $this->fileLength 
+                    && $this->file[$this->filePos] === '>' 
+                ) {
+                    $this->filePos++;
+                    return $this->token(Token::T_OBJECT_OP, '->');
+                }
+                if ($this->filePos < $this->fileLength 
                     && ctype_digit($this->file[$this->filePos]) 
                 ) {
                     return $this->emitNumber($char);
@@ -125,7 +151,8 @@ restart:
                 }
                 return $this->token(Token::T_ASSIGN, '=');
             case '\'':
-                return $this->emitString();
+            case '"':
+                return $this->emitString($char);
             case '.':
                 if ($this->filePos + 1 < $this->fileLength 
                     && $this->file[$this->filePos] === '.' 
@@ -177,7 +204,7 @@ syntax_error:
         );
     }
 
-    private function emitString(): Token {
+    private function emitString(string $type): Token {
         $buffer = '';
         $columnNumber = $this->columnNumber;
         while ($this->filePos < $this->fileLength) {
@@ -187,10 +214,29 @@ syntax_error:
                     if ($this->filePos < $this->fileLength) {
                         $char = $this->file[$this->filePos++];
                         $columnNumber++;
+                        if ($type === '"') {
+                            switch ($char) {
+                                case 'n':
+                                    $char = chr(10);
+                                    break;
+                                case 'r':
+                                    $char = chr(13);
+                                    break;
+                                case 't':
+                                    $char = chr(9);
+                                    break;
+                                case '"':
+                                case '$':
+                                    break;
+                                default:
+                                    throw new \LogicException("Unsupported escape sequence: \\" . $char);
+
+                            }
+                        }
                         goto append_buffer;
                     }
                     break 2;
-                case '\'':
+                case $type:
                     $token = $this->token(Token::T_STRING, $buffer);
                     $this->columnNumber = $columnNumber + 1;
                     return $token;
@@ -202,6 +248,11 @@ syntax_error:
                 case chr(10):
                     $this->lineNumber++;
                     $columnNumber = -1;
+                case '{':
+                case '$':
+                    if ($type === '"') {
+                        throw new \LogicException("Unsupport string variable expressions used");
+                    }
                 default:
 append_buffer:
                     $columnNumber++;
@@ -288,6 +339,7 @@ class Token {
     const T_LOGICAL_AND = 30; // &&
     const T_BITWISE_OR = 31; // |
     const T_LOGICAL_OR = 32; // ||
+    const T_OBJECT_OP = 33; // ->
 
     const T_END_OF_FILE = 512;
 
