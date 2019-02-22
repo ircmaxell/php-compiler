@@ -73,10 +73,10 @@ class Compiler {
             $total = count($op->list);
             assert($total > 0);
             $pointer = 1;
-            $result = $this->compileOperand($op->list[0], $block);
+            $result = $this->compileOperand($op->list[0], $block, true);
             while ($pointer < $total) {
-                $right = $this->compileOperand($op->list[$pointer++], $block);
-                $tmpResult = $this->compileOperand(new Operand\Temporary, $block);
+                $right = $this->compileOperand($op->list[$pointer++], $block, true);
+                $tmpResult = $this->compileOperand(new Operand\Temporary, $block, false);
                 $block->addOpCode(new OpCode(
                     OpCode::TYPE_CONCAT,
                     $tmpResult,
@@ -85,7 +85,7 @@ class Compiler {
                 ));
                 $result = $tmpResult;
             }
-            $return = $this->compileOperand($op->result, $block);
+            $return = $this->compileOperand($op->result, $block, false);
             $block->addOpCode(new OpCode(
                 OpCode::TYPE_ASSIGN,
                 $return,
@@ -107,11 +107,14 @@ class Compiler {
         if ($stmt instanceof Op\Stmt\Jump) {
             $op = new OpCode(OpCode::TYPE_JUMP);
             $op->block1 = $this->compileCfgBlock($stmt->target);
+            $op->block1->parents[] = $block;
             $block->addOpCode($op);
         } elseif ($stmt instanceof Op\Stmt\JumpIf) {
-            $op = new OpCode(OpCode::TYPE_JUMPIF, $this->compileOperand($stmt->cond, $block));
+            $op = new OpCode(OpCode::TYPE_JUMPIF, $this->compileOperand($stmt->cond, $block, true));
             $op->block1 = $this->compileCfgBlock($stmt->if);
             $op->block2 = $this->compileCfgBlock($stmt->else);
+            $op->block1->parents[] = $block;
+            $op->block2->parents[] = $block;
             $block->addOpCode($op);
         } else {
             throw new \LogicException("Unknown Stmt Type: " . $stmt->getType());
@@ -133,36 +136,37 @@ class Compiler {
         if ($expr instanceof Op\Expr\BinaryOp) {
             return new OpCode(
                 $this->getOpCodeTypeFromBinaryOp($expr),
-                $this->compileOperand($expr->result, $block),
-                $this->compileOperand($expr->left, $block),
-                $this->compileOperand($expr->right, $block),
+                $this->compileOperand($expr->result, $block, false),
+                $this->compileOperand($expr->left, $block, true),
+                $this->compileOperand($expr->right, $block, true),
             );
         }
         switch (get_class($expr)) {
             case Op\Expr\Assign::class:
                 return new OpCode(
                     OpCode::TYPE_ASSIGN,
-                    $this->compileOperand($expr->result, $block),   
-                    $this->compileOperand($expr->var, $block),
-                    $this->compileOperand($expr->expr, $block) 
+                    $this->compileOperand($expr->result, $block, false),   
+                    $this->compileOperand($expr->var, $block, false),
+                    $this->compileOperand($expr->expr, $block, true) 
                 );
             case Op\Expr\ConstFetch::class:
                 $nsName = null;
                 if (!is_null($expr->nsName)) {
-                    $nsName = $this->compileOperand($expr->nsName, $block);
+                    $nsName = $this->compileOperand($expr->nsName, $block, true);
                 }
                 return new OpCode(
                     OpCode::TYPE_CONST_FETCH,
-                    $this->compileOperand($expr->result, $block),
-                    $this->compileOperand($expr->name, $block),
+                    $this->compileOperand($expr->result, $block, false),
+                    $this->compileOperand($expr->name, $block, true),
                     $nsName
                 );
         }
         throw new \LogicException("Unsupported expression: " . $expr->getType());
     }
 
-    protected function compileOperand(Operand $operand, Block $block): int {
+    protected function compileOperand(Operand $operand, Block $block, bool $isRead): int {
         if ($operand instanceof Operand\Literal) {
+            assert($isRead === true);
             $return = new PHPVar($operand->type->type);
             switch ($operand->type->type) {
                 case Type::TYPE_STRING:
@@ -176,7 +180,7 @@ class Compiler {
             }
             return $block->registerConstant($operand, $return);
         } elseif ($operand instanceof Operand\Temporary) {
-            return $block->getVarSlot($operand);
+            return $block->getVarSlot($operand, $isRead);
         }
         throw new \LogicException("Unknown Operand Type: " . $operand->getType());
     }
@@ -184,7 +188,7 @@ class Compiler {
     protected function compileTerminal(Op\Terminal $terminal, Block $block): OpCode {
         switch ($terminal->getType()) {
             case 'Terminal_Echo':
-                $var = $this->compileOperand($terminal->expr, $block);
+                $var = $this->compileOperand($terminal->expr, $block, true);
                 return new OpCode(
                     OpCode::TYPE_ECHO,
                     $var

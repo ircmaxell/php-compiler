@@ -12,7 +12,8 @@
         "php": ">=5.5",
         "ircmaxell/php-cfg": "dev-master",
         "ircmaxell/php-types": "dev-master",
-        "ircmaxell/php-optimizer": "dev-master"
+        "ircmaxell/php-optimizer": "dev-master",
+        "ircmaxell/libgccjit": "dev-master"
     },
     "require-dev": {
         "phpunit/phpunit": "^4.7",

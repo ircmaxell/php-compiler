@@ -16,6 +16,10 @@ class VM {
     const FAILURE = 2;
 
     public static function run(Block $block, Context $context): int {
+        if (!is_null($block->handler)) {
+            ($block->handler->callback)();
+            return self::SUCCESS;
+        }
         $context->push($block->getFrame($context));
 nextframe:
         $frame = $context->pop();
@@ -24,8 +28,8 @@ nextframe:
             return self::SUCCESS;
         }
 restart:
-        if (!is_null($frame->handler)) {
-            ($frame->handler)();
+        if (!is_null($block->handler)) {
+            ($block->handler->callback)();
             goto nextframe;
         }
 

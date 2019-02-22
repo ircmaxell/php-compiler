@@ -4,8 +4,80 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#composer-lock-the-lock-file",
         "This file is @generated automatically"
     ],
-    "hash": "3ad40d09f8d87703c0e7626082f5d841",
+    "content-hash": "dda154784bb9f7598d0655cd3afe191a",
     "packages": [
+        {
+            "name": "ircmaxell/ffime",
+            "version": "dev-master",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/ircmaxell/FFIMe.git",
+                "reference": "404e922aecdbef3e0f33bf00bf9bf9cb9ca0502a"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/ircmaxell/FFIMe/zipball/404e922aecdbef3e0f33bf00bf9bf9cb9ca0502a",
+                "reference": "404e922aecdbef3e0f33bf00bf9bf9cb9ca0502a",
+                "shasum": ""
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "FFIMe\\": "lib/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Anthony Ferrara",
+                    "email": "ircmaxell@gmail.com"
+                }
+            ],
+            "description": "Make life easy when working with 7.4's FFI",
+            "time": "2019-02-19 12:35:38"
+        },
+        {
+            "name": "ircmaxell/libgccjit",
+            "version": "dev-master",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/ircmaxell/libgccffi.git",
+                "reference": "b65ed219f8216091164f0d965b1769dead76c3bd"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/ircmaxell/libgccffi/zipball/b65ed219f8216091164f0d965b1769dead76c3bd",
+                "reference": "b65ed219f8216091164f0d965b1769dead76c3bd",
+                "shasum": ""
+            },
+            "require": {
+                "ircmaxell/ffime": "master@dev"
+            },
+            "type": "library",
+            "autoload": {
+                "psr-4": {
+                    "libgccjit\\": "lib/"
+                },
+                "files": [
+                    "lib/functions.php"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Anthony Ferrara",
+                    "email": "ircmaxell@gmail.com"
+                }
+            ],
+            "description": "A wrapper for FFI with libgccjit",
+            "time": "2019-02-20 14:26:59"
+        },
         {
             "name": "ircmaxell/php-cfg",
             "version": "dev-master",
@@ -375,7 +447,7 @@
                     "email": "mike.vanriel@naenius.com"
                 }
             ],
-            "time": "2015-02-03 12:10:50"
+            "time": "2015-02-03T12:10:50+00:00"
         },
         {
             "name": "phpspec/prophecy",
@@ -585,7 +657,7 @@
             "keywords": [
                 "template"
             ],
-            "time": "2015-06-21 13:50:34"
+            "time": "2015-06-21T13:50:34+00:00"
         },
         {
             "name": "phpunit/php-timer",
@@ -1174,7 +1246,7 @@
             ],
             "description": "Library that helps with managing the version number of Git-hosted PHP projects",
             "homepage": "https://github.com/sebastianbergmann/version",
-            "time": "2015-06-21 13:59:46"
+            "time": "2015-06-21T13:59:46+00:00"
         },
         {
             "name": "symfony/console",
@@ -1534,7 +1606,7 @@
             ],
             "description": "Symfony Yaml Component",
             "homepage": "https://symfony.com",
-            "time": "2015-07-26 09:09:51"
+            "time": "2015-07-26T09:09:51+00:00"
         }
     ],
     "aliases": [],
@@ -1542,7 +1614,8 @@
     "stability-flags": {
         "ircmaxell/php-cfg": 20,
         "ircmaxell/php-types": 20,
-        "ircmaxell/php-optimizer": 20
+        "ircmaxell/php-optimizer": 20,
+        "ircmaxell/libgccjit": 20
     },
     "prefer-stable": false,
     "prefer-lowest": false,

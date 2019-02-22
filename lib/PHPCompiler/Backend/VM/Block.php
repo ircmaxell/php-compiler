@@ -20,13 +20,15 @@ class Block {
      */
     public array $opCodes = [];
 
+    public array $blocks = [];
+
     public int $nOpCodes = 0;
 
     public CfgBlock $orig;
 
     private \SplObjectStorage $scope;
 
-    private \SplObjectStorage $phi;
+    public \SplObjectStorage $phi;
 
     /** 
      * @var PHPVar[] $constants
@@ -34,28 +36,43 @@ class Block {
     public array $constants = [];
 
     /**
-     * @var function(Scope):void
+     * @var callable():void
      */
-    public $handler = null;
+    public ?Handler $handler = null;
+
+    public \SplObjectStorage $args;
 
     public function __construct(CfgBlock $block) {
         $this->orig = $block;
         $this->scope = new \SplObjectStorage;
         $this->phi = new \SplObjectStorage;
+        $this->args = new \SplObjectStorage;
         foreach ($block->phi as $phi) {
             $this->phi[$phi->result] = $phi;
+            $this->getVarSlot($phi->result, true);
         }
     }
 
-    public function getVarSlot(Operand $operand): int {
+    public function getOperand(int $offset): Operand {
+        foreach ($this->scope as $operand) {
+            if ($this->scope[$operand] === $offset) {
+                return $operand;
+            }
+        }
+    }
+
+    public function getVarSlot(Operand $operand, bool $isRead): int {
         if (!$this->scope->contains($operand)) {
             $this->scope[$operand] = $this->scope->count();
+            if ($isRead) {
+                $this->args[$operand] = $this->scope[$operand];
+            }
         }
         return $this->scope[$operand];
     }
 
     public function registerConstant(Operand $operand, PHPVar $const): int {
-        $slot = $this->getVarSlot($operand);
+        $slot = $this->getVarSlot($operand, false);
         $this->constants[$slot] = $const;
         return $slot;
     }
@@ -88,16 +105,24 @@ class Block {
             
             if (isset($this->constants[$pos])) {
                 $scope[$pos] = $this->constants[$pos];
-            } elseif ($this->phi->contains($op)) {
+            } elseif ($this->args->contains($op)) {
                 if (is_null($frame)) {
                     throw new \LogicException("Phi var with no parent frame, illegal");
                 }
-                $phi = $this->phi[$op];
                 $found = false;
-                foreach ($phi->vars as $var) {
-                    $temp = $frame->block->findSlot($var, $frame);
-                    if ($temp) {
-                        $scope[$pos] = $temp;
+                if ($this->phi->contains($op)) {
+                    $phi = $this->phi[$op];
+                    foreach ($phi->vars as $var) {
+                        $temp = $frame->block->findSlot($var, $frame);
+                        if ($temp) {
+                            $scope[$pos] = $temp;
+                            $found = true;
+                        }
+                    }
+                } else {
+                    $parent = $frame->block->findSlot($op, $frame);
+                    if (!is_null($parent)) {
+                        $scope[$pos] = $parent;
                         $found = true;
                     }
                 }
@@ -105,13 +130,6 @@ class Block {
                     throw new \LogicException("Could not resolve Phi");
                 }
             } else { 
-                if (!is_null($frame)) {
-                    $parent = $frame->block->findSlot($op, $frame);
-                    if (!is_null($parent)) {
-                        $scope[$pos] = $parent;
-                        continue;
-                    }
-                }
                 $scope[$pos] = new PHPVar;
             }
         }
