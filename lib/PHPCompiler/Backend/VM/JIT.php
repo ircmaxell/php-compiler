@@ -190,7 +190,7 @@ class JIT {
                         \gcc_jit_context_new_call(
                             $context->context,
                             null,
-                            $context->lookup('printf')->func,
+                            $context->lookupFunction('printf')->func,
                             2,
                             \gcc_jit_rvalue_ptr_ptr::fromArray(
                                 $context->constantFromString('%s'),

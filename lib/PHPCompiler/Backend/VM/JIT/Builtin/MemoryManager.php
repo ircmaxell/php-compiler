@@ -16,8 +16,8 @@ use PHPCompiler\Backend\VM\JIT;
 
 class MemoryManager extends Builtin {
 
-    protected function register(int $type): void {
-        $this->context->register(
+    protected function register(): void {
+        $this->context->registerFunction(
             'efree',
             $this->createFunction(
                 \GCC_JIT_FUNCTION_IMPORTED,
@@ -28,7 +28,7 @@ class MemoryManager extends Builtin {
                 ...$this->expandDebugDecl()
             )
         );
-        $this->context->register(
+        $this->context->registerFunction(
             'emalloc',
             $this->createFunction(
                 \GCC_JIT_FUNCTION_IMPORTED,
@@ -53,5 +53,17 @@ class MemoryManager extends Builtin {
         return [];
     }
 
+    public function emalloc(gcc_jit_rvalue_ptr $size, \gcc_jit_type_ptr $type): \gcc_jit_rvalue_ptr {
+        $void = \gcc_jit_context_new_call(
+            $this->context->context,
+            null,
+            $this->context->lookupFunction('emalloc')->func,
+            1,
+            \gcc_jit_rvalue_ptr_ptr::fromArray(
+                $size
+            )
+        );
+        // todo: cast
+    }
 
 }

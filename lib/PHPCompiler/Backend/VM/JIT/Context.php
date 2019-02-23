@@ -16,13 +16,14 @@ use PHPTypes\Type;
 class Context {
 
     public \gcc_jit_context_ptr $context;
-    public array $scope = [];
+    public array $functionScope = [];
     private array $typeMap = [];
     private array $intConstant = [];
     private array $stringConstant = [];
     private ?Result $result = null;
     public Builtin\MemoryManager $memory;
     public Builtin\Output $output;
+    public Builtin\Type $type;
     private array $builtins;
     private int $loadType;
 
@@ -31,8 +32,10 @@ class Context {
         $this->context = \gcc_jit_context_acquire();
         $this->memory = new Builtin\MemoryManager($this, $loadType);
         $this->output = new Builtin\Output($this, $loadType);
+        $this->type = new Builtin\Type($this, $loadType);
+
         if ($loadType !== Builtin::LOAD_TYPE_IMPORT) {
-            $this->defineInitFunction();
+            $this->defineBuiltins();
         }   
     }
 
@@ -44,7 +47,7 @@ class Context {
         \gcc_jit_context_release($this->context);
     }
 
-    private function defineInitFunction(): void {
+    private function defineBuiltins(): void {
       $initFunc = \gcc_jit_context_new_function(
           $this->context,
           null,
@@ -60,6 +63,12 @@ class Context {
           $block = $builtin->init($initFunc, $block);
       }
       \gcc_jit_block_end_with_void_return($block, null);
+      foreach ($this->builtins as $builtin) {
+          // this is a separate loop, since implementation may
+          // depend on global variables set during init()
+          // so this way, cross-builtin dependencies are honored
+          $builtin->implement();
+      }
     }
 
     public function compileInPlace(): Result {
@@ -86,16 +95,19 @@ class Context {
         }
     }
 
-    public function lookup(string $name): Func {
-        if (isset($this->scope[$name])) {
-            return $this->scope[$name];
+    public function lookupFunction(string $name): Func {
+        if (isset($this->functionScope[$name])) {
+            return $this->functionScope[$name];
         }
         throw new \LogicException('Unable to lookup non-existing function ' . $name);
     }
 
-    public function register(string $name, Func $func): self {
-        $this->scope[$name] = $func;
-        return $this;
+    public function registerFunction(string $name, Func $func): void {
+        $this->functionScope[$name] = $func;
+    }
+
+    public function registerType(string $name, \gcc_jit_type_ptr $type): void {
+        $this->typeMap[$name] = $type;
     }
 
     public function getTypeFromType(Type $type): \gcc_jit_type_ptr {
@@ -136,7 +148,7 @@ class Context {
         switch ($type) {
             case 'char*':
                 return \gcc_jit_type_get_pointer(
-                    $this->getTypeFromString($this->context, 'char')
+                    $this->getTypeFromString('char')
                 );
             default:
                 throw new \LogicException("Unsupported native type $type");

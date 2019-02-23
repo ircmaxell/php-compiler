@@ -14,15 +14,12 @@ use PHPCompiler\Backend\VM\JIT\Context;
 use PHPCompiler\Backend\VM\JIT\Func;
 use PHPCompiler\Backend\VM\JIT;
 
-class Output extends Builtin {
+class Type extends Builtin {
+
+    public Type\String_ $string;
 
     protected function register(): void {
-        $this->importFunction(
-            'printf',
-            'int',
-            true,
-            'const char*'
-        );
+        $this->string = new Type\String_($this->context, $this->loadType);
     }
 
 }
