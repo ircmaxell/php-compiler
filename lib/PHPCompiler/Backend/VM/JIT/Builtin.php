@@ -36,58 +36,6 @@ abstract class Builtin {
         return $block;
     }
 
-    protected function importFunction(
-        string $funcName, 
-        string $returnType, 
-        bool $isVariadic, 
-        string ...$params
-    ): void {
-        $this->context->registerFunction($funcName, $this->createFunction(
-            \GCC_JIT_FUNCTION_IMPORTED,
-            $funcName,
-            $returnType,
-            $isVariadic,
-            ...$params
-        ));
-    }
-
-    protected function createFunction(
-        int $type, 
-        string $funcName, 
-        string $returnType, 
-        bool $isVariadic, 
-        string ...$params
-    ): Func {
-        $paramPointers = [];
-        $i = 0;
-        foreach ($params as $param) {
-            $paramPointers[] = \gcc_jit_context_new_param (
-                $this->context->context, 
-                null, 
-                $this->context->getTypeFromString($param), 
-                "{$funcName}_{$i}"
-            );
-        }
-        $gccReturnType = $this->context->getTypeFromString($returnType);
-        return new Func(
-            $funcName,
-            \gcc_jit_context_new_function(
-                $this->context->context, 
-                null,
-                $type,
-                $gccReturnType,
-                $funcName,
-                count($paramPointers), 
-                \gcc_jit_param_ptr_ptr::fromArray(
-                    ...$paramPointers
-                ),
-                $isVariadic ? 1 : 0
-            ),
-            $gccReturnType,
-            ...$paramPointers
-        );
-    }
-
     protected function sizeof(\gcc_jit_type_ptr $type): \gcc_jit_rvalue_ptr {
         $type_ptr = \gcc_jit_type_get_pointer($type);
         $size_type = $this->context->getTypeFromString('size_t');

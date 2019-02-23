@@ -17,7 +17,7 @@ use PHPCompiler\Backend\VM\JIT;
 class Output extends Builtin {
 
     protected function register(): void {
-        $this->importFunction(
+        $this->context->helper->importFunction(
             'printf',
             'int',
             true,

@@ -19,7 +19,7 @@ class MemoryManager extends Builtin {
     protected function register(): void {
         $this->context->registerFunction(
             'efree',
-            $this->createFunction(
+            $this->context->helper->createFunction(
                 \GCC_JIT_FUNCTION_IMPORTED,
                 'efree',
                 'void',
@@ -30,7 +30,7 @@ class MemoryManager extends Builtin {
         );
         $this->context->registerFunction(
             'emalloc',
-            $this->createFunction(
+            $this->context->helper->createFunction(
                 \GCC_JIT_FUNCTION_IMPORTED,
                 '_emalloc',
                 'void',
@@ -53,17 +53,27 @@ class MemoryManager extends Builtin {
         return [];
     }
 
-    public function emalloc(gcc_jit_rvalue_ptr $size, \gcc_jit_type_ptr $type): \gcc_jit_rvalue_ptr {
-        $void = \gcc_jit_context_new_call(
+    private function expandDebugArgs(): array {
+        if (PHP_DEBUG) {
+            return [
+                // TODO: convert to null pointers
+                null, 
+                null, 
+                null, 
+                null
+            ];
+        }
+        return [];
+    }
+
+    public function emalloc(\gcc_jit_rvalue_ptr $size, \gcc_jit_type_ptr $type): \gcc_jit_rvalue_ptr {
+        $void = $this->context->helper->call('emalloc', $size, ...$this->expandDebugArgs());
+        return \gcc_jit_context_new_cast(
             $this->context->context,
             null,
-            $this->context->lookupFunction('emalloc')->func,
-            1,
-            \gcc_jit_rvalue_ptr_ptr::fromArray(
-                $size
-            )
+            $void,
+            $type
         );
-        // todo: cast
     }
 
 }

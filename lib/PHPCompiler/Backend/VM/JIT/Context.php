@@ -24,12 +24,16 @@ class Context {
     public Builtin\MemoryManager $memory;
     public Builtin\Output $output;
     public Builtin\Type $type;
+    public Builtin\Refcount $refcount;
+    public Helper $helper;
     private array $builtins;
     private int $loadType;
 
     public function __construct(int $loadType) {
         $this->loadType = $loadType;
         $this->context = \gcc_jit_context_acquire();
+        $this->helper = new Helper($this);
+        $this->refcount = new Builtin\Refcount($this, $loadType);
         $this->memory = new Builtin\MemoryManager($this, $loadType);
         $this->output = new Builtin\Output($this, $loadType);
         $this->type = new Builtin\Type($this, $loadType);
@@ -48,6 +52,12 @@ class Context {
     }
 
     private function defineBuiltins(): void {
+      foreach ($this->builtins as $builtin) {
+          // this is a separate loop, since implementation may
+          // depend on global variables set during init()
+          // so this way, cross-builtin dependencies are honored
+          $builtin->implement();
+      }
       $initFunc = \gcc_jit_context_new_function(
           $this->context,
           null,
@@ -58,17 +68,13 @@ class Context {
           null,
           0
       );
+
       $block = \gcc_jit_function_new_block($initFunc, 'initblock');
       foreach ($this->builtins as $builtin) {
           $block = $builtin->init($initFunc, $block);
       }
       \gcc_jit_block_end_with_void_return($block, null);
-      foreach ($this->builtins as $builtin) {
-          // this is a separate loop, since implementation may
-          // depend on global variables set during init()
-          // so this way, cross-builtin dependencies are honored
-          $builtin->implement();
-      }
+      
     }
 
     public function compileInPlace(): Result {
@@ -149,6 +155,13 @@ class Context {
             case 'char*':
                 return \gcc_jit_type_get_pointer(
                     $this->getTypeFromString('char')
+                );
+            case 'char[1]':
+                return \gcc_jit_context_new_array_type(
+                    $this->context,
+                    null,
+                    $this->getTypeFromString('char'),
+                    1
                 );
             default:
                 throw new \LogicException("Unsupported native type $type");
