@@ -3,14 +3,14 @@
 use PhpParser\ParserFactory;
 
 $rawCode = <<<'EOF'
-$i = 0;
-$a = "a";
-while ($i < 1000) {
-    $i++;
-    echo $a;
-}
-echo $a;
+$a = 0;
+for ($i = 0; $i < 1000000; $i++)
+    $a++;
+$thisisanotherlongname = 0;
+for ($thisisalongname = 0; $thisisalongname < 1000000; $thisisalongname++)
+    $thisisanotherlongname++;
 
+echo "test";
 EOF;
 $code = '<?php ' . $rawCode;
 
@@ -98,9 +98,11 @@ PHPCompiler\Backend\VM\VM::run($opcodes, $compileContext);
 //($opcodes->handler->callback)();
 $times['Run in Compiled'] = microtime(true);
 
-$opcodes->handler = null;
+unset($opcodes->handler);
+//echo "";
 echo "\n\nVM Output\n\n";
-PHPCompiler\Backend\VM\VM::run($opcodes, $compileContext);
+
+//PHPCompiler\Backend\VM\VM::run($opcodes, $compileContext);
 $times['Run in VM'] = microtime(true);
 
 echo "\n\nTimers:\n";

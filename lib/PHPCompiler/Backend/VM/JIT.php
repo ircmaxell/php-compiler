@@ -9,17 +9,17 @@
 
 namespace PHPCompiler\Backend\VM;
 
-use PHPTypes\Type;
 use PHPCfg\Operand;
 use PHPCfg\Op;
 use PHPCfg\Block as CfgBlock;
+use PHPTypes\Type;
+
 
 class JIT {
     private static int $functionNumber = 0;
 
     public static int $optimizationLevel = 3;
 
-    private static array $typeMap = [];
     private static array $valueMap = [];
     private static \SplObjectStorage $rvalueStorage;
     private static \SplObjectStorage $lvalueStorage;
@@ -31,127 +31,22 @@ class JIT {
     
     private static function init(): void {
         self::$functionNumber++;
-        self::$typeMap = [];
         self::$valueMap = [];
-        self::$stringConstant = [];
-        self::$intConstant = [];
         self::$rvalueStorage = new \SplObjectStorage;
         self::$lvalueStorage = new \SplObjectStorage;
         self::$paramStorage = new \SplObjectStorage;
         self::$blockStorage = new \SplObjectStorage;
-        self::$builtIns = [];
-    }
-
-    public static function getBuiltIn(\gcc_jit_context_ptr $context, string $name): \gcc_jit_function_ptr {
-        if (!isset(self::$builtIns[$name])) {
-            self::$builtIns[$name] = self::_getBuiltIn($context, $name);
-        }
-        return self::$builtIns[$name];
-    }
-
-    private static function _getBuiltIn(\gcc_jit_context_ptr $context, string $name): \gcc_jit_function_ptr {
-        switch ($name) {
-            case 'printf':
-                $param_format = \gcc_jit_context_new_param (
-                    $context, 
-                    null, 
-                    self::getTypeFromString($context, 'const char*'), 
-                    "format"
-                );
-                return gcc_jit_context_new_function(
-                    $context, 
-                    null,
-                    \GCC_JIT_FUNCTION_IMPORTED,
-                    self::getTypeFromString($context, 'int'),
-                    "printf",
-                    1, 
-                    \gcc_jit_param_ptr_ptr::fromArray(
-                        $param_format
-                    ),
-                    1
-                );
-        }
-    }
-
-    public static function getTypeFromType(\gcc_jit_context_ptr $context, Type $type): \gcc_jit_type_ptr {
-        switch ($type->type) {
-            case Type::TYPE_LONG:
-                return self::getTypeFromString($context, 'long long');
-            case Type::TYPE_STRING:
-                return self::getTypeFromString($context, 'char*');
-        }
-        var_dump($type->toString());
-    }
-
-    public static function getTypeFromString(\gcc_jit_context_ptr $context, string $type): \gcc_jit_type_ptr {
-        if (!isset(self::$typeMap[$type])) {
-            self::$typeMap[$type] = self::_getTypeFromString($context, $type);           
-        }
-        return self::$typeMap[$type];
-    }
-
-    public static function _getTypeFromString(\gcc_jit_context_ptr $context, string $type): \gcc_jit_type_ptr {
-        switch ($type) {
-            case 'void':
-                return gcc_jit_context_get_type (
-                    $context, 
-                    \GCC_JIT_TYPE_VOID
-                );
-            case 'const char*':
-                return gcc_jit_context_get_type (
-                    $context, 
-                    \GCC_JIT_TYPE_CONST_CHAR_PTR
-                );
-            case 'char*':
-                return \gcc_jit_type_get_pointer(self::getTypeFromString($context, 'char'));
-            case 'char':
-                return gcc_jit_context_get_type (
-                    $context, 
-                    \GCC_JIT_TYPE_CHAR
-                );
-            case 'int':
-                return gcc_jit_context_get_type (
-                    $context, 
-                    \GCC_JIT_TYPE_INT
-                );
-            case 'long long':
-                return gcc_jit_context_get_type (
-                    $context, 
-                    \GCC_JIT_TYPE_LONG_LONG
-                );
-        }
-    }
-
-    public static function constantFromInteger(\gcc_jit_context_ptr $context, int $value): \gcc_jit_rvalue_ptr {
-        if (!isset(self::$intConstant[$value])) {
-            self::$intConstant[$value] = \gcc_jit_context_new_rvalue_from_long(
-                $context,
-                self::getTypeFromString($context, 'long long'),
-                $value
-            );
-        }
-        return self::$intConstant[$value];
-    }
-
-    public static function constantFromString(\gcc_jit_context_ptr $context, string $string): \gcc_jit_rvalue_ptr {
-        if (!isset(self::$stringConstant[$string])) {
-            self::$stringConstant[$string] = \gcc_jit_context_new_string_literal(
-                $context,
-                $string
-            );
-        }
-        return self::$stringConstant[$string];
     }
 
     public static function compileBlock(Block $block) {
         self::init();
         $funcName = "internal_" . self::$functionNumber;
-        $context = \gcc_jit_context_acquire();
-        \gcc_jit_context_set_int_option(
-            $context,
+        $context = new JIT\Context(JIT\Builtin::LOAD_TYPE_EMBED);
+        $context->setOption(
             \GCC_JIT_INT_OPTION_OPTIMIZATION_LEVEL,
             self::$optimizationLevel
         );
+
         $callbackType = 'void(*)(';
         $callbackSep = '';
         $args = [];
@@ -160,30 +55,26 @@ class JIT {
         }
         $callbackType .= ')';
         $func = \gcc_jit_context_new_function(
-            $context, 
+            $context->context, 
             NULL,
             GCC_JIT_FUNCTION_EXPORTED,
-            self::getTypeFromString($context, 'void'),
+            $context->getTypeFromString('void'),
             $funcName,
             count($args), 
             \gcc_jit_param_ptr_ptr::fromArray(...$args),
             0
         );
         self::handlePhiNodes($context, $func, $block);
-        self::compileBlockInternal($block, $func, $context);
-        $result = \gcc_jit_context_compile($context);
-        \gcc_jit_context_release($context);
-        $void = \gcc_jit_result_get_code($result, $funcName);
-
-        $cb = \__gcc_jit_getCallable(
-            $callbackType, 
-            $void
-        );
-        $block->handler = new Handler($cb, $result);
+        self::compileBlockInternal($context, $func, $block);
+        $block->handler = $context->compileInPlace()->getHandler($funcName, $callbackType);
         self::init();
     }
 
-    private static function handlePhiNodes(\gcc_jit_context_ptr $context, \gcc_jit_function_ptr $func, Block $block): void {
+    private static function handlePhiNodes(
+        JIT\Context $context, 
+        \gcc_jit_function_ptr $func, 
+        Block $block
+    ): void {
         $seen = new \SplObjectStorage;
         $queue = [$block->orig];
         while (!empty($queue)) {
@@ -206,10 +97,17 @@ class JIT {
         }
     }
 
-    private static function registerPhi(\gcc_jit_context_ptr $context, \gcc_jit_function_ptr $func, Op\Phi $phi): void {
+    private static function registerPhi(
+        JIT\Context $context,
+        \gcc_jit_function_ptr $func, 
+        Op\Phi $phi
+    ): void {
         foreach ($phi->vars as $var) {
             if (self::$paramStorage->contains($var)) {
-                self::registerPhiLVal($phi, \gcc_jit_param_as_lvalue(self::$paramStorage[$var]));
+                self::registerPhiLVal(
+                    $phi, 
+                    \gcc_jit_param_as_lvalue(self::$paramStorage[$var])
+                );
                 return;
             }
         }
@@ -225,7 +123,11 @@ class JIT {
     }
 
     private static int $blockNumber = 0;
-    public function compileBlockInternal(Block $block, \gcc_jit_function_ptr $func, \gcc_jit_context_ptr $context): \gcc_jit_block_ptr {
+    public function compileBlockInternal(
+        JIT\Context $context, 
+        \gcc_jit_function_ptr $func,
+        Block $block
+    ): \gcc_jit_block_ptr {
         if (self::$blockStorage->contains($block)) {
             return self::$blockStorage[$block];
         }
@@ -252,9 +154,9 @@ class JIT {
                     break;  
                 case OpCode::TYPE_JUMP:
                     $newBlock = self::compileBlockInternal(
-                        $op->block1,
+                        $context,
                         $func,
-                        $context
+                        $op->block1
                     );
                     \gcc_jit_block_end_with_jump(
                         $gccBlock,
@@ -264,14 +166,14 @@ class JIT {
                     return $gccBlock;
                 case OpCode::TYPE_JUMPIF:
                     $if = self::compileBlockInternal(
-                        $op->block1,
+                        $context,
                         $func,
-                        $context
+                        $op->block1
                     );
                     $else = self::compileBlockInternal(
-                        $op->block2,
+                        $context,
                         $func,
-                        $context
+                        $op->block2
                     );
                     \gcc_jit_block_end_with_conditional(
                         $gccBlock,
@@ -286,12 +188,12 @@ class JIT {
                         $gccBlock,
                         null,
                         \gcc_jit_context_new_call(
-                            $context,
+                            $context->context,
                             null,
-                            self::getBuiltIn($context, 'printf'),
+                            $context->lookup('printf')->func,
                             2,
                             \gcc_jit_rvalue_ptr_ptr::fromArray(
-                                self::constantFromString($context, '%s'),
+                                $context->constantFromString('%s'),
                                 self::getRValue($context, $block, $op->arg1)
                             )
                         )
@@ -300,10 +202,10 @@ class JIT {
                 case OpCode::TYPE_PLUS:
                     $result = $block->getOperand($op->arg1);
                     self::setRValue(\gcc_jit_context_new_binary_op(
-                        $context,
+                        $context->context,
                         null,
                         \GCC_JIT_BINARY_OP_PLUS,
-                        self::getTypeFromType($context, $result->type),
+                        $context->getTypeFromType($result->type),
                         self::getRValue($context, $block, $op->arg2),
                         self::getRValue($context, $block, $op->arg3),
                     ), $result);
@@ -311,7 +213,7 @@ class JIT {
                 case OpCode::TYPE_SMALLER:
                     $result = $block->getOperand($op->arg1);
                     self::setRValue(\gcc_jit_context_new_comparison(
-                        $context,
+                        $context->context,
                         null,
                         \GCC_JIT_COMPARISON_LT,
                         self::getRValue($context, $block, $op->arg2),
@@ -326,16 +228,12 @@ class JIT {
         return $gccBlock;
     }
 
-    public static function isOpFromBlock(Op $op, CfgBlock $block): bool {
-        foreach ($block->children as $child) {
-            if ($child === $op) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    public static function getLValue(\gcc_jit_context_ptr $context, \gcc_jit_function_ptr $func, Block $block, int $scopePointer): \gcc_jit_lvalue_ptr {
+    public static function getLValue(
+        JIT\Context $context, 
+        \gcc_jit_function_ptr $func, 
+        Block $block, 
+        int $scopePointer
+    ): \gcc_jit_lvalue_ptr {
         $op = $block->getOperand($scopePointer);
         if (isset(self::$rvalueStorage[$op])) {
             throw new \LogicException("Cannot cast rvalue to literal for operand");
@@ -348,7 +246,7 @@ class JIT {
             self::$lvalueStorage[$op] = self::makeLValue($context, $func, $op);
             return self::$lvalueStorage[$op];
         }
-        var_dump(get_class($op));
+        throw new \LogicException("Could not extract lvalue for " . get_class($op));
     }
 
     public static function setRValue(\gcc_jit_rvalue_ptr $rvalue, Operand $op): void {
@@ -359,13 +257,17 @@ class JIT {
 
     public static int $lvalueCounter = 0;
 
-    public static function makeLValue(\gcc_jit_context_ptr $context, \gcc_jit_function_ptr $func, Operand $op): \gcc_jit_lvalue_ptr {
+    public static function makeLValue(
+        JIT\Context $context, 
+        \gcc_jit_function_ptr $func, 
+        Operand $op
+    ): \gcc_jit_lvalue_ptr {
         assert(!self::$lvalueStorage->contains($op));
         self::$lvalueCounter++;
         $lval = \gcc_jit_function_new_local(
             $func,
             null,
-            self::getTypeFromType($context, $op->type),
+            $context->getTypeFromType($op->type),
             "lvalue_" . self::$lvalueCounter
         );
         self::$lvalueStorage[$op] = $lval;
@@ -373,7 +275,11 @@ class JIT {
         return $lval;
     }
 
-    public static function getRValue(\gcc_jit_context_ptr $context, Block $block, int $scopePointer): \gcc_jit_rvalue_ptr {
+    public static function getRValue(
+        JIT\Context $context, 
+        Block $block, 
+        int $scopePointer
+    ): \gcc_jit_rvalue_ptr {
         $op = $block->getOperand($scopePointer);
         if (isset(self::$rvalueStorage[$op])) {
             return self::$rvalueStorage[$op];
@@ -386,11 +292,11 @@ class JIT {
             // Compile Constants
             switch ($op->type->type) {
                 case Type::TYPE_STRING:
-                    $const = self::constantFromString($context, $op->value);
+                    $const = $context->constantFromString($op->value);
                     self::$rvalueStorage[$op] = $const;
                     return $const;
                 case Type::TYPE_LONG:
-                    $const = self::constantFromInteger($context, $op->value);
+                    $const = $context->constantFromInteger($op->value);
                     self::$rvalueStorage[$op] = $const;
                     return $const;
             }
@@ -398,7 +304,7 @@ class JIT {
     }
 
     public static function compileArg(Operand $op): \gcc_jit_param_ptr {
-
+        throw new \LogicException("Block args not implemented yet");
     }
 
 

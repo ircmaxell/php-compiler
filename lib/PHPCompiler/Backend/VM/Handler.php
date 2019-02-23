@@ -13,15 +13,13 @@ namespace PHPCompiler\Backend\VM;
 class Handler {
 
     public $callback;
-    private \gcc_jit_result_ptr $result;
+    private JIT\Result $result;
 
-    public function __construct(callable $cb, \gcc_jit_result_ptr $result) {
+    public function __construct(callable $cb, JIT\Result $result) {
         $this->callback = $cb;
         $this->result = $result;
     }
 
-    public function __destruct() {
-        \gcc_jit_result_release($this->result);
-    }
+    
 
 }
