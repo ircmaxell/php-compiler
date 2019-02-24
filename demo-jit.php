@@ -3,14 +3,9 @@
 use PhpParser\ParserFactory;
 
 $rawCode = <<<'EOF'
-$a = 0;
-for ($i = 0; $i < 1000000; $i++)
-    $a++;
-$thisisanotherlongname = 0;
-for ($thisisalongname = 0; $thisisalongname < 1000000; $thisisalongname++)
-    $thisisanotherlongname++;
-
-echo "test";
+$a = "Hello";
+$a = "$a World\n";
+echo $a;
 EOF;
 $code = '<?php ' . $rawCode;
 
@@ -58,35 +53,33 @@ $traverser->addVisitor(new PHPCfg\Visitor\Simplifier);
 
 $typeReconstructor = new PHPTypes\TypeReconstructor;
 $dumper = new PHPCfg\Printer\Text();
-$optimizer = new PHPOptimizer\Optimizer;
+//$optimizer = new PHPOptimizer\Optimizer;
 $compiler = new PHPCompiler\Backend\VM\Compiler;
 $compileContext = new PHPCompiler\Backend\VM\Context;
 
 $times['Initialize Libraries'] = microtime(true);
 
-$block = $parser->parse($code, __FILE__);
+$script = $parser->parse($code, __FILE__);
 $times['Parse'] = microtime(true);
 
-$traverser->traverse($block);
+$traverser->traverse($script);
 $times['Traverse CFG'] = microtime(true);
 
-$state = new PHPTypes\State([$block]);
+$state = new PHPTypes\State($script);
 $typeReconstructor->resolve($state);
 $times['Reconstruct Types'] = microtime(true);
 
-$blocks = $state->blocks;
-
 //$blocks = $optimizer->optimize($blocks);
 
-$opcodes = $compiler->compile($blocks);
+$opcodes = $compiler->compile($script);
 $times['Compile'] = microtime(true);
 
 
-PHPCompiler\Backend\VM\JIT::compileBlock($opcodes);
+PHPCompiler\Backend\VM\JIT::compileBlock($opcodes, __DIR__ . '/result');
 $times['JIT Compile'] = microtime(true);
 
 
-echo $dumper->printCFG($blocks);
+echo $dumper->printScript($script);
 $times['Dump CFG'] = microtime(true);
 
 echo "\n\nEval Output:\n\n";

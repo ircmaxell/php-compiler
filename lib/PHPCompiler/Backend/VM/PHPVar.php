@@ -15,7 +15,7 @@ class PHPVar {
 
     public int $type = Type::TYPE_UNKNOWN;
 
-    public Str $string;
+    public string $string;
     public int $integer;
     public bool $bool;
 
@@ -38,12 +38,12 @@ class PHPVar {
         // TODO: convert other types
     }
 
-    public function toString(): Str {
+    public function toString(): string {
         switch ($this->type) {
             case Type::TYPE_STRING:
                 return $this->string;
             case Type::TYPE_LONG:
-                return Str::fromPrimitive((string) $this->integer);
+                return (string) $this->integer;
         }
         // error
         var_dump($this);

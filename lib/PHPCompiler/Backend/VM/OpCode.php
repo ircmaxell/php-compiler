@@ -18,6 +18,7 @@ class OpCode {
     const TYPE_JUMPIF = 6;
     const TYPE_PLUS = 7;
     const TYPE_SMALLER = 8;
+    const TYPE_RETURN_VOID = 9;
 
     public int $type;
     public ?int $arg1;

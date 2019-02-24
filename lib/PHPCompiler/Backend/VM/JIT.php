@@ -38,14 +38,19 @@ class JIT {
         self::$blockStorage = new \SplObjectStorage;
     }
 
-    public static function compileBlock(Block $block) {
+    public static function compileBlock(Block $block, ?string $debugfile = null) {
         self::init();
         $funcName = "internal_" . self::$functionNumber;
         $context = new JIT\Context(JIT\Builtin::LOAD_TYPE_EMBED);
-        $context->setOption(
-            \GCC_JIT_INT_OPTION_OPTIMIZATION_LEVEL,
-            self::$optimizationLevel
-        );
+        //gcc_jit_context_set_bool_option($context->context, GCC_JIT_BOOL_OPTION_DUMP_INITIAL_GIMPLE, 1);
+        $context->setDebug(true);
+        if (!is_null($debugfile)) {
+            $context->setDebugFile($debugfile);
+        }
+        // $context->setOption(
+        //     \GCC_JIT_INT_OPTION_OPTIMIZATION_LEVEL,
+        //     self::$optimizationLevel
+        // );
 
         $callbackType = 'void(*)(';
         $callbackSep = '';
@@ -57,7 +62,7 @@ class JIT {
         $func = \gcc_jit_context_new_function(
             $context->context, 
             NULL,
-            GCC_JIT_FUNCTION_EXPORTED,
+            \GCC_JIT_FUNCTION_EXPORTED,
             $context->getTypeFromString('void'),
             $funcName,
             count($args), 
@@ -100,6 +105,7 @@ class JIT {
     private static function registerPhi(
         JIT\Context $context,
         \gcc_jit_function_ptr $func, 
+        \gcc_jit_block_ptr $block,
         Op\Phi $phi
     ): void {
         foreach ($phi->vars as $var) {
@@ -111,7 +117,7 @@ class JIT {
                 return;
             }
         }
-        $lval = self::makeLValue($context, $func, $phi->result);
+        $lval = self::makeLValue($context, $func, $block, $phi->result);
         self::registerPhiLVal($phi, $lval);
     }
 
@@ -142,13 +148,13 @@ class JIT {
                     \gcc_jit_block_add_assignment(
                         $gccBlock,
                         null,
-                        self::getLValue($context, $func, $block, $op->arg1),
+                        self::getLValue($context, $func, $gccBlock, $block, $op->arg1),
                         $result
                     );
                     \gcc_jit_block_add_assignment(
                         $gccBlock,
                         null,
-                        self::getLValue($context, $func, $block, $op->arg2),
+                        self::getLValue($context, $func, $gccBlock, $block, $op->arg2),
                         $result
                     );
                     break;  
@@ -184,6 +190,8 @@ class JIT {
                     );
                     return $gccBlock;
                 case OpCode::TYPE_ECHO:
+                    $arg = self::getRValue($context, $block, $op->arg1);
+                    $length = $context->type->string->toSizeRValue($arg);
                     \gcc_jit_block_add_eval(
                         $gccBlock,
                         null,
@@ -191,10 +199,11 @@ class JIT {
                             $context->context,
                             null,
                             $context->lookupFunction('printf')->func,
-                            2,
+                            3,
                             \gcc_jit_rvalue_ptr_ptr::fromArray(
-                                $context->constantFromString('%s'),
-                                self::getRValue($context, $block, $op->arg1)
+                                $context->constantFromString('%.*s'),
+                                $length,
+                                $context->type->string->toValueRValue($arg)
                             )
                         )
                     );
@@ -220,30 +229,71 @@ class JIT {
                         self::getRValue($context, $block, $op->arg3),
                     ), $result);
                     break;
+                case OpCode::TYPE_RETURN_VOID:
+                    goto void_return;
+                case OpCode::TYPE_CONCAT:
+                    $result = self::getLValue($context, $func, $gccBlock, $block, $op->arg1);
+                    $left = self::getRValue($context, $block, $op->arg2);
+                    $right =
+                        self::getRValue($context, $block, $op->arg3);
+                    $context->refcount->delref($gccBlock, $result->asRValue());
+                    $leftLength = $context->type->string->toSizeRValue($left);
+                    $rightLength = $context->type->string->toSizeRValue($right);
+                    $context->type->string->allocate(
+                        $gccBlock, 
+                        $result, 
+                        $context->helper->binaryOp(
+                            \GCC_JIT_BINARY_OP_PLUS,
+                            'size_t',
+                            $leftLength,
+                            $rightLength
+                        )
+                    );
+                    $context->memory->memcpy(
+                        $gccBlock,
+                        $context->type->string->valuePtr($result->asRValue()),
+                        $context->type->string->toValueRValue($left),
+                        $leftLength
+                    );
+                    $context->memory->memcpy(
+                        $gccBlock,
+                        gcc_jit_lvalue_get_address(gcc_jit_context_new_array_access(
+                            $context->context,
+                            $context->location(),
+                            $context->type->string->valuePtr($result->asRValue()),
+                            $context->helper->cast($leftLength, 'size_t')
+                        ), $context->location()),
+                        $context->type->string->toValueRValue($right),
+                        $rightLength
+                    );
+
+                    break;
                 default:
                     throw new \LogicException("Unknown JIT opcode: ". $op->getType());
             }
         }
+void_return:
         \gcc_jit_block_end_with_void_return($gccBlock, null);
         return $gccBlock;
     }
 
     public static function getLValue(
         JIT\Context $context, 
-        \gcc_jit_function_ptr $func, 
+        \gcc_jit_function_ptr $func,
+        \gcc_jit_block_ptr $gccBlock, 
         Block $block, 
         int $scopePointer
     ): \gcc_jit_lvalue_ptr {
         $op = $block->getOperand($scopePointer);
-        if (isset(self::$rvalueStorage[$op])) {
-            throw new \LogicException("Cannot cast rvalue to literal for operand");
-        } elseif (isset(self::$lvalueStorage[$op])) {
+        if (isset(self::$lvalueStorage[$op])) {
             return self::$lvalueStorage[$op];
         } elseif (isset(self::$paramStorage[$op])) {
             return \gcc_jit_param_as_lvalue(self::$paramStorage[$op]);
+        } elseif (isset(self::$rvalueStorage[$op])) {
+            throw new \LogicException("Cannot cast rvalue to literal for operand");
         }
         if ($op instanceof Operand\Temporary) {
-            self::$lvalueStorage[$op] = self::makeLValue($context, $func, $op);
+            self::$lvalueStorage[$op] = self::makeLValue($context, $func, $gccBlock, $op);
             return self::$lvalueStorage[$op];
         }
         throw new \LogicException("Could not extract lvalue for " . get_class($op));
@@ -259,10 +309,13 @@ class JIT {
 
     public static function makeLValue(
         JIT\Context $context, 
-        \gcc_jit_function_ptr $func, 
+        \gcc_jit_function_ptr $func,
+        \gcc_jit_block_ptr $block, 
         Operand $op
     ): \gcc_jit_lvalue_ptr {
         assert(!self::$lvalueStorage->contains($op));
+        assert(!self::$rvalueStorage->contains($op));
+        assert(!is_null($op->type));
         self::$lvalueCounter++;
         $lval = \gcc_jit_function_new_local(
             $func,
@@ -272,11 +325,16 @@ class JIT {
         );
         self::$lvalueStorage[$op] = $lval;
         self::$rvalueStorage[$op] = \gcc_jit_lvalue_as_rvalue($lval);
+        if ($op->type->type === Type::TYPE_STRING) {
+            // initialize!!!
+            $context->type->string->allocate($block, $lval, $context->constantFromInteger(0, 'size_t'));
+        }
+
         return $lval;
     }
 
     public static function getRValue(
-        JIT\Context $context, 
+        JIT\Context $context,
         Block $block, 
         int $scopePointer
     ): \gcc_jit_rvalue_ptr {
@@ -292,7 +350,7 @@ class JIT {
             // Compile Constants
             switch ($op->type->type) {
                 case Type::TYPE_STRING:
-                    $const = $context->constantFromString($op->value);
+                    $const = $context->constantStringFromString($op->value);
                     self::$rvalueStorage[$op] = $const;
                     return $const;
                 case Type::TYPE_LONG:

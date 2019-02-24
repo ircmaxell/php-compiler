@@ -23,17 +23,15 @@ abstract class Builtin {
         $this->context = $context;
         $context->registerBuiltin($this);
         $this->loadType = $loadType;
-        $this->register();
     }
 
-    protected function register(): void {
+    public function register(): void {
     }
 
     public function implement(): void {
     }
 
-    public function init(\gcc_jit_function_ptr $func, \gcc_jit_block_ptr $block): \gcc_jit_block_ptr {
-        return $block;
+    public function initialize(): void {
     }
 
     protected function sizeof(\gcc_jit_type_ptr $type): \gcc_jit_rvalue_ptr {

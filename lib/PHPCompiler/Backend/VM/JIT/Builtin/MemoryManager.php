@@ -16,12 +16,36 @@ use PHPCompiler\Backend\VM\JIT;
 
 class MemoryManager extends Builtin {
 
-    protected function register(): void {
+    public function register(): void {
+        $this->context->registerFunction(
+            'memcpy',
+            $this->context->helper->createFunction(
+                \GCC_JIT_FUNCTION_IMPORTED,
+                'memcpy',
+                'int',
+                false,
+                'char*',
+                'const char*',
+                'size_t'
+            )
+        );
+        $this->context->registerFunction(
+            'memset',
+            $this->context->helper->createFunction(
+                \GCC_JIT_FUNCTION_IMPORTED,
+                'memset',
+                'int',
+                false,
+                'char*',
+                'char',
+                'size_t'
+            )
+        );
         $this->context->registerFunction(
             'efree',
             $this->context->helper->createFunction(
                 \GCC_JIT_FUNCTION_IMPORTED,
-                'efree',
+                '_efree',
                 'void',
                 false,
                 'void*',
@@ -33,9 +57,9 @@ class MemoryManager extends Builtin {
             $this->context->helper->createFunction(
                 \GCC_JIT_FUNCTION_IMPORTED,
                 '_emalloc',
-                'void',
-                false,
                 'void*',
+                false,
+                'size_t',
                 ...$this->expandDebugDecl()
             )
         );
@@ -56,14 +80,27 @@ class MemoryManager extends Builtin {
     private function expandDebugArgs(): array {
         if (PHP_DEBUG) {
             return [
-                // TODO: convert to null pointers
-                null, 
-                null, 
-                null, 
-                null
+                $this->context->constantFromString('jit'), 
+                $this->context->helper->cast(
+                    $this->context->constantFromInteger(2),
+                    'uint32_t'
+                ), 
+                $this->context->constantFromString('jit'), 
+                $this->context->helper->cast(
+                    $this->context->constantFromInteger(2),
+                    'uint32_t'
+                ) 
             ];
         }
         return [];
+    }
+
+    public function efree(\gcc_jit_rvalue_ptr $ptr): \gcc_jit_rvalue_ptr {
+        return $this->context->helper->call(
+            'efree', 
+            $this->context->helper->cast($ptr, 'void*'),
+            ...$this->expandDebugArgs()
+        );
     }
 
     public function emalloc(\gcc_jit_rvalue_ptr $size, \gcc_jit_type_ptr $type): \gcc_jit_rvalue_ptr {
@@ -74,6 +111,34 @@ class MemoryManager extends Builtin {
             $void,
             $type
         );
+    }
+
+    public function memcpy(
+        \gcc_jit_block_ptr $block,
+        \gcc_jit_rvalue_ptr $to,
+        \gcc_jit_rvalue_ptr $from,
+        \gcc_jit_rvalue_ptr $size
+    ): void {
+        $this->context->helper->eval($block, $this->context->helper->call(
+            'memcpy',
+            $to,
+            $from,
+            $size
+        ));
+    }
+
+    public function memset(
+        \gcc_jit_block_ptr $block,
+        \gcc_jit_rvalue_ptr $dest,
+        \gcc_jit_rvalue_ptr $value,
+        \gcc_jit_rvalue_ptr $size
+    ): void {
+        $this->context->helper->eval($block, $this->context->helper->call(
+            'memset',
+            $dest,
+            $value,
+            $size
+        ));
     }
 
 }

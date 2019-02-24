@@ -14,9 +14,11 @@ use PHPCompiler\Backend\VM\Handler;
 
 class Result {
     private \gcc_jit_result_ptr $result;
+    private int $loadType;
 
     public function __construct(\gcc_jit_result_ptr $result, int $loadType) {
         $this->result = $result;
+        $this->loadType = $loadType;
         if ($loadType !== Builtin::LOAD_TYPE_IMPORT) {
             // Call the initialization function!
             $cb = $this->getCallable('__init__', 'void(*)()');
@@ -25,6 +27,11 @@ class Result {
     }
 
     public function __destruct() {
+        if ($this->loadType !== Builtin::LOAD_TYPE_IMPORT) {
+            // Call the initialization function!
+            $cb = $this->getCallable('__shutdown__', 'void(*)()');
+            $cb();
+        }
         \gcc_jit_result_release($this->result);
     }
 

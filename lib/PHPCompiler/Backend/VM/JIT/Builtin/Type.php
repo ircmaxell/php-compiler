@@ -18,8 +18,9 @@ class Type extends Builtin {
 
     public Type\String_ $string;
 
-    protected function register(): void {
+    public function register(): void {
         $this->string = new Type\String_($this->context, $this->loadType);
+        $this->string->register();
     }
 
 }

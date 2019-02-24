@@ -63,12 +63,10 @@ restart:
                     $arg2 = $frame->scope[$op->arg2]->toString();
                     $arg3 = $frame->scope[$op->arg3]->toString();
                     $arg1->type = Type::TYPE_STRING;
-                    $arg1->string = Str::allocate($arg2->length + $arg3->length);
-                    Str::memcpy($arg1->string, $arg2, 0);
-                    Str::memcpy($arg1->string, $arg3, $arg2->length);
+                    $arg1->string = $arg2->string . $arg3->string;
                     break;
                 case OpCode::TYPE_ECHO:
-                    echo $frame->scope[$op->arg1]->toString()->value;
+                    echo $frame->scope[$op->arg1]->toString();
                     break;
                 case OpCode::TYPE_JUMP:
                     $frame = $op->block1->getFrame(
@@ -98,6 +96,9 @@ restart:
                     }
                     $frame->scope[$op->arg1]->copyFrom($value);
                     break;
+                case OpCode::TYPE_RETURN_VOID:
+                    // TODO
+                    return SUCCESS;
                 default:
                     throw new \LogicException("VM OpCode Not Implemented: " . $op->getType());
             }

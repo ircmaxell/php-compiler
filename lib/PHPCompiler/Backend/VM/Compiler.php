@@ -12,23 +12,26 @@ namespace PHPCompiler\Backend\VM;
 use PHPCfg\Op;
 use PHPCfg\Block as CfgBlock;
 use PHPCfg\Operand;
+use PHPCfg\Script;
 use PHPTypes\Type;
 
 class Compiler {
 
     protected ?\SplObjectStorage $seen;
 
-    public function compile(array $blocks): ?Block {
+    public function compile(Script $script): ?Block {
+
         $this->seen = new \SplObjectStorage;
-        $firstBlock = null;
-        foreach ($blocks as $block) {
-            $result = $this->compileCfgBlock($block);
-            if (is_null($firstBlock)) {
-                $firstBlock = $result;
-            }
-        }
+        $main = $this->compileCfgBlock($script->main->cfg);
+
+        // foreach ($script->functions as $func) {
+        //     $result = $this->compileCfgBlock($func->cfg);
+        //     if (is_null($firstBlock)) {
+        //         $firstBlock = $result;
+        //     }
+        // }
         $this->seen = null;
-        return $firstBlock;
+        return $main;
     }
 
     protected function compileCfgBlock(CfgBlock $block): Block {
@@ -170,7 +173,7 @@ class Compiler {
             $return = new PHPVar($operand->type->type);
             switch ($operand->type->type) {
                 case Type::TYPE_STRING:
-                    $return->string = Str::fromPrimitive($operand->value);
+                    $return->string = $operand->value;
                     break;
                 case Type::TYPE_LONG:
                     $return->integer = $operand->value;
@@ -193,6 +196,13 @@ class Compiler {
                     OpCode::TYPE_ECHO,
                     $var
                 );
+            case 'Terminal_Return':
+                if (is_null($terminal->expr)) {
+                    return new OpCode(
+                        OpCode::TYPE_RETURN_VOID
+                    );    
+                }
+                var_dump($terminal->expr);
             default:
                 throw new \LogicException("Unknown Terminal Type: " . $terminal->getType());
         }

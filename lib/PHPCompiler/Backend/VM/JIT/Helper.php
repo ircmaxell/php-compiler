@@ -21,16 +21,16 @@ class Helper {
     }
 
     public function eval(\gcc_jit_block_ptr $block, \gcc_jit_rvalue_ptr $value): void {
-        \gcc_jit_block_add_eval($block, null, $value);
+        \gcc_jit_block_add_eval($block, $this->context->location(), $value);
     }
 
     public function call(
         string $func, 
-        \gcc_jit_rvalue_ptr ...$params
+        ?\gcc_jit_rvalue_ptr ...$params
     ): \gcc_jit_rvalue_ptr {
         return \gcc_jit_context_new_call(
             $this->context->context,
-            null,
+            $this->context->location(),
             $this->context->lookupFunction($func)->func,
             count($params),
             \gcc_jit_rvalue_ptr_ptr::fromArray(
@@ -42,7 +42,7 @@ class Helper {
     public function cast(\gcc_jit_rvalue_ptr $from, string $to): \gcc_jit_rvalue_ptr {
         return \gcc_jit_context_new_cast(
             $this->context->context,
-            null,
+            $this->context->location(),
             $from,
             $this->context->getTypeFromString($to)
         );
@@ -56,7 +56,7 @@ class Helper {
     ): \gcc_jit_rvalue_ptr {
         return \gcc_jit_context_new_binary_op(
             $this->context->context, 
-            NULL, 
+            $this->context->location(), 
             $op, 
             $this->context->getTypeFromString($type), 
             $left,
@@ -101,7 +101,7 @@ class Helper {
             $funcName,
             \gcc_jit_context_new_function(
                 $this->context->context, 
-                null,
+                $this->context->location(),
                 $type,
                 $gccReturnType,
                 $funcName,
@@ -123,7 +123,7 @@ class Helper {
     ): void {
         \gcc_jit_block_add_assignment(
             $block,
-            null,
+            $this->context->location(),
             $result,
             $value
         );
@@ -132,7 +132,7 @@ class Helper {
     public function createField(string $name, string $type): \gcc_jit_field_ptr {
         return \gcc_jit_context_new_field(
             $this->context->context,
-            null,
+            $this->context->location(),
             $this->context->getTypeFromString($type),
             $name
         );
