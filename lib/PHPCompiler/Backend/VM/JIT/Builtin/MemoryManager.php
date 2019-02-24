@@ -122,7 +122,7 @@ class MemoryManager extends Builtin {
         $this->context->helper->eval($block, $this->context->helper->call(
             'memcpy',
             $to,
-            $from,
+            $this->context->helper->cast($from, 'const char*'),
             $size
         ));
     }

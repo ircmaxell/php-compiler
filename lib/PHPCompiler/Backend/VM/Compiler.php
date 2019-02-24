@@ -79,7 +79,9 @@ class Compiler {
             $result = $this->compileOperand($op->list[0], $block, true);
             while ($pointer < $total) {
                 $right = $this->compileOperand($op->list[$pointer++], $block, true);
-                $tmpResult = $this->compileOperand(new Operand\Temporary, $block, false);
+                $tmpOp = new Operand\Temporary($op->result);
+                $tmpOp->type = $op->result->type;
+                $tmpResult = $this->compileOperand($tmpOp, $block, false);
                 $block->addOpCode(new OpCode(
                     OpCode::TYPE_CONCAT,
                     $tmpResult,

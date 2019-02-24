@@ -3,8 +3,10 @@
 use PhpParser\ParserFactory;
 
 $rawCode = <<<'EOF'
-$a = "Hello";
-$a = "$a World\n";
+$a = "";
+for ($i = 0; $i < 10; $i++) {
+    $a = $a . "a";
+}
 echo $a;
 EOF;
 $code = '<?php ' . $rawCode;
@@ -69,6 +71,9 @@ $state = new PHPTypes\State($script);
 $typeReconstructor->resolve($state);
 $times['Reconstruct Types'] = microtime(true);
 
+echo $dumper->printScript($script);
+$times['Dump CFG'] = microtime(true);
+
 //$blocks = $optimizer->optimize($blocks);
 
 $opcodes = $compiler->compile($script);
@@ -77,10 +82,6 @@ $times['Compile'] = microtime(true);
 
 PHPCompiler\Backend\VM\JIT::compileBlock($opcodes, __DIR__ . '/result');
 $times['JIT Compile'] = microtime(true);
-
-
-echo $dumper->printScript($script);
-$times['Dump CFG'] = microtime(true);
 
 echo "\n\nEval Output:\n\n";
 eval($rawCode);
@@ -91,6 +92,7 @@ PHPCompiler\Backend\VM\VM::run($opcodes, $compileContext);
 //($opcodes->handler->callback)();
 $times['Run in Compiled'] = microtime(true);
 
+flush();
 unset($opcodes->handler);
 //echo "";
 echo "\n\nVM Output\n\n";

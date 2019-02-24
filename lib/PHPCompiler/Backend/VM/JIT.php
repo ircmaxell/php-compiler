@@ -69,7 +69,6 @@ class JIT {
             \gcc_jit_param_ptr_ptr::fromArray(...$args),
             0
         );
-        self::handlePhiNodes($context, $func, $block);
         self::compileBlockInternal($context, $func, $block);
         $block->handler = $context->compileInPlace()->getHandler($funcName, $callbackType);
         self::init();
@@ -78,6 +77,7 @@ class JIT {
     private static function handlePhiNodes(
         JIT\Context $context, 
         \gcc_jit_function_ptr $func, 
+        \gcc_jit_block_ptr $gccBlock,
         Block $block
     ): void {
         $seen = new \SplObjectStorage;
@@ -90,7 +90,7 @@ class JIT {
 
             $seen->attach($cfgBlock);
             foreach ($cfgBlock->phi as $phi) {
-                self::registerPhi($context, $func, $phi);
+                self::registerPhi($context, $func, $gccBlock, $phi);
             }
             $jump = end($cfgBlock->children);
             if ($jump instanceof Op\Stmt\Jump) {
@@ -140,6 +140,10 @@ class JIT {
         self::$blockNumber++;
         $gccBlock = \gcc_jit_function_new_block($func, 'block_' . self::$blockNumber);
         self::$blockStorage[$block] = $gccBlock;
+        if (self::$blockNumber === 1) {
+            //Todo: this is wrong, it should be run for the first block in each function, not the first overall
+            self::handlePhiNodes($context, $func, $gccBlock, $block);
+        }
 
         foreach ($block->opCodes as $op) {
             switch ($op->type) {
@@ -293,6 +297,9 @@ void_return:
             throw new \LogicException("Cannot cast rvalue to literal for operand");
         }
         if ($op instanceof Operand\Temporary) {
+            if (is_null($op->type)) {
+                var_dump($block);
+            }
             self::$lvalueStorage[$op] = self::makeLValue($context, $func, $gccBlock, $op);
             return self::$lvalueStorage[$op];
         }
@@ -316,6 +323,9 @@ void_return:
         assert(!self::$lvalueStorage->contains($op));
         assert(!self::$rvalueStorage->contains($op));
         assert(!is_null($op->type));
+        if (is_null($op->type)) {
+            debug_print_backtrace(DEBUG_BACKTRACE_IGNORE_ARGS);
+        }
         self::$lvalueCounter++;
         $lval = \gcc_jit_function_new_local(
             $func,

@@ -169,11 +169,6 @@ class String_ extends Type {
             $this->size,
             $this->sizeof($this->context->getTypeFromString('__string__'))
         );
-        $this->context->helper->eval($this->context->initBlock, $this->context->helper->call(
-            'printf', 
-            $this->context->constantFromString("String Size: %d\n"),
-            $this->size->asRValue()
-        ));
     }
 
     private static $constId = 0;
