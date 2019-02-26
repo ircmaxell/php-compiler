@@ -131,11 +131,11 @@ class Context {
             if (!is_null($this->debugFile)) {
                 gcc_jit_context_dump_reproducer_to_file(
                     $this->context,
-                    $this->debugFile . '.reproduce'
+                    $this->debugFile . '.reproduce.c'
                 );
                 \gcc_jit_context_dump_to_file(
                     $this->context,
-                    $this->debugFile . '.debug',
+                    $this->debugFile . '.debug.c',
                     1
                 );
             }
