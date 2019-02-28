@@ -10,7 +10,7 @@
 namespace PHPCompiler\Backend\VM\JIT;
 
 use PHPCompiler\Backend\VM\Handler;
-
+use PHPCompiler\Backend\VM\Block;
 use PHPTypes\Type;
 
 class Context {
@@ -305,6 +305,15 @@ class Context {
             ));
         }
         return $this->stringConstantMap[$string]->asRValue();
+    }
+
+    public function freeDeadVariables(
+        \gcc_jit_function_ptr $func,
+        \gcc_jit_block_ptr $gccBlock,
+        Block $block
+    ): void {
+        return;
+        var_dump($block->orig->deadOperands);
     }
 
 }

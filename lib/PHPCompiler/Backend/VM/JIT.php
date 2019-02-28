@@ -168,6 +168,7 @@ class JIT {
                         $func,
                         $op->block1
                     );
+                    $context->freeDeadVariables($func, $gccBlock, $block);
                     \gcc_jit_block_end_with_jump(
                         $gccBlock,
                         null,
@@ -185,6 +186,7 @@ class JIT {
                         $func,
                         $op->block2
                     );
+                    $context->freeDeadVariables($func, $gccBlock, $block);
                     \gcc_jit_block_end_with_conditional(
                         $gccBlock,
                         null,
@@ -234,6 +236,7 @@ class JIT {
                     ), $result);
                     break;
                 case OpCode::TYPE_RETURN_VOID:
+                    $context->freeDeadVariables($func, $gccBlock, $block);
                     goto void_return;
                 case OpCode::TYPE_CONCAT:
                     $result = self::getLValue($context, $func, $gccBlock, $block, $op->arg1);
