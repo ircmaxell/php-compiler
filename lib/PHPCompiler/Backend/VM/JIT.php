@@ -20,27 +20,12 @@ class JIT {
 
     public static int $optimizationLevel = 3;
 
-    private static array $valueMap = [];
-    private static \SplObjectStorage $rvalueStorage;
-    private static \SplObjectStorage $lvalueStorage;
-    private static \SplObjectStorage $paramStorage;
-    private static \SplObjectStorage $blockStorage;
+
     private static array $stringConstant = [];
     private static array $intConstant = [];
     private static array $builtIns = [];
-    
-    private static function init(): void {
-        self::$functionNumber++;
-        self::$valueMap = [];
-        self::$rvalueStorage = new \SplObjectStorage;
-        self::$lvalueStorage = new \SplObjectStorage;
-        self::$paramStorage = new \SplObjectStorage;
-        self::$blockStorage = new \SplObjectStorage;
-    }
 
-    public static function compileBlock(Block $block, ?string $debugfile = null) {
-        self::init();
-        $funcName = "internal_" . self::$functionNumber;
+    public static function compile(Block $block, ?string $debugfile = null) {
         $context = new JIT\Context(JIT\Builtin::LOAD_TYPE_EMBED);
         gcc_jit_context_set_bool_option($context->context, GCC_JIT_BOOL_OPTION_DUMP_INITIAL_GIMPLE, 1);
         $context->setDebug(true);
@@ -52,13 +37,44 @@ class JIT {
             self::$optimizationLevel
         );
 
-        $callbackType = 'void(*)(';
-        $callbackSep = '';
+        self::compileBlock($context, $block);
+        $context->compileInPlace();
+    }
+
+
+    private static function compileBlock(JIT\Context $context, Block $block): \gcc_jit_function_ptr {
+        $funcName = "internal_" . (++self::$functionNumber);
+        
         $args = [];
-        foreach ($block->args as $arg) {
-            $args[] = self::compileArg($arg);
+        $argVars = [];
+        if (!is_null($block->func)) {
+            $callbackType = '';
+            if ($block->func->returnType instanceof Op\Type\Literal) {
+                if ($block->func->returnType->name !== 'void') {
+                    throw new \LogicException("Non-void return types not supported yet");
+                }
+                $callbackType .= "void";
+            }
+            $callbackType .= '(*)(';
+            $callbackSep = '';
+            foreach ($block->func->params as $idx => $param) {
+                $type = $context->getTypeFromType($param->result->type);
+                $callbackType .= $callbackSep . $context->getStringFromType($type);
+                $callbackSep = ', ';
+                $args[] = $arg = \gcc_jit_context_new_param($context->context, $context->location(), $type, 'param_' . $idx);
+                $argVars[] = new JIT\Variable(
+                    $context,
+                    JIT\Variable::getTypeFromType($param->result->type),
+                    JIT\Variable::KIND_VARIABLE,
+                    $arg->asRValue(),
+                    $arg->asLValue()
+                );
+            }
+            $callbackType .= ')';
+        } else {
+            $callbackType = 'void(*)()';
         }
-        $callbackType .= ')';
+
         $func = \gcc_jit_context_new_function(
             $context->context, 
             NULL,
@@ -69,23 +85,27 @@ class JIT {
             \gcc_jit_param_ptr_ptr::fromArray(...$args),
             0
         );
-        self::compileBlockInternal($context, $func, $block);
-        $block->handler = $context->compileInPlace()->getHandler($funcName, $callbackType);
-        self::init();
+        self::compileBlockInternal($context, $func, $block, ...$argVars);
+        if (empty($args)) {
+            $context->addExport($funcName, $callbackType, $block);
+        }
+
+        return $func;
     }
 
     private static int $blockNumber = 0;
-    public function compileBlockInternal(
+    private function compileBlockInternal(
         JIT\Context $context, 
         \gcc_jit_function_ptr $func,
-        Block $block
+        Block $block,
+        JIT\Variable ...$args
     ): \gcc_jit_block_ptr {
-        if (self::$blockStorage->contains($block)) {
-            return self::$blockStorage[$block];
+        if ($context->scope->blockStorage->contains($block)) {
+            return $context->scope->blockStorage[$block];
         }
-        self::$blockNumber++;
+        $context->scope->blockNumber++;
         $gccBlock = \gcc_jit_function_new_block($func, 'block_' . self::$blockNumber);
-        self::$blockStorage[$block] = $gccBlock;
+        $context->scope->blockStorage[$block] = $gccBlock;
         // Handle hoisted variables
         foreach ($block->orig->hoistedOperands as $operand) {
             $var = $context->makeVariableFromOp($func, $gccBlock, $block, $operand);
@@ -93,6 +113,9 @@ class JIT {
 
         foreach ($block->opCodes as $op) {
             switch ($op->type) {
+                case OpCode::TYPE_ARG_RECV:
+                    $context->helper->assignOperand($gccBlock, $block->getOperand($op->arg1), $args[$op->arg2]);
+                    break;
                 case OpCode::TYPE_ASSIGN:
                     $value = $context->getVariableFromOp($block->getOperand($op->arg3));
                     $context->helper->assignOperand($gccBlock, $block->getOperand($op->arg2), $value);
@@ -141,7 +164,7 @@ class JIT {
                     );
                     break;
                 case OpCode::TYPE_JUMP:
-                    $newBlock = self::compileBlockInternal($context, $func, $op->block1);
+                    $newBlock = self::compileBlockInternal($context, $func, $op->block1, ...$args);
                     $context->freeDeadVariables($func, $gccBlock, $block);
                     \gcc_jit_block_end_with_jump(
                         $gccBlock,
@@ -150,8 +173,8 @@ class JIT {
                     );
                     return $gccBlock;
                 case OpCode::TYPE_JUMPIF:
-                    $if = self::compileBlockInternal($context, $func, $op->block1);
-                    $else = self::compileBlockInternal($context, $func, $op->block2);
+                    $if = self::compileBlockInternal($context, $func, $op->block1, ...$args);
+                    $else = self::compileBlockInternal($context, $func, $op->block2, ...$args);
                     $context->freeDeadVariables($func, $gccBlock, $block);
                     \gcc_jit_block_end_with_conditional(
                         $gccBlock,
@@ -165,6 +188,40 @@ class JIT {
                     $context->freeDeadVariables($func, $gccBlock, $block);
                     goto void_return;
                     break;
+                case OpCode::TYPE_FUNCDEF:
+                    $nameOp = $block->getOperand($op->arg1);
+                    assert($nameOp instanceof Operand\Literal);
+                    $context->pushScope();
+                    $internal = self::compileBlock($context, $op->block1);
+                    $context->functions[strtolower($nameOp->value)] = $internal;
+                    $context->popScope();
+                    break;
+                case OpCode::TYPE_FUNCCALL_INIT:
+                    $nameOp = $block->getOperand($op->arg1);
+                    if (!$nameOp instanceof Operand\Literal) {
+                        throw new \LogicException("Variable function calls not yet supported");
+                    }
+                    $lcname = strtolower($nameOp->value);
+                    if (!isset($context->functions[$lcname])) {
+                        throw new \RuntimeException("Call to undefined function $lcname");
+                    }
+                    $context->scope->toCall = $context->functions[$lcname];
+                    $context->scope->args = [];
+                    break;
+                case OpCode::TYPE_ARG_SEND:
+                    $context->scope->args[] = $context->getVariableFromOp($block->getOperand($op->arg1))->rvalue;
+                    break;
+                case OpCode::TYPE_FUNCCALL_EXEC_NORETURN:
+                    $context->helper->eval($gccBlock,
+                        \gcc_jit_context_new_call(
+                            $context->context,
+                            $context->location(),
+                            $context->scope->toCall,
+                            count($context->scope->args),
+                            \gcc_jit_rvalue_ptr_ptr::fromArray(...$context->scope->args)
+                        )
+                    );
+                    break;
                 default:
                     throw new \LogicException("Unknown JIT opcode: ". $op->getType());
             }
@@ -174,7 +231,7 @@ void_return:
         return $gccBlock;
     }
 
-    public static function compileArg(Operand $op): \gcc_jit_param_ptr {
+    private static function compileArg(Operand $op): \gcc_jit_param_ptr {
         throw new \LogicException("Block args not implemented yet");
     }
 

@@ -30,9 +30,8 @@ restart:
             goto nextframe;
         }
 
-        $pos = 0;
-        while ($pos < $frame->block->nOpCodes) {
-            $op = $frame->block->opCodes[$pos++];
+        while ($frame->pos < $frame->block->nOpCodes) {
+            $op = $frame->block->opCodes[$frame->pos++];
             switch ($op->type) {
                 case OpCode::TYPE_ASSIGN:
                     $arg1 = $frame->scope[$op->arg1];
@@ -60,7 +59,7 @@ restart:
                     $arg2 = $frame->scope[$op->arg2]->toString();
                     $arg3 = $frame->scope[$op->arg3]->toString();
                     $arg1->type = Type::TYPE_STRING;
-                    $arg1->string = $arg2->string . $arg3->string;
+                    $arg1->string = $arg2 . $arg3;
                     break;
                 case OpCode::TYPE_ECHO:
                     echo $frame->scope[$op->arg1]->toString();
@@ -95,7 +94,38 @@ restart:
                     break;
                 case OpCode::TYPE_RETURN_VOID:
                     // TODO
-                    return SUCCESS;
+                    goto nextframe;
+                case OpCode::TYPE_FUNCDEF:
+                    $name = $frame->scope[$op->arg1]->toString();
+                    $lcname = strtolower($name);
+                    if (isset($context->functions[$lcname])) {
+                        throw new \LogicException("Duplicate function definition for $lcname()");
+                    }
+                    $context->functions[$lcname] = $op->block1;
+                    break;
+                case OpCode::TYPE_FUNCCALL_INIT:
+                    $name = $frame->scope[$op->arg1]->toString();
+                    $lcname = strtolower($name);
+                    if (!isset($context->functions[$lcname])) {
+                        throw new \LogicException("Call to undefined function $lcname()");
+                    }
+                    $frame->call = $context->functions[$lcname];
+                    $frame->callArgs = [];
+                    break;
+                case OpCode::TYPE_ARG_SEND:
+                    $frame->callArgs[] = $frame->scope[$op->arg1];
+                    break;
+                case OpCode::TYPE_FUNCCALL_EXEC_NORETURN:
+                    $new = $frame->call->getFrame($context);
+                    $new->calledArgs = $frame->callArgs;
+                    $context->push($frame); // save the frame
+                    $frame = $new;
+                    goto restart;
+                case OpCode::TYPE_ARG_RECV:
+                    // Todo: do type checks and transformations
+                    $arg1 = $frame->scope[$op->arg1];
+                    $arg1->copyFrom($frame->calledArgs[$op->arg2]);
+                    break;
                 default:
                     throw new \LogicException("VM OpCode Not Implemented: " . $op->getType());
             }

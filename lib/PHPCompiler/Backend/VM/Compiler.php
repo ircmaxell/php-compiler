@@ -9,6 +9,7 @@
 
 namespace PHPCompiler\Backend\VM;
 
+use PHPCfg\Func;
 use PHPCfg\Op;
 use PHPCfg\Block as CfgBlock;
 use PHPCfg\Operand;
@@ -18,40 +19,50 @@ use PHPTypes\Type;
 class Compiler {
 
     protected ?\SplObjectStorage $seen;
+    protected ?\SplObjectStorage $funcs;
 
     public function compile(Script $script): ?Block {
-
         $this->seen = new \SplObjectStorage;
+
         $main = $this->compileCfgBlock($script->main->cfg);
 
-        // foreach ($script->functions as $func) {
-        //     $result = $this->compileCfgBlock($func->cfg);
-        //     if (is_null($firstBlock)) {
-        //         $firstBlock = $result;
-        //     }
-        // }
         $this->seen = null;
         return $main;
     }
 
-    protected function compileCfgBlock(CfgBlock $block): Block {
+    protected function compileCfgBlock(CfgBlock $block, array $params = []): Block {
         if (!$this->seen->contains($block)) {
             $this->seen[$block] = $new = new Block($block);
+            $paramIdx = 0;
+            foreach ($params as $param) {
+                $new->addOpCode($this->compileParam($param, $new, $paramIdx++));                
+            }
             $this->compileBlock($new);
         }
         return $this->seen[$block];
     }
 
     protected function compileBlock(Block $block) {
+        // First hoist functions and class definitions
         foreach ($block->orig->children as $child) {
             switch (get_class($child)) {
                 case Op\Stmt\Function_::class:
-                    $block->addOpCode(...$this->compileFunction($child));
+                    $block->addOpCode($this->compileFunction($child, $block));
                     break;
                 case Op\Stmt\Class_::class:
                 case Op\Stmt\Interface_::class:
                 case Op\Stmt\Trait_::class:
-                    $block->addOpCode(...$this->compileClassLike($child));
+                    $block->addOpCode(...$this->compileClassLike($child, $block));
+                    break;
+            }
+        }
+
+        foreach ($block->orig->children as $child) {
+            switch (get_class($child)) {
+                case Op\Stmt\Function_::class:
+                case Op\Stmt\Class_::class:
+                case Op\Stmt\Interface_::class:
+                case Op\Stmt\Trait_::class:
                     break;
                 default:
                     $this->compileOp($child, $block);
@@ -59,15 +70,33 @@ class Compiler {
         }
     }
 
-    protected function compileFunction(Op\Stmt\Function_ $func) {
-
-        var_dump($func);
-        die();
+    protected function compileParam(Op\Expr\Param $param, Block $block, int $paramIdx): OpCode {
+        assert(false === $param->byRef);
+        assert(false === $param->variadic);
+        assert(null === $param->defaultBlock);
+        return new OpCode(
+            OpCode::TYPE_ARG_RECV,
+            $this->compileOperand($param->result, $block, false),
+            $paramIdx
+        );
     }
 
-    protected function compileClass(Op\Stmt\Class_ $class) {
+    protected function compileFunction(Op\Stmt\Function_ $function, Block $block): OpCode {
+        $funcBlock = $this->compileCfgBlock($function->func->cfg, $function->func->params);
+        $funcBlock->func = $function->func;
+        $operand = new Operand\Literal($function->func->name);
+        $operand->type = Type::string();
+        $return = new OpCode(
+            OpCode::TYPE_FUNCDEF,
+            $this->compileOperand($operand, $block, true)
+        );
+        $return->block1 = $funcBlock;
+        return $return;
+    }
+
+    protected function compileClass(Op\Stmt\Class_ $class, Block $block) {
         var_dump($class);
-        die();
+        throw new \LogicException("Not implemented: class definition support");
     }
 
     protected function compileOp(Op $op, Block $block) {
@@ -93,7 +122,7 @@ class Compiler {
                 ));
             }
         } elseif ($op instanceof Op\Expr) {
-            $block->addOpCode($this->compileExpr($op, $block));
+            $block->addOpCode(...$this->compileExpr($op, $block));
         } elseif ($op instanceof Op\Stmt) {
             $this->compileStmt($op, $block);
         } elseif ($op instanceof Op\Terminal) {
@@ -132,34 +161,59 @@ class Compiler {
         throw new \LogicException("Unknown BinaryOp Type: " . $expr->getType());
     }
 
-    protected function compileExpr(Op\Expr $expr, Block $block): OpCode {
+    protected function compileExpr(Op\Expr $expr, Block $block): array {
         if ($expr instanceof Op\Expr\BinaryOp) {
-            return new OpCode(
+            return [new OpCode(
                 $this->getOpCodeTypeFromBinaryOp($expr),
                 $this->compileOperand($expr->result, $block, false),
                 $this->compileOperand($expr->left, $block, true),
                 $this->compileOperand($expr->right, $block, true),
-            );
+            )];
         }
         switch (get_class($expr)) {
             case Op\Expr\Assign::class:
-                return new OpCode(
+                return [new OpCode(
                     OpCode::TYPE_ASSIGN,
                     $this->compileOperand($expr->result, $block, false),   
                     $this->compileOperand($expr->var, $block, false),
                     $this->compileOperand($expr->expr, $block, true) 
-                );
+                )];
             case Op\Expr\ConstFetch::class:
                 $nsName = null;
                 if (!is_null($expr->nsName)) {
                     $nsName = $this->compileOperand($expr->nsName, $block, true);
                 }
-                return new OpCode(
+                return [new OpCode(
                     OpCode::TYPE_CONST_FETCH,
                     $this->compileOperand($expr->result, $block, false),
                     $this->compileOperand($expr->name, $block, true),
                     $nsName
-                );
+                )];
+            case Op\Expr\FuncCall::class:
+                $return = [
+                    new OpCode(
+                        OpCode::TYPE_FUNCCALL_INIT,
+                        $this->compileOperand($expr->name, $block, true)
+                    )
+                ];
+                foreach ($expr->args as $arg) {
+                    $return[] = new OpCode(
+                        OpCode::TYPE_ARG_SEND,
+                        $this->compileOperand($arg, $block, true)
+                    );
+                }
+                if (!empty($expr->result->usages)) {
+                    $return[] = new OpCode(
+                        OpCode::TYPE_FUNCCALL_EXEC_RETURN,
+                        $this->compileOperand($expr->result, $block, false)
+                    );
+                } else {
+                    $return[] = new OpCode(
+                        OpCode::TYPE_FUNCCALL_EXEC_NORETURN,
+                    );
+                }
+                return $return;
+
         }
         throw new \LogicException("Unsupported expression: " . $expr->getType());
     }

@@ -87,7 +87,7 @@ class Runtime {
     }
 
     public function jit(?Block $block, ?string $debugFile = null) {
-        JIT::compileBlock($block, $debugFile);
+        JIT::compile($block, $debugFile);
     }
 
 }

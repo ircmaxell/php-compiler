@@ -1,11 +1,15 @@
 <?php
 
 $rawCode = <<<'EOF'
-$a = "a";
-for ($i = 0; $i < 100000; $i++) {
-    $a .= "b";
+function hello(): void {
+
 }
-echo $a;
+function simpleucall(int $n): void {
+    for ($i = 0; $i < $n; $i++) {
+        hello();
+    }
+}
+simpleucall(100000);
 EOF;
 $code = '<?php ' . $rawCode;
 
@@ -20,6 +24,20 @@ $times["Setup"] = microtime(true);
 $block = $runtime->parseAndCompile($code, __FILE__);
 
 $times["parseAndCompile"] = microtime(true);
+
+echo (new PHPCompiler\Backend\VM\Printer)->print($block);
+
+$times["printCompiledOpCodes"] = microtime(true);
+
+// echo "\n\nExecuting VM\n\n";
+
+// $runtime->run($block);
+
+// $times["vm execute"] = microtime(true);
+
+// flush();
+
+// $times["vm flush"] = microtime(true);
 
 $runtime->jit($block, __DIR__ . '/result');
 
@@ -71,7 +89,7 @@ echo "\n\nTimers:\n";
 
 $start = array_shift($times);
 foreach ($times as $key => $time) {
-    echo "  $key => " . ($time - $start) . "\n";
+    printf("  %30s => %02.8F\n", $key, $time - $start);
     $start = $time;
 }
 echo "\n\n";

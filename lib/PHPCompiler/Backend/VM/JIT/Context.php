@@ -34,10 +34,13 @@ class Context {
     private static int $stringConstantCounter = 0;
     private array $stringConstantMap = [];
     private ?string $debugFile = null;
-    private \SplObjectStorage $variables;
+    public Scope $scope;
+    private array $scopeStack;
+
+    private array $exports = [];
 
     public function __construct(int $loadType) {
-        $this->variables = new \SplObjectStorage;
+        $this->scope = new Scope;
         $this->loadType = $loadType;
         $this->context = \gcc_jit_context_acquire();
         $this->helper = new Helper($this);
@@ -53,6 +56,20 @@ class Context {
 
     public function __destruct() {
         \gcc_jit_context_release($this->context);
+    }
+
+    public function addExport(string $name, string $signature, Block $block): void {
+        $this->exports[] = [$name, $signature, $block];
+    }
+
+    public function pushScope(): void {
+        $this->scopeStack[] = $this->scope;
+        $this->scope = new Scope;
+    }
+
+    public function popScope(): void {
+        assert(!empty($this->scopeStack));
+        $this->scope = array_pop($this->scopeStack);
     }
 
     public function location(): \gcc_jit_location_ptr {
@@ -127,7 +144,7 @@ class Context {
       
     }
 
-    public function compileInPlace(): Result {
+    public function compileInPlace() {
         if (is_null($this->result)) {
             \gcc_jit_block_end_with_void_return($this->initBlock, $this->location());
             \gcc_jit_block_end_with_void_return($this->shutdownBlock, $this->location());
@@ -147,8 +164,10 @@ class Context {
                 \gcc_jit_context_compile($this->context),
                 $this->loadType
             );
+            foreach ($this->exports as $export) {
+                $export[2]->handler = $this->result->getHandler($export[0], $export[1]);
+            }
         }
-        return $this->result;
     }
 
     public function setDebugFile(string $file): void {
@@ -317,13 +336,13 @@ class Context {
         Block $block,
         Operand $op
     ) {
-        assert(!$this->variables->contains($op));
-        $this->variables[$op] = Variable::fromOp($this, $func, $gccBlock, $block, $op);
-        $this->variables[$op]->initialize($gccBlock);
+        assert(!$this->scope->variables->contains($op));
+        $this->scope->variables[$op] = Variable::fromOp($this, $func, $gccBlock, $block, $op);
+        $this->scope->variables[$op]->initialize($gccBlock);
     }
 
     public function hasVariableOp(Operand $op): bool {
-        if ($this->variables->contains($op)) {
+        if ($this->scope->variables->contains($op)) {
             return true;
         }
         if ($op instanceof Operand\Literal) {
@@ -333,24 +352,24 @@ class Context {
     }
 
     public function getVariableFromOp(Operand $op): Variable {
-        if (!$this->variables->contains($op)) {
+        if (!$this->scope->variables->contains($op)) {
             if ($op instanceof Operand\Literal) {
-                $this->variables[$op] = Variable::fromLiteral($this, $op);
+                $this->scope->variables[$op] = Variable::fromLiteral($this, $op);
             } else {
                 throw new \LogicException("Unknown variable referenced: " . get_class($op));
             }
         }
-        return $this->variables[$op];
+        return $this->scope->variables[$op];
     }
 
     public function makeVariableFromRValueOp(
         \gcc_jit_rvalue_ptr $rvalue,
         Operand $op
     ): Variable {
-        $this->variables[$op] = Variable::fromRValueOp(
+        $this->scope->variables[$op] = Variable::fromRValueOp(
             $this, $rvalue, $op
         );
-        return $this->variables[$op];
+        return $this->scope->variables[$op];
     }
 
     public function freeDeadVariables(
@@ -359,7 +378,7 @@ class Context {
         Block $block
     ): void {
         foreach ($block->orig->deadOperands as $op) {
-            $this->variables[$op]->free($gccBlock);
+            $this->scope->variables[$op]->free($gccBlock);
         }
     }
 

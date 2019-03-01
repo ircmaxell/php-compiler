@@ -18,6 +18,10 @@ class Frame {
      */
     public array $scope;
 
+    public ?Block $call = null;
+    public array $callArgs = [];
+    public array $calledArgs = [];
+
     public function __construct(Block $block, ?Frame $parent, PHPVar ...$scope) {
         $this->block = $block;
         $this->parent = $parent;

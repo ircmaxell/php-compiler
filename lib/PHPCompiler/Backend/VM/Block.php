@@ -9,8 +9,9 @@
 
 namespace PHPCompiler\Backend\VM;
 
+use PHPCfg\Func;
 use PHPCfg\Block as CfgBlock;
-
+use PHPCfg\Op\Expr;
 use PHPCfg\Operand;
 
 class Block { 
@@ -24,11 +25,11 @@ class Block {
 
     public int $nOpCodes = 0;
 
+    public ?Func $func = null;
+
     public CfgBlock $orig;
 
     private \SplObjectStorage $scope;
-
-    public \SplObjectStorage $phi;
 
     /** 
      * @var PHPVar[] $constants
@@ -45,12 +46,7 @@ class Block {
     public function __construct(CfgBlock $block) {
         $this->orig = $block;
         $this->scope = new \SplObjectStorage;
-        $this->phi = new \SplObjectStorage;
         $this->args = new \SplObjectStorage;
-        foreach ($block->phi as $phi) {
-            $this->phi[$phi->result] = $phi;
-            $this->getVarSlot($phi->result, true);
-        }
     }
 
     public function getOperand(int $offset): Operand {
@@ -107,27 +103,16 @@ class Block {
                 $scope[$pos] = $this->constants[$pos];
             } elseif ($this->args->contains($op)) {
                 if (is_null($frame)) {
-                    throw new \LogicException("Phi var with no parent frame, illegal");
+                    throw new \LogicException("Argument var with no parent frame, illegal");
                 }
                 $found = false;
-                if ($this->phi->contains($op)) {
-                    $phi = $this->phi[$op];
-                    foreach ($phi->vars as $var) {
-                        $temp = $frame->block->findSlot($var, $frame);
-                        if ($temp) {
-                            $scope[$pos] = $temp;
-                            $found = true;
-                        }
-                    }
-                } else {
-                    $parent = $frame->block->findSlot($op, $frame);
-                    if (!is_null($parent)) {
-                        $scope[$pos] = $parent;
-                        $found = true;
-                    }
+                $parent = $frame->block->findSlot($op, $frame);
+                if (!is_null($parent)) {
+                    $scope[$pos] = $parent;
+                    $found = true;
                 }
                 if (!$found) {
-                    throw new \LogicException("Could not resolve Phi");
+                    throw new \LogicException("Could not resolve argument");
                 }
             } else { 
                 $scope[$pos] = new PHPVar;
