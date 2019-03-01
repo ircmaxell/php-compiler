@@ -42,11 +42,11 @@ class JIT {
         self::init();
         $funcName = "internal_" . self::$functionNumber;
         $context = new JIT\Context(JIT\Builtin::LOAD_TYPE_EMBED);
-        //gcc_jit_context_set_bool_option($context->context, GCC_JIT_BOOL_OPTION_DUMP_INITIAL_GIMPLE, 1);
-        // $context->setDebug(true);
-        // if (!is_null($debugfile)) {
-        //     $context->setDebugFile($debugfile);
-        // }
+        gcc_jit_context_set_bool_option($context->context, GCC_JIT_BOOL_OPTION_DUMP_INITIAL_GIMPLE, 1);
+        $context->setDebug(true);
+        if (!is_null($debugfile)) {
+            $context->setDebugFile($debugfile);
+        }
         $context->setOption(
             \GCC_JIT_INT_OPTION_OPTIMIZATION_LEVEL,
             self::$optimizationLevel

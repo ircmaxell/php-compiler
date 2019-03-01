@@ -13,7 +13,7 @@ use PHPCfg\Parser;
 use PHPCfg\Traverser;
 use PHPCfg\LivenessDetector;
 use PHPCfg\Visitor;
-use PHPCfg\Printer;
+use PHPCfg\Printer as CfgPrinter;
 use PHPTypes\TypeReconstructor;
 use PhpParser\NodeTraverser;
 use PhpParser\NodeVisitor;
@@ -27,6 +27,7 @@ class Runtime {
     private Traverser $preprocessor;
     private Traverser $postprocessor;
     private LivenessDetector $detector;
+    private Optimizer $assignOpResolver;
 
     public function __construct() {
         $astTraverser = new NodeTraverser;
@@ -47,6 +48,7 @@ class Runtime {
         $this->postprocessor = new Traverser;
         $this->postprocessor->addVisitor(new Visitor\PhiResolver);
         $this->detector = new LivenessDetector;
+        $this->assignOpResolver = new Optimizer\AssignOp;
 
         $this->typeReconstructor = new TypeReconstructor;
         $this->compiler = new Compiler;
@@ -56,19 +58,36 @@ class Runtime {
         $script = $this->parser->parse($code, $filename);
         $this->preprocessor->traverse($script);
         $this->typeReconstructor->resolve(new State($script));
+        echo "\n\nPre Processed:\n\n";
+        echo (new CfgPrinter\Text)->printScript($script);
+        echo "\n\n";
         $this->postprocessor->traverse($script);
         $this->detector->detect($script);
-        echo (new Printer\Text)->printScript($script);
+        echo "\n\nPost Processed:\n\n";
+        echo (new CfgPrinter\Text)->printScript($script);
         echo "\n\n";
-        return $this->compiler->compile($script);
+        $block = $this->compiler->compile($script);
+        echo "\n\nCompiled:\n\n";
+        echo (new Printer)->print($block);
+        echo "\n\n";
+        $this->assignOpResolver->optimize($block);
+
+        echo "\n\Optimized:\n\n";
+        echo (new Printer)->print($block);
+        echo "\n\n";
+        return $block;
     }
 
-    public function run(?Block $opcodes) {
-        return VM::run($opcodes, new Context);
+    public function run(?Block $block) {
+        if (!\is_null($block->handler)) {
+            ($block->handler->callback)();
+            return VM::SUCCESS;
+        }
+        return VM::run($block);
     }
 
-    public function jit(?Block $opcodes, ?string $debugFile = null) {
-        JIT::compileBlock($opcodes, $debugFile);
+    public function jit(?Block $block, ?string $debugFile = null) {
+        JIT::compileBlock($block, $debugFile);
     }
 
 }

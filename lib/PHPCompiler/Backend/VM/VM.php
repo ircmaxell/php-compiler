@@ -15,11 +15,8 @@ class VM {
     const SUCCESS = 1;
     const FAILURE = 2;
 
-    public static function run(Block $block, Context $context): int {
-        if (!is_null($block->handler)) {
-            ($block->handler->callback)();
-            return self::SUCCESS;
-        }
+    public static function run(Block $block, ?Context $context = null): int {
+        $context = $context ?? new Context;
         $context->push($block->getFrame($context));
 nextframe:
         $frame = $context->pop();

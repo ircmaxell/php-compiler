@@ -1,14 +1,11 @@
 <?php
 
-use PhpParser\ParserFactory;
-
 $rawCode = <<<'EOF'
-$test = 0;
-for ($i = 0; $i < 1000000; $i++) {
-    $test += $i;
+$a = "a";
+for ($i = 0; $i < 100000; $i++) {
+    $a .= "b";
 }
-$test += 2;
-echo "hi";
+echo $a;
 EOF;
 $code = '<?php ' . $rawCode;
 
@@ -28,21 +25,47 @@ $runtime->jit($block, __DIR__ . '/result');
 
 $times["jit compile"] = microtime(true); 
 
+echo "\n\nExecuting JIT Locally With Null Check\n\n";
+
+if (!is_null($block->handler)) {
+    ($block->handler->callback)();
+}
+
+$times["local null-safe jit execute"] = microtime(true);
+
+flush();
+
+$times["local null-safe jit flush"] = microtime(true);
+
+echo "\n\nExecuting JIT Locally Without Null Check\n\n";
+
+($block->handler->callback)();
+
+$times["local jit execute"] = microtime(true);
+
+flush();
+
+$times["local jit flush"] = microtime(true);
+
 echo "\n\nExecuting JIT\n\n";
 
 $runtime->run($block);
 
+$times["jit execute"] = microtime(true);
+
 flush();
 
-$times["jit execute"] = microtime(true);
+$times["jit flush"] = microtime(true);
 
 echo "\n\nExecuting Eval\n\n";
 
 eval($rawCode);
 
+$times["eval execute"] = microtime(true);
+
 flush();
 
-$times["eval execute"] = microtime(true);
+$times["eval flush"] = microtime(true);
 
 echo "\n\nTimers:\n";
 
