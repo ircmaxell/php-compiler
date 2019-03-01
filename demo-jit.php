@@ -3,11 +3,12 @@
 use PhpParser\ParserFactory;
 
 $rawCode = <<<'EOF'
-$a = "";
-for ($i = 0; $i < 10; $i++) {
-    $a = $a . "a";
+$test = 0;
+for ($i = 0; $i < 1000000; $i++) {
+    $test += $i;
 }
-echo $a;
+$test += 2;
+echo "hi";
 EOF;
 $code = '<?php ' . $rawCode;
 
@@ -27,11 +28,21 @@ $runtime->jit($block, __DIR__ . '/result');
 
 $times["jit compile"] = microtime(true); 
 
+echo "\n\nExecuting JIT\n\n";
+
 $runtime->run($block);
 
-$times["execute"] = microtime(true);
+flush();
+
+$times["jit execute"] = microtime(true);
+
+echo "\n\nExecuting Eval\n\n";
+
+eval($rawCode);
 
 flush();
+
+$times["eval execute"] = microtime(true);
 
 echo "\n\nTimers:\n";
 

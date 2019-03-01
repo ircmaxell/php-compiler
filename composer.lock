@@ -84,12 +84,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/ircmaxell/php-cfg.git",
-                "reference": "8300f78156bdde595d1700893fa29c68b9346b0c"
+                "reference": "5f6d0c8635a293d17987906031e388dfe19a0d83"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/ircmaxell/php-cfg/zipball/8300f78156bdde595d1700893fa29c68b9346b0c",
-                "reference": "8300f78156bdde595d1700893fa29c68b9346b0c",
+                "url": "https://api.github.com/repos/ircmaxell/php-cfg/zipball/5f6d0c8635a293d17987906031e388dfe19a0d83",
+                "reference": "5f6d0c8635a293d17987906031e388dfe19a0d83",
                 "shasum": ""
             },
             "require": {
@@ -118,7 +118,7 @@
                 }
             ],
             "description": "A Control Flow Graph implementation for PHP",
-            "time": "2019-02-28 03:49:33"
+            "time": "2019-02-28 22:32:07"
         },
         {
             "name": "ircmaxell/php-optimizer",

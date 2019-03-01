@@ -11,6 +11,7 @@ namespace PHPCompiler\Backend\VM\JIT;
 
 use PHPCompiler\Backend\VM\Handler;
 
+use PHPCfg\Operand;
 
 class Helper {
 
@@ -48,6 +49,37 @@ class Helper {
         );
     }
 
+    public function numericBinaryOp(
+        int $op,
+        Operand $result,
+        Variable $left,
+        Variable $right 
+    ): \gcc_jit_rvalue_ptr {
+        if ($left->type === $right->type) {
+            switch ($left->type) {
+                case Variable::TYPE_NATIVE_LONG:
+                    $resultType = Variable::TYPE_NATIVE_LONG;
+                    $rvalue = $this->binaryOp(
+                        $op,
+                        Variable::getStringType(Variable::TYPE_NATIVE_LONG),
+                        $left->rvalue,
+                        $right->rvalue
+                    );
+                    break;
+                default:
+                    throw new \LogicException("Unhandled type: " . $left->type);
+            }
+        } else {
+            throw new \LogicException("Unhandled type pair: " . $left->type . ' and ' . $right->type);
+        }
+        $neededResultType = Variable::getTypeFromType($result->type);
+        if ($neededResultType === $resultType) {
+            return $rvalue;
+        }
+        // Need to cast
+        throw new \LogicException("Unhandled type cast needed for " . $neededResultType . " from " . $resultType);
+    }
+
     public function binaryOp(
         int $op, 
         string $type, 
@@ -62,6 +94,37 @@ class Helper {
             $left,
             $right
         );
+    }
+
+    public function compareOp(
+        int $op,
+        Operand $result,
+        Variable $left,
+        Variable $right 
+    ): \gcc_jit_rvalue_ptr {
+        if ($left->type === $right->type) {
+            switch ($left->type) {
+                case Variable::TYPE_NATIVE_LONG:
+                    $rvalue = \gcc_jit_context_new_comparison(
+                        $this->context->context,
+                        $this->context->location(),
+                        $op,
+                        $left->rvalue,
+                        $right->rvalue
+                    );
+                    break;
+                default:
+                    throw new \LogicException("Unhandled type: " . $left->type);
+            }
+        } else {
+            throw new \LogicException("Unhandled type pair: " . $left->type . ' and ' . $right->type);
+        }
+        $neededResultType = Variable::getTypeFromType($result->type);
+        if ($neededResultType === Variable::TYPE_NATIVE_BOOL) {
+            return $rvalue;
+        }
+        // Need to cast
+        throw new \LogicException("Unhandled type cast needed for " . $neededResultType . " from " . $resultType);
     }
 
     public function importFunction(
@@ -95,6 +158,7 @@ class Helper {
                 $this->context->getTypeFromString($param), 
                 "{$funcName}_{$i}"
             );
+            $i++;
         }
         $gccReturnType = $this->context->getTypeFromString($returnType);
         return new Func(
@@ -127,6 +191,31 @@ class Helper {
             $result,
             $value
         );
+    }
+
+    public function assignOperand(
+        \gcc_jit_block_ptr $block,
+        Operand $result,
+        Variable $value
+    ): void {
+        if (empty($result->usages)) {
+            // optimize out assignment
+            return;
+        }
+        $result = $this->context->getVariableFromOp($result);
+        if ($value->type === $result->type) {
+            if ($value->type === Variable::TYPE_STRING) {
+                $this->context->refcount->delref($block, $result->rvalue);
+                $this->context->refcount->addref($block, $value->rvalue);
+            }
+            $this->assign(
+                $block,
+                $result->lvalue,
+                $value->rvalue
+            );
+            return;
+        }
+        throw new \LogicException("Assignment of different types not supported yet");
     }
 
     public function createField(string $name, string $type): \gcc_jit_field_ptr {

@@ -63,6 +63,18 @@ class MemoryManager extends Builtin {
                 ...$this->expandDebugDecl()
             )
         );
+        $this->context->registerFunction(
+            'erealloc',
+            $this->context->helper->createFunction(
+                \GCC_JIT_FUNCTION_IMPORTED,
+                '_erealloc',
+                'void*',
+                false,
+                'void*',
+                'size_t',
+                ...$this->expandDebugDecl()
+            )
+        );
     }
 
     private function expandDebugDecl(): array {
@@ -100,6 +112,26 @@ class MemoryManager extends Builtin {
             'efree', 
             $this->context->helper->cast($ptr, 'void*'),
             ...$this->expandDebugArgs()
+        );
+    }
+
+    public function erealloc(\gcc_jit_rvalue_ptr $ptr, \gcc_jit_rvalue_ptr $size, \gcc_jit_type_ptr $type): \gcc_jit_rvalue_ptr {
+        $void = $this->context->helper->call(
+            'erealloc', 
+            \gcc_jit_context_new_cast(
+                $this->context->context,
+                $this->context->location(),
+                $ptr,
+                $this->context->getTypeFromString('void*')
+            ),
+            $size, 
+            ...$this->expandDebugArgs()
+        );
+        return \gcc_jit_context_new_cast(
+            $this->context->context,
+            null,
+            $void,
+            $type
         );
     }
 

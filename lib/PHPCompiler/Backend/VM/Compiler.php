@@ -72,31 +72,26 @@ class Compiler {
 
     protected function compileOp(Op $op, Block $block) {
         if ($op instanceof Op\Expr\ConcatList) {
-            // special case, since it's a multi-op expression
             $total = count($op->list);
-            assert($total > 0);
-            $pointer = 1;
-            $result = $this->compileOperand($op->list[0], $block, true);
-            while ($pointer < $total) {
-                $right = $this->compileOperand($op->list[$pointer++], $block, true);
-                $tmpOp = new Operand\Temporary($op->result);
-                $tmpOp->type = $op->result->type;
-                $tmpResult = $this->compileOperand($tmpOp, $block, false);
-                $block->addOpCode(new OpCode(
-                    OpCode::TYPE_CONCAT,
-                    $tmpResult,
-                    $result,
-                    $right
-                ));
-                $result = $tmpResult;
-            }
+            assert($total >= 2);
+            $pointer = 2;
+
             $return = $this->compileOperand($op->result, $block, false);
             $block->addOpCode(new OpCode(
-                OpCode::TYPE_ASSIGN,
+                OpCode::TYPE_CONCAT,
                 $return,
-                $return,
-                $result
+                $this->compileOperand($op->list[0], $block, true),
+                $this->compileOperand($op->list[1], $block, true)
             ));
+            while ($pointer < $total) {
+                $right = $this->compileOperand($op->list[$pointer++], $block, true);
+                $block->addOpCode(new OpCode(
+                    OpCode::TYPE_CONCAT,
+                    $return,
+                    $return,
+                    $right
+                ));
+            }
         } elseif ($op instanceof Op\Expr) {
             $block->addOpCode($this->compileExpr($op, $block));
         } elseif ($op instanceof Op\Stmt) {

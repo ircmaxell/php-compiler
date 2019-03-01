@@ -13,6 +13,7 @@ use PHPCfg\Parser;
 use PHPCfg\Traverser;
 use PHPCfg\LivenessDetector;
 use PHPCfg\Visitor;
+use PHPCfg\Printer;
 use PHPTypes\TypeReconstructor;
 use PhpParser\NodeTraverser;
 use PhpParser\NodeVisitor;
@@ -44,8 +45,7 @@ class Runtime {
         $this->preprocessor->addVisitor(new Visitor\DeclarationFinder);
         $this->preprocessor->addVisitor(new Visitor\VariableFinder);
         $this->postprocessor = new Traverser;
-        $this->postprocessor->addVisitor(new Visitor\PhiResolver
-        );
+        $this->postprocessor->addVisitor(new Visitor\PhiResolver);
         $this->detector = new LivenessDetector;
 
         $this->typeReconstructor = new TypeReconstructor;
@@ -58,6 +58,8 @@ class Runtime {
         $this->typeReconstructor->resolve(new State($script));
         $this->postprocessor->traverse($script);
         $this->detector->detect($script);
+        echo (new Printer\Text)->printScript($script);
+        echo "\n\n";
         return $this->compiler->compile($script);
     }
 

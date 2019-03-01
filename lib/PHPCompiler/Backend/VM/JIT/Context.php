@@ -9,6 +9,7 @@
 
 namespace PHPCompiler\Backend\VM\JIT;
 
+use PHPCfg\Operand;
 use PHPCompiler\Backend\VM\Handler;
 use PHPCompiler\Backend\VM\Block;
 use PHPTypes\Type;
@@ -33,13 +34,15 @@ class Context {
     private static int $stringConstantCounter = 0;
     private array $stringConstantMap = [];
     private ?string $debugFile = null;
+    private \SplObjectStorage $variables;
 
     public function __construct(int $loadType) {
+        $this->variables = new \SplObjectStorage;
         $this->loadType = $loadType;
         $this->context = \gcc_jit_context_acquire();
         $this->helper = new Helper($this);
         $this->location = new Location("Unknown", 1, 1);
-
+        
         $this->refcount = new Builtin\Refcount($this, $loadType);
         $this->memory = new Builtin\MemoryManager($this, $loadType);
         $this->output = new Builtin\Output($this, $loadType);
@@ -188,6 +191,7 @@ class Context {
     }
 
     public function getTypeFromType(Type $type): \gcc_jit_type_ptr {
+
         static $map = [
             Type::TYPE_LONG => 'long long',
             Type::TYPE_STRING => '__string__*',
@@ -289,10 +293,10 @@ class Context {
             $this->type->string->allocate(
                 $this->initBlock, 
                 $global, 
-                $length
+                $length,
+                true
             );
             // disable refcounting
-            $this->refcount->disableRefcount($this->initBlock, $global->asRValue());
             $this->memory->memcpy(
                 $this->initBlock,
                 $this->type->string->valuePtr($global->asRValue()),
@@ -307,13 +311,56 @@ class Context {
         return $this->stringConstantMap[$string]->asRValue();
     }
 
+    public function makeVariableFromOp(
+        \gcc_jit_function_ptr $func,
+        \gcc_jit_block_ptr $gccBlock,
+        Block $block,
+        Operand $op
+    ) {
+        assert(!$this->variables->contains($op));
+        $this->variables[$op] = Variable::fromOp($this, $func, $gccBlock, $block, $op);
+        $this->variables[$op]->initialize($gccBlock);
+    }
+
+    public function hasVariableOp(Operand $op): bool {
+        if ($this->variables->contains($op)) {
+            return true;
+        }
+        if ($op instanceof Operand\Literal) {
+            return true;
+        }
+        return false;
+    }
+
+    public function getVariableFromOp(Operand $op): Variable {
+        if (!$this->variables->contains($op)) {
+            if ($op instanceof Operand\Literal) {
+                $this->variables[$op] = Variable::fromLiteral($this, $op);
+            } else {
+                throw new \LogicException("Unknown variable referenced: " . get_class($op));
+            }
+        }
+        return $this->variables[$op];
+    }
+
+    public function makeVariableFromRValueOp(
+        \gcc_jit_rvalue_ptr $rvalue,
+        Operand $op
+    ): Variable {
+        $this->variables[$op] = Variable::fromRValueOp(
+            $this, $rvalue, $op
+        );
+        return $this->variables[$op];
+    }
+
     public function freeDeadVariables(
         \gcc_jit_function_ptr $func,
         \gcc_jit_block_ptr $gccBlock,
         Block $block
     ): void {
-        return;
-        var_dump($block->orig->deadOperands);
+        foreach ($block->orig->deadOperands as $op) {
+            $this->variables[$op]->free($gccBlock);
+        }
     }
 
 }
