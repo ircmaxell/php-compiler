@@ -5,9 +5,9 @@ Basic String Operations
 $a = "hello";
 $b = "world";
 $c = "$a $b";
-echo "$a\r\n";
-echo "$b\r\n";
-echo "$c\r\n";
+echo "$a\n";
+echo "$b\n";
+echo "$c\n";
 --EXPECT--
 hello
 world

@@ -44,11 +44,22 @@ abstract class BaseTest extends TestCase {
     ];
 
     public static function providePHPTests(): \Generator {
-        $it = new \GlobIterator(__DIR__ . '/cases/**.phpt');
-        foreach ($it as $file) {
-            yield self::parsePHPT($file->getPathname(), $file->getBasename());
+        yield from self::providePHPTestsFromDir(__DIR__ . '/cases');
+    }
+
+    private static function providePHPTestsFromDir(string $dir): \Generator {
+        foreach (new \DirectoryIterator($dir) as $path) {
+            if (!$path->isDir() || $path->isDot()) {
+                continue;
+            }
+            yield from self::providePHPTestsFromDir($path->getPathname());
+        }
+        foreach (new \GlobIterator($dir . '/*.phpt') as $test) {
+            yield self::parsePHPT($test->getPathname(), $test->getBasename());
         }
     }
+
+
 
     private static function parsePHPT(string $filename, string $basename): array {
         $sections = [];
@@ -141,16 +152,26 @@ abstract class BaseTest extends TestCase {
         $this->assertExpect($result, $sections);
     }
 
+    const ASSERTIONS = [
+        'EXPECT' => 'assertEquals',
+        'EXPECTF' => 'assertStringMatchesFormat',
+        'EXPECTREGEX' => 'assertRegExp',
+    ];
+
     protected function assertExpect(string $result, array $sections): void {
-        if (isset($sections['EXPECT'])) {
-            $this->assertEquals($sections['EXPECT'], $result);
+        $actual = preg_replace('(\r\n)', "\n", trim($result));
+        foreach (self::ASSERTIONS as $action => $selectedAssertion) {
+            if (isset($sections[$action])) {
+                $content = preg_replace('(\r\n)', "\n", trim($sections[$action]));
+                $expected = $action === "EXPECTREGEX" ? "/{$content}/" : $content;
+                if ($expected === null) {
+                    throw new \LogicException("No PHPT expectation found");
+                }
+                $this->$selectedAssertion($expected, $actual);
+                return;
+            }
         }
-        if (isset($sections['EXPECTF'])) {
-            throw new \LogicException("Unknown expectation type EXPECTF");
-        }
-        if (isset($sections['EXPECTREGEX'])) {
-            throw new \LogicException("Unknown expectation type EXPECTF");
-        }
+        throw new \RuntimeException('No PHPT assertion found');
     }
 
 }
