@@ -139,12 +139,19 @@ class Variable {
         );
     }
 
+    public function addref(\gcc_jit_block_ptr $block): void {
+        if ($this->type & self::IS_REFCOUNTED) {
+            $this->context->refcount->addref($block, $this->rvalue);
+        }
+    }
+
     public function free(\gcc_jit_block_ptr $block): void {
         if ($this->kind === self::KIND_VALUE) {
             return;
         }
         switch ($this->type) {
             case self::TYPE_NATIVE_LONG:
+            case self::TYPE_NATIVE_BOOL:
                 return;
         }
         if ($this->type & self::IS_REFCOUNTED) {
@@ -172,4 +179,10 @@ class Variable {
         }
     }
     
+    public function toString(\gcc_jit_block_ptr $block): Variable {
+        switch ($this->type) {
+            case self::TYPE_STRING:
+                return $this;
+        }
+    }
 }

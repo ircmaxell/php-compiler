@@ -49,6 +49,17 @@ class String_ extends Type {
             )
         );
         $this->context->registerFunction(
+            '__string__init',
+            $this->context->helper->createFunction(
+                \GCC_JIT_FUNCTION_ALWAYS_INLINE,
+                '__string__init',
+                '__string__*',
+                false,
+                'const char*',
+                'size_t'
+            )
+        );
+        $this->context->registerFunction(
             '__string__realloc',
             $this->context->helper->createFunction(
                 \GCC_JIT_FUNCTION_ALWAYS_INLINE,
@@ -79,6 +90,16 @@ class String_ extends Type {
                 'const char*'
             )
         );
+        // $this->context->registerFunction(
+        //     '__string__from_long_long',
+        //     $this->context->helper->createFunction(
+        //         \GCC_JIT_FUNCTION_ALWAYS_INLINE,
+        //         '__string__from_long_long',
+        //         'char*',
+        //         false,
+        //         'long long'
+        //     )
+        // );
     }
 
     public function implement(): void {
@@ -102,6 +123,7 @@ class String_ extends Type {
         );
 
         $this->implementAlloc();
+        $this->implementInit();
         $this->implementRealloc();
         $this->implementSeparate();
     }
@@ -130,6 +152,27 @@ class String_ extends Type {
             $block, 
             $local->asRValue(),
             Refcount::TYPE_INFO_REFCOUNTED | Refcount::TYPE_INFO_TYPE_STRING
+        );
+        \gcc_jit_block_end_with_return($block,  null, $local->asRValue());
+    }
+
+    private function implementInit(): void {
+        $init = $this->context->lookupFunction('__string__init');
+        $block = \gcc_jit_function_new_block($init->func, 'main');
+        $local = \gcc_jit_function_new_local($init->func, null, $this->pointer, 'result');
+        $this->context->helper->assign(
+            $block,
+            $local,
+            $this->context->helper->call(
+                '__string__alloc',
+                $init->params[1]->asRValue()
+            )
+        );
+        $this->context->memory->memcpy(
+            $block,
+            $this->valuePtr($local->asRValue()),
+            $init->params[0]->asRValue(),
+            $init->params[1]->asRValue()
         );
         \gcc_jit_block_end_with_return($block,  null, $local->asRValue());
     }
@@ -188,15 +231,10 @@ class String_ extends Type {
         $block = \gcc_jit_function_new_block($func->func, 'main');
         $tmp = \gcc_jit_function_new_local($func->func, $this->context->location(), $this->pointer, 'tmp');
         $length = $this->sizePtr($from)->asRValue();
-        $this->allocate(
+        $this->init(
             $block,
             $tmp,
-            $length
-        );
-        $this->context->memory->memcpy(
-            $block,
-            $this->valuePtr($tmp->asRValue()),
-            $this->valuePtr($from),
+            $this->context->helper->cast($this->valuePtr($from), 'const char*'),
             $length
         );
         \gcc_jit_block_add_assignment(
@@ -296,6 +334,28 @@ class String_ extends Type {
         }
     }
 
+    public function init(
+        \gcc_jit_block_ptr $block,
+        \gcc_jit_lvalue_ptr $dest,
+        \gcc_jit_rvalue_ptr $value,
+        \gcc_jit_rvalue_ptr $length,
+        bool $isConstant = false
+    ): void {
+        $this->context->helper->assign(
+            $block,
+            $dest,
+            $this->context->helper->call(
+                '__string__init',
+                $value,
+                $length
+            )
+        );
+        if ($isConstant) {
+            // disable refcount
+            $this->context->refcount->disableRefcount($block, $dest->asRValue());
+        }
+    }
+
     public function reallocate(
         \gcc_jit_block_ptr $block,
         \gcc_jit_lvalue_ptr $original, 
@@ -346,6 +406,17 @@ class String_ extends Type {
             case Variable::TYPE_STRING:
                 // pointer call
                 return $this->sizePtr($var->rvalue)->asRValue();
+            case Variable::TYPE_NATIVE_LONG:
+                return $this->context->helper->cast(
+                    $this->context->helper->call(
+                        'snprintf',
+                        \gcc_jit_context_null($this->context->context, $this->context->getTypeFromString('char*')),
+                        $this->context->constantFromInteger(0, 'size_t'),
+                        $this->context->constantFromString('%lld'),
+                        $var->rvalue
+                    ),
+                    'size_t'
+                );
         }
     }
 
@@ -360,56 +431,67 @@ class String_ extends Type {
     public function concat(\gcc_jit_block_ptr $block, Variable $dest, Variable $left, Variable $right): void {
         assert($dest->type === Variable::TYPE_STRING);
         $this->context->refcount->separate($block, $dest->lvalue);
+
+
+        $leftSize = $this->size($left);
+        $rightSize = $this->size($right);
         $this->reallocate($block, $dest->lvalue, $this->context->helper->binaryOp(
             \GCC_JIT_BINARY_OP_PLUS,
             'size_t',
-            $this->size($left),
-            $this->size($right)
+            $leftSize,
+            $rightSize
         ));
 
         if ($left !== $dest) {
-            $this->context->memory->memcpy(
-                $block,
-                $this->valuePtr($dest->rvalue),
-                $this->valuePtr($left->rvalue),
-                $this->size($left)
-            );
-            $this->context->memory->memcpy(
-                $block,
-                \gcc_jit_lvalue_get_address(
-                    \gcc_jit_context_new_array_access(
-                        $this->context->context,
-                        $this->context->location(),
-                        $this->valuePtr($dest->rvalue),
-                        $this->size($left)
-                    ),
-                    $this->context->location()
-                ),
-                $this->valuePtr($right->rvalue),
-                $this->size($right)
-            );
-        }  else {
-            $this->context->memory->memcpy(
-                $block,
-                \gcc_jit_lvalue_get_address(
-                    \gcc_jit_context_new_array_access(
-                        $this->context->context,
-                        $this->context->location(),
-                        $this->valuePtr($dest->rvalue),
-                        $this->context->helper->binaryOp(
-                            \GCC_JIT_BINARY_OP_MINUS,
-                            'size_t',
-                            $this->size($dest),
-                            $this->size($right)
-                        )
-                    ),
-                    $this->context->location()
-                ),
-                $this->valuePtr($right->rvalue),
-                $this->size($right)
+            $this->copy(
+                $block, 
+                $dest, 
+                $left,
+                $this->context->constantFromInteger(0, 'size_t')
             );
         }
+        $this->copy(
+            $block,
+            $dest,
+            $right,
+            $this->context->helper->binaryOp(
+                \GCC_JIT_BINARY_OP_MINUS,
+                'size_t',
+                $this->size($dest),
+                $this->size($right)
+            )
+        );
         
+    }
+
+    private function copy(\gcc_jit_block_ptr $block, Variable $dest, Variable $other, \gcc_jit_rvalue_ptr $offset): void {
+        $addr = \gcc_jit_lvalue_get_address(
+            \gcc_jit_context_new_array_access(
+                $this->context->context,
+                $this->context->location(),
+                $this->valuePtr($dest->rvalue),
+                $offset
+            ),
+            $this->context->location()
+        );
+        switch ($other->type) {
+            case Variable::TYPE_STRING:
+                $this->context->memory->memcpy($block, $addr, $this->valuePtr($other->rvalue), $this->sizePtr($other->rvalue)->asRValue());
+                break;
+            case Variable::TYPE_NATIVE_LONG:
+                $this->context->helper->eval(
+                    $block,
+                    $this->context->helper->call(
+                        'sprintf',
+                        $addr,
+                        $this->context->constantFromString('%lld'),
+                        $other->rvalue
+                    )
+                );
+                break;
+            default:
+                throw new \LogicException("Unhandled type for copy $other->type");
+        }
     }
 
 }

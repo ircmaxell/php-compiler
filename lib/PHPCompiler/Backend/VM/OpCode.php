@@ -25,6 +25,9 @@ class OpCode {
     const TYPE_ARG_RECV = 13;
     const TYPE_FUNCCALL_EXEC_RETURN = 14;
     const TYPE_FUNCCALL_EXEC_NORETURN = 15;
+    const TYPE_IDENTICAL = 16;
+    const TYPE_RETURN = 17;
+    const TYPE_MINUS = 18;
 
     public int $type;
     public ?int $arg1;

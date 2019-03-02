@@ -23,6 +23,21 @@ class Output extends Builtin {
             true,
             'const char*'
         );
+        $this->context->helper->importFunction(
+            'sprintf',
+            'int',
+            true,
+            'char*',
+            'const char*'
+        );
+        $this->context->helper->importFunction(
+            'snprintf',
+            'int',
+            true,
+            'char*',
+            'size_t',
+            'const char*'
+        );
     }
 
 }

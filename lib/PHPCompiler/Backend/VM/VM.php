@@ -95,6 +95,9 @@ restart:
                 case OpCode::TYPE_RETURN_VOID:
                     // TODO
                     goto nextframe;
+                case OpCode::TYPE_RETURN:
+                    $frame->returnVar->copyFrom($frame->scope[$op->arg1]);
+                    goto nextframe;
                 case OpCode::TYPE_FUNCDEF:
                     $name = $frame->scope[$op->arg1]->toString();
                     $lcname = strtolower($name);
@@ -117,6 +120,13 @@ restart:
                     break;
                 case OpCode::TYPE_FUNCCALL_EXEC_NORETURN:
                     $new = $frame->call->getFrame($context);
+                    $new->calledArgs = $frame->callArgs;
+                    $context->push($frame); // save the frame
+                    $frame = $new;
+                    goto restart;
+                case OpCode::TYPE_FUNCCALL_EXEC_RETURN:
+                    $new = $frame->call->getFrame($context);
+                    $new->returnVar = $frame->scope[$op->arg1];
                     $new->calledArgs = $frame->callArgs;
                     $context->push($frame); // save the frame
                     $frame = $new;

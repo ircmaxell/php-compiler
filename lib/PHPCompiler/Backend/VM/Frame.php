@@ -21,6 +21,7 @@ class Frame {
     public ?Block $call = null;
     public array $callArgs = [];
     public array $calledArgs = [];
+    public ?PHPVar $returnVar = null;
 
     public function __construct(Block $block, ?Frame $parent, PHPVar ...$scope) {
         $this->block = $block;

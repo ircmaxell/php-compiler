@@ -1,15 +1,11 @@
 <?php
 
 $rawCode = <<<'EOF'
-function hello(): void {
-
+$a = "test";
+for ($i = 0; $i < 100; $i++) {
+    $a .= $i;
 }
-function simpleucall(int $n): void {
-    for ($i = 0; $i < $n; $i++) {
-        hello();
-    }
-}
-simpleucall(100000);
+echo $a;
 EOF;
 $code = '<?php ' . $rawCode;
 
@@ -24,10 +20,6 @@ $times["Setup"] = microtime(true);
 $block = $runtime->parseAndCompile($code, __FILE__);
 
 $times["parseAndCompile"] = microtime(true);
-
-echo (new PHPCompiler\Backend\VM\Printer)->print($block);
-
-$times["printCompiledOpCodes"] = microtime(true);
 
 // echo "\n\nExecuting VM\n\n";
 

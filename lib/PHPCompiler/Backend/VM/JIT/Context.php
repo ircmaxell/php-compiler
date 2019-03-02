@@ -245,6 +245,7 @@ class Context {
             'char' => \GCC_JIT_TYPE_CHAR,
             'int' => \GCC_JIT_TYPE_INT,
             'long long' => \GCC_JIT_TYPE_LONG_LONG,
+            'unsigned long long' => \GCC_JIT_TYPE_UNSIGNED_LONG_LONG,
             'size_t' => \GCC_JIT_TYPE_SIZE_T,
             'uint32_t' => \GCC_JIT_TYPE_UNSIGNED_LONG,
             'bool' => \GCC_JIT_TYPE_BOOL,
@@ -309,18 +310,12 @@ class Context {
                 '__string__constant_' . (self::$stringConstantCounter++)
             );
             $length = $this->constantFromInteger(strlen($string), 'size_t');
-            $this->type->string->allocate(
-                $this->initBlock, 
-                $global, 
+            $this->type->string->init(
+                $this->initBlock,
+                $global,
+                $this->constantFromString($string),
                 $length,
                 true
-            );
-            // disable refcounting
-            $this->memory->memcpy(
-                $this->initBlock,
-                $this->type->string->valuePtr($global->asRValue()),
-                $this->constantFromString($string),
-                $length
             );
             $this->stringConstantMap[$string] = $global;
             $this->helper->eval($this->shutdownBlock, $this->memory->efree(

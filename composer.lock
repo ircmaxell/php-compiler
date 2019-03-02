@@ -168,12 +168,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/ircmaxell/php-types.git",
-                "reference": "3e77f4c3bb27fe573c0b02432ef7bd9298e16629"
+                "reference": "0502c7de0693b9e918e1f8a7f7e71bec0e00791d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/ircmaxell/php-types/zipball/3e77f4c3bb27fe573c0b02432ef7bd9298e16629",
-                "reference": "3e77f4c3bb27fe573c0b02432ef7bd9298e16629",
+                "url": "https://api.github.com/repos/ircmaxell/php-types/zipball/0502c7de0693b9e918e1f8a7f7e71bec0e00791d",
+                "reference": "0502c7de0693b9e918e1f8a7f7e71bec0e00791d",
                 "shasum": ""
             },
             "require": {
@@ -201,7 +201,7 @@
                 }
             ],
             "description": "A PHP CFG Type Inference / Reconstruction Engine",
-            "time": "2019-02-27 18:25:56"
+            "time": "2019-03-01 17:59:22"
         },
         {
             "name": "nikic/php-parser",

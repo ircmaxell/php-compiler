@@ -157,6 +157,10 @@ class Compiler {
             return OpCode::TYPE_PLUS;
         } elseif ($expr instanceof Op\Expr\BinaryOp\Smaller) {
             return OpCode::TYPE_SMALLER;
+        } elseif ($expr instanceof Op\Expr\BinaryOp\Identical) {
+            return OpCode::TYPE_IDENTICAL;
+        } elseif ($expr instanceof Op\Expr\BinaryOp\Minus) {
+            return OpCode::TYPE_MINUS;
         }
         throw new \LogicException("Unknown BinaryOp Type: " . $expr->getType());
     }
@@ -253,7 +257,10 @@ class Compiler {
                         OpCode::TYPE_RETURN_VOID
                     );    
                 }
-                var_dump($terminal->expr);
+                return new OpCode(
+                    OpCode::TYPE_RETURN,
+                    $this->compileOperand($terminal->expr, $block, true)
+                );
             default:
                 throw new \LogicException("Unknown Terminal Type: " . $terminal->getType());
         }

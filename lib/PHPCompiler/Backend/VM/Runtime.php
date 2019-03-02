@@ -58,23 +58,10 @@ class Runtime {
         $script = $this->parser->parse($code, $filename);
         $this->preprocessor->traverse($script);
         $this->typeReconstructor->resolve(new State($script));
-        echo "\n\nPre Processed:\n\n";
-        echo (new CfgPrinter\Text)->printScript($script);
-        echo "\n\n";
         $this->postprocessor->traverse($script);
         $this->detector->detect($script);
-        echo "\n\nPost Processed:\n\n";
-        echo (new CfgPrinter\Text)->printScript($script);
-        echo "\n\n";
         $block = $this->compiler->compile($script);
-        echo "\n\nCompiled:\n\n";
-        echo (new Printer)->print($block);
-        echo "\n\n";
         $this->assignOpResolver->optimize($block);
-
-        echo "\n\Optimized:\n\n";
-        echo (new Printer)->print($block);
-        echo "\n\n";
         return $block;
     }
 
