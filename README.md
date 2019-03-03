@@ -27,7 +27,7 @@ There are three main ways of using this compiler:
 
 This compiler mode implements its own PHP Virtual Machine, just like PHP does. This is effectively a giant switch statement in a loop.
 
-No, seriously. It's literally [a giant switch statement](lib/PHPCompiler/VM/VM.php)...
+No, seriously. It's literally [a giant switch statement](lib/PHPCompiler/Backend/VM/VM.php)...
 
 Practically, it's a REALLY slow way to run your PHP code. Well, it's slow because it's in PHP, and PHP is already running on top of a VM written in C. 
 
@@ -62,7 +62,9 @@ There are four CLI entrypoints, and all 4 behave (somewhat) like the PHP cli:
  * `php bin/compile.php` - Compile all code, and output a `.o` file.
  * `php bin/print.php` - Compile and output CFG and the generated OpCodes (useful for debugging)
 
- Specifying code from `STDIN` (this works for all 4 entrypoints):
+## Executing Code
+
+Specifying code from `STDIN` (this works for all 4 entrypoints):
 
 ```console
 me@local:~$ echo '<?php echo "Hello World\n";' | php bin/vm.php
@@ -94,3 +96,36 @@ Or, using the default:
 me@local:~$ php bin/compile.php test.php
 // generates test.o
 ```
+
+## Linting Code
+
+If you pass the `-l` parameter, it will not execute the code, but instead just perform the compilation. This will allow you to test to see if the code even will compile (hint: most currently will not).
+
+## Debugging
+
+Sometimes, you want to see what's going on. If you do, try the `bin/print.php` entrypoint. It will output two types of information. The first is the Control Flow Graph, and the second is the compiled opcodes.
+
+```console
+me@local:~$ php bin/print.php -r 'echo "Hello World\n";'
+
+Control Flow Graph:
+
+Block#1
+    Terminal_Echo
+        expr: LITERAL<inferred:string>('Hello World
+        ')
+    Terminal_Return
+
+
+OpCodes:
+
+block_0:
+  TYPE_ECHO(0, null, null)
+  TYPE_RETURN_VOID(null, null, null)
+```
+
+# Future Work
+
+Right now, this only supports an EXTREMELY limited subset of PHP. There is no support for dynamic anything. Arrays aren't supported. Neither Object properties nor methods are not supported. And the only builtin functions that are supported are `var_dump` and `strlen`.
+
+But it's a start...
