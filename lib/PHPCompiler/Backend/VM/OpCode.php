@@ -28,6 +28,11 @@ class OpCode {
     const TYPE_IDENTICAL = 16;
     const TYPE_RETURN = 17;
     const TYPE_MINUS = 18;
+    const TYPE_DECLARE_CLASS = 19;
+    const TYPE_NEW = 20;
+    const TYPE_MUL = 21;
+    const TYPE_DIV = 22;
+    const TYPE_GREATER = 23;
 
     public int $type;
     public ?int $arg1;

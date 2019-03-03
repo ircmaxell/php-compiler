@@ -26,6 +26,7 @@ class JIT {
     private static array $builtIns = [];
 
     const COMPARE_MAP = [
+        OpCode::TYPE_GREATER => \GCC_JIT_COMPARISON_GT,
         OpCode::TYPE_SMALLER => \GCC_JIT_COMPARISON_LT,
         OpCode::TYPE_IDENTICAL => \GCC_JIT_COMPARISON_EQ,
     ];
@@ -33,6 +34,8 @@ class JIT {
     const BINARYOP_MAP = [
         OpCode::TYPE_MINUS => \GCC_JIT_BINARY_OP_MINUS,
         OpCode::TYPE_PLUS => \GCC_JIT_BINARY_OP_PLUS,
+        OpCode::TYPE_MUL => \GCC_JIT_BINARY_OP_MULT,
+        OpCode::TYPE_DIV => \GCC_JIT_BINARY_OP_DIVIDE,
     ];
 
     public static function compile(Block $block, ?string $debugfile = null) {
@@ -178,8 +181,10 @@ class JIT {
                     }
                     
                     break;
+                case OpCode::TYPE_MUL:
                 case OpCode::TYPE_PLUS:
                 case OpCode::TYPE_MINUS:
+                case OpCode::TYPE_DIV:
                     $result = $block->getOperand($op->arg1);
                     $context->makeVariableFromRValueOp(
                         $context->helper->numericBinaryOp(
@@ -191,6 +196,7 @@ class JIT {
                         $result
                     );
                     break;
+                case OpCode::TYPE_GREATER:
                 case OpCode::TYPE_SMALLER:
                 case OpCode::TYPE_IDENTICAL:
                     $result = $block->getOperand($op->arg1);
@@ -216,11 +222,15 @@ class JIT {
                 case OpCode::TYPE_JUMPIF:
                     $if = self::compileBlockInternal($context, $func, $op->block1, ...$args);
                     $else = self::compileBlockInternal($context, $func, $op->block2, ...$args);
+                    $condition = $context->castToBool(
+                        $context->getVariableFromOp($block->getOperand($op->arg1))->rvalue
+                    );
+
                     $context->freeDeadVariables($func, $gccBlock, $block);
                     \gcc_jit_block_end_with_conditional(
                         $gccBlock,
                         $context->location(),
-                        $context->getVariableFromOp($block->getOperand($op->arg1))->rvalue,
+                        $condition,
                         $if,
                         $else
                     );

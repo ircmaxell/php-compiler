@@ -209,6 +209,22 @@ class Context {
         $this->typeMap[$name] = $type;
     }
 
+    public function castToBool(\gcc_jit_rvalue_ptr $value): \gcc_jit_rvalue_ptr {
+        $type = \gcc_jit_rvalue_get_type($value);
+        switch ($this->getStringFromType($type)) {
+            case 'bool':
+                return $value;
+            case 'long long':
+                return \gcc_jit_context_new_comparison(
+                    $this->context,
+                    $this->location(),
+                    \GCC_JIT_COMPARISON_NE,
+                    $value,
+                    $this->constantFromInteger(0, 'long long')
+                );
+        }
+    }
+
     public function getTypeFromType(Type $type): \gcc_jit_type_ptr {
 
         static $map = [

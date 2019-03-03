@@ -13,13 +13,11 @@ namespace PHPCompiler\Backend\VM;
 class Handler {
 
     public $callback;
-    private JIT\Result $result;
+    private ?JIT\Result $result;
 
-    public function __construct(callable $cb, JIT\Result $result) {
+    public function __construct(callable $cb, ?JIT\Result $result) {
         $this->callback = $cb;
         $this->result = $result;
     }
-
-    
 
 }

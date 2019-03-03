@@ -18,6 +18,8 @@ class PHPVar {
     public string $string;
     public int $integer;
     public bool $bool;
+    public ObjectEntry $object;
+    public array $array;
 
     public function __construct(int $type = Type::TYPE_UNKNOWN) {
         $this->type = $type;
@@ -33,6 +35,8 @@ class PHPVar {
     public function toBool(): bool {
         if ($this->type === Type::TYPE_BOOLEAN) {
             return $this->bool;
+        } elseif ($this->type === Type::TYPE_LONG) {
+            return $this->integer !== 0;
         }
         var_dump($this);
         // TODO: convert other types
@@ -54,6 +58,7 @@ class PHPVar {
         unset($this->string);
         unset($this->integer);
         unset($this->bool);
+        unset($this->object);
         $this->type = $var->type;
         switch ($var->type) {
             case Type::TYPE_STRING:
@@ -65,6 +70,12 @@ class PHPVar {
             case Type::TYPE_BOOLEAN:
                 $this->bool = $var->bool;
                 break;
+            case Type::TYPE_OBJECT:
+                $this->object = $var->object;
+                break;
+            default:
+                var_dump($var->type);
+                throw new \LogicException("Unsupported type copy");
         }
     }
 }

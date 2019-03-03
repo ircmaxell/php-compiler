@@ -27,7 +27,7 @@ class Block {
 
     public ?Func $func = null;
 
-    public CfgBlock $orig;
+    public ?CfgBlock $orig;
 
     private \SplObjectStorage $scope;
 
@@ -43,7 +43,7 @@ class Block {
 
     public \SplObjectStorage $args;
 
-    public function __construct(CfgBlock $block) {
+    public function __construct(?CfgBlock $block) {
         $this->orig = $block;
         $this->scope = new \SplObjectStorage;
         $this->args = new \SplObjectStorage;

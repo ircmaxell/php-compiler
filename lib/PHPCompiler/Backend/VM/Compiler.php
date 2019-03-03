@@ -52,7 +52,7 @@ class Compiler {
                 case Op\Stmt\Class_::class:
                 case Op\Stmt\Interface_::class:
                 case Op\Stmt\Trait_::class:
-                    $block->addOpCode(...$this->compileClassLike($child, $block));
+                    $block->addOpCode($this->compileClassLike($child, $block));
                     break;
             }
         }
@@ -68,6 +68,19 @@ class Compiler {
                     $this->compileOp($child, $block);
             }
         }
+    }
+
+    protected function compileClassLike(Op\Stmt\ClassLike $class, Block $block): OpCode {
+        if ($class instanceof Op\Stmt\Class_) {
+            $return = new OpCode(
+                OpCode::TYPE_DECLARE_CLASS,
+                $this->compileOperand($class->name, $block, true)
+            );
+        } else {
+            throw new \LogicException('Unsupported class type: ' . get_class($class));
+        }
+        $return->block1 = $this->compileCfgBlock($class->stmts);
+        return $return;
     }
 
     protected function compileParam(Op\Expr\Param $param, Block $block, int $paramIdx): OpCode {
@@ -157,10 +170,16 @@ class Compiler {
             return OpCode::TYPE_PLUS;
         } elseif ($expr instanceof Op\Expr\BinaryOp\Smaller) {
             return OpCode::TYPE_SMALLER;
+        } elseif ($expr instanceof Op\Expr\BinaryOp\Greater) {
+            return OpCode::TYPE_GREATER;
         } elseif ($expr instanceof Op\Expr\BinaryOp\Identical) {
             return OpCode::TYPE_IDENTICAL;
         } elseif ($expr instanceof Op\Expr\BinaryOp\Minus) {
             return OpCode::TYPE_MINUS;
+        } elseif ($expr instanceof Op\Expr\BinaryOp\Mul) {
+            return OpCode::TYPE_MUL;
+        } elseif ($expr instanceof Op\Expr\BinaryOp\Div) {
+            return OpCode::TYPE_DIV;
         }
         throw new \LogicException("Unknown BinaryOp Type: " . $expr->getType());
     }
@@ -217,7 +236,24 @@ class Compiler {
                     );
                 }
                 return $return;
-
+            case Op\Expr\New_::class:
+                $return = [
+                    new OpCode(
+                        OpCode::TYPE_NEW,
+                        $this->compileOperand($expr->result, $block, false),
+                        $this->compileOperand($expr->class, $block, true),
+                    )
+                ];
+                foreach ($expr->args as $arg) {
+                    $return[] = new OpCode(
+                        OpCode::TYPE_ARG_SEND,
+                        $this->compileOperand($arg, $block, true)
+                    );
+                }
+                $return[] = new OpCode(
+                    OpCode::TYPE_FUNCCALL_EXEC_NORETURN
+                );
+                return $return;
         }
         throw new \LogicException("Unsupported expression: " . $expr->getType());
     }

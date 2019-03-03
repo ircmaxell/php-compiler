@@ -90,16 +90,16 @@ class String_ extends Type {
                 'const char*'
             )
         );
-        // $this->context->registerFunction(
-        //     '__string__from_long_long',
-        //     $this->context->helper->createFunction(
-        //         \GCC_JIT_FUNCTION_ALWAYS_INLINE,
-        //         '__string__from_long_long',
-        //         'char*',
-        //         false,
-        //         'long long'
-        //     )
-        // );
+        $this->context->registerFunction(
+            '__string__strlen',
+            $this->context->helper->createFunction(
+                \GCC_JIT_FUNCTION_ALWAYS_INLINE,
+                '__string__strlen',
+                'long long',
+                false,
+                '__string__*'
+            )
+        );
     }
 
     public function implement(): void {
@@ -126,6 +126,21 @@ class String_ extends Type {
         $this->implementInit();
         $this->implementRealloc();
         $this->implementSeparate();
+        $this->implementStrlen();
+        $this->context->functions['strlen'] = $this->context->lookupFunction('__string__strlen')->func;
+    }
+
+    private function implementStrlen(): void {
+        $strlen = $this->context->lookupFunction('__string__strlen');
+        $block = \gcc_jit_function_new_block($strlen->func, 'main');
+        \gcc_jit_block_end_with_return(
+            $block,
+            null,
+            $this->context->helper->cast(
+                $this->sizePtr($strlen->params[0]->asRValue())->asRValue(),
+                'long long'
+            )
+        );
     }
 
     private function implementAlloc(): void {
