@@ -7,40 +7,27 @@
  * @license MIT See LICENSE at the root of the project for more info
  */
 
-namespace PHPCompiler\Backend\VM\Builtins;
+namespace PHPCompiler\Backend\VM\Handler\Builtins\Functions;
 
-use PHPCompiler\Backend\VM\Block;
-use PHPCompiler\Backend\VM\ClassEntry;
-use PHPCompiler\Backend\VM\Context;
-use PHPCompiler\Backend\VM\Frame;
+use PHPCompiler\Backend\VM\Handler\Builtins\Functions;
 use PHPCompiler\Backend\VM\Handler;
+use PHPCompiler\Backend\VM\Frame;
 use PHPCompiler\Backend\VM\PHPVar;
 use PHPTypes\Type;
 
-class Basic {
+class VarDump extends Functions {
 
-    public function register(Context $context) {
-        $this->registerFunction($context, 'var_dump', function(Frame $frame) {
-            foreach ($frame->calledArgs as $arg) {
-                self::var_dump($arg, 1);
-            }
-        });
-        $this->registerFunction($context, 'strlen', function(Frame $frame) {
-            $var = $frame->calledArgs[0];
-            if (!is_null($frame->returnVar)) {
-                $frame->returnVar->type = Type::TYPE_LONG;
-                $frame->returnVar->integer = strlen($var->toString());
-            }
-        });
-        $context->classes['stdclass'] = new ClassEntry('stdClass');
+    public function getName(): string {
+        return 'var_dump';
     }
 
-    private function registerFunction(Context $context, string $name, callable $cb) {
-        $context->functions[$name] = new Block(null);
-        $context->functions[$name]->handler = new Handler($cb, null);
+    public function execute(Frame $frame): void {
+        foreach ($frame->calledArgs as $arg) {
+            $this->var_dump($arg, 1);
+        }
     }
 
-    private static function var_dump(PHPVar $var, int $level) {
+    private function var_dump(PHPVar $var, int $level) {
         if ($level > 1) {
             printf('%*c', $level - 1, ' ');
         }
@@ -58,7 +45,7 @@ class Basic {
                 $props = $var->object->getProperties(ClassEntry::PROP_PURPOSE_DEBUG);
                 printf("object(%s)#%d (%d) {\n", $var->object->class->name, $var->object->id, count($props));
                 foreach ($props as $key => $prop) {
-                    self::var_dump_object_property($key, $prop, $level);
+                    $this->var_dump_object_property($key, $prop, $level);
                 }
                 if ($level > 1) {
                     printf("%*c", $level - 1, ' ');
@@ -70,8 +57,9 @@ class Basic {
         }
     }
 
-    private static function var_dump_object_property(string $key, PHPVar $prop, int $level) {
+    private function var_dump_object_property(string $key, PHPVar $prop, int $level) {
         printf("\"%s\" =>\n", $key);
-        self::var_dump($prop, $level + 2);
+        $this->var_dump($prop, $level + 2);
     }
+
 }

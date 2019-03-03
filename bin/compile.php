@@ -6,7 +6,10 @@ function run(string $filename, string $code, array $options) {
     $runtime = new Runtime;
     $block = $runtime->parseAndCompile($code, $filename);
     if (!isset($options['-l'])) {
-        $runtime->run($block);
+        if (!isset($options['-o']) || $options['-o'] === true) {
+            $options['-o'] = str_replace('.php', '.o', $filename);
+        }
+        $runtime->standalone($block, $options['-o']);
     }
 }
 

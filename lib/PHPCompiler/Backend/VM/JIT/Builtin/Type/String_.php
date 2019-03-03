@@ -156,7 +156,7 @@ class String_ extends Type {
         $this->context->helper->assign(
             $block, 
             $local,
-            $this->context->memory->emalloc($allocSize, $this->pointer) 
+            $this->context->memory->malloc($allocSize, $this->pointer) 
         );
         $this->context->helper->assign(
             $block,
@@ -209,7 +209,7 @@ class String_ extends Type {
         $this->context->helper->assign(
             $block, 
             $local,
-            $this->context->memory->erealloc($ptr->asRValue(), $reallocSize, $this->pointer) 
+            $this->context->memory->realloc($ptr->asRValue(), $reallocSize, $this->pointer) 
         );
         $this->context->helper->assign(
             $block,

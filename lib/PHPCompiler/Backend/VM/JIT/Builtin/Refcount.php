@@ -248,10 +248,7 @@ class Refcount extends Builtin {
             $needsfree,
             $return
         );
-        $this->context->helper->eval(
-            $needsfree,
-            $this->context->memory->efree($virtual)
-        );
+        $this->context->memory->free($needsfree, $virtual);
         \gcc_jit_block_end_with_void_return(
             $needsfree,
             $this->context->location()

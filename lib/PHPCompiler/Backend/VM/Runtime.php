@@ -14,6 +14,7 @@ use PHPCfg\Traverser;
 use PHPCfg\LivenessDetector;
 use PHPCfg\Visitor;
 use PHPCfg\Printer as CfgPrinter;
+use PHPCfg\Script;
 use PHPTypes\TypeReconstructor;
 use PhpParser\NodeTraverser;
 use PhpParser\NodeVisitor;
@@ -54,27 +55,35 @@ class Runtime {
         $this->compiler = new Compiler;
     }
 
-    public function parseAndCompile(string $code, string $filename): ?Block {
+    public function parse(string $code, string $filename): Script {
         $script = $this->parser->parse($code, $filename);
         $this->preprocessor->traverse($script);
         $this->typeReconstructor->resolve(new State($script));
         $this->postprocessor->traverse($script);
         $this->detector->detect($script);
+        return $script;
+    }
+
+    public function compile(Script $script): ?Block {
         $block = $this->compiler->compile($script);
         $this->assignOpResolver->optimize($block);
         return $block;
     }
 
-    public function run(?Block $block) {
-        if (!\is_null($block->handler)) {
-            ($block->handler->callback)();
-            return VM::SUCCESS;
-        }
-        return VM::run($block);
+    public function jit(?Block $block, ?string $debugFile = null) {
+        JIT::compile($block, JIT\Builtin::LOAD_TYPE_EMBED, $debugFile)->compileInPlace();
     }
 
-    public function jit(?Block $block, ?string $debugFile = null) {
-        JIT::compile($block, $debugFile);
+    public function standalone(?Block $block, string $outfile, ?string $debugFile = null) {
+        JIT::compile($block, JIT\Builtin::LOAD_TYPE_STANDALONE, $debugFile)->compileToFile($outfile);
+    }
+
+    public function parseAndCompile(string $code, string $filename): ?Block {
+        return $this->compile($this->parse($code, $filename));
+    }
+
+    public function run(?Block $block) {
+        return VM::run($block);
     }
 
 }

@@ -38,23 +38,14 @@ class JIT {
         OpCode::TYPE_DIV => \GCC_JIT_BINARY_OP_DIVIDE,
     ];
 
-    public static function compile(Block $block, ?string $debugfile = null) {
-        $context = new JIT\Context(JIT\Builtin::LOAD_TYPE_EMBED);
-        // $context->setDebug(true);
-        // if (!is_null($debugfile)) {
-        //     $context->setDebugFile($debugfile);
-        // }
-        // $context->setOption(
-        //     \GCC_JIT_INT_OPTION_OPTIMIZATION_LEVEL,
-        //     self::$optimizationLevel
-        // );
-
-        self::compileBlock($context, $block);
-        $context->compileInPlace();
+    public static function compile(Block $block, int $loadType, ?string $debugfile = null): JIT\Context {
+        $context = new JIT\Context($loadType);
+        $context->setMain(self::compileBlock($context, $block));
+        return $context;
     }
 
 
-    private static function compileBlock(JIT\Context $context, Block $block, ?string $funcName = null): void {
+    private static function compileBlock(JIT\Context $context, Block $block, ?string $funcName = null): \gcc_jit_function_ptr {
         $internalName = "internal_" . (++self::$functionNumber);
         
         $args = [];
@@ -64,16 +55,21 @@ class JIT {
             if ($block->func->returnType instanceof Op\Type\Literal) {
                 switch ($block->func->returnType->name) {
                     case 'void':
-                        $callbackType .= 'void';
+                        $callbackType = 'void';
                         break;
                     case 'int':
-                        $callbackType .= 'long long';
+                        $callbackType = 'long long';
                         break;
-                    throw new \LogicException("Non-void return types not supported yet");
+                    case 'string':
+                        $callbackType = '__string__*';
+                        break;
+                    default:
+                        throw new \LogicException("Non-void return types not supported yet");
                 }
             } else {
                 throw new \LogicException("Non-typed functions not implemented yet");
             }
+            $returnType = $context->getTypeFromString($callbackType);
             $callbackType .= '(*)(';
             $callbackSep = '';
             foreach ($block->func->params as $idx => $param) {
@@ -90,9 +86,6 @@ class JIT {
                 );
             }
             $callbackType .= ')';
-            assert($block->func->returnType instanceof Op\Type\Literal);
-            // ToDo: do this in PHPTypes
-            $returnType = $context->getTypeFromType(Type::fromDecl($block->func->returnType->name));
         } else {
             $callbackType = 'void(*)()';
             $returnType = $context->getTypeFromString('void');
@@ -113,9 +106,10 @@ class JIT {
         }
 
         self::compileBlockInternal($context, $func, $block, ...$argVars);
-        if (empty($args)) {
+        if ($callbackType === 'void(*)()') {
             $context->addExport($internalName, $callbackType, $block);
         }
+        return $func;
     }
 
     private static int $blockNumber = 0;

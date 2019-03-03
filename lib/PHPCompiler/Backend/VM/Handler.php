@@ -10,14 +10,8 @@
 namespace PHPCompiler\Backend\VM;
 
 
-class Handler {
+interface Handler {
 
-    public $callback;
-    private ?JIT\Result $result;
-
-    public function __construct(callable $cb, ?JIT\Result $result) {
-        $this->callback = $cb;
-        $this->result = $result;
-    }
+    public function execute(Frame $frame): void;
 
 }

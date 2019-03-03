@@ -11,7 +11,6 @@ namespace PHPCompiler\Backend\VM\JIT;
 
 use PHPCompiler\Backend\VM\Handler;
 
-
 class Result {
     private \gcc_jit_result_ptr $result;
     private int $loadType;
@@ -36,7 +35,7 @@ class Result {
     }
 
     public function getHandler(string $funcName, string $callbackType): Handler {
-        return new Handler($this->getCallable($funcName, $callbackType), $this);
+        return new Handler\JIT($this->getCallable($funcName, $callbackType), $this);
     }
 
     public function getCallable(string $funcName, string $callbackType): callable {

@@ -1,80 +1,96 @@
 # A compiler for PHP
 
-Right now, this doesn't do anything...
+Ok, so this used to be a dead project. It required calling out to all sorts of hackery to generate PHP extensions, or PHP itself.
 
-Well, that's a lie.
+Now, thanks to [FFI landing in PHP 7.4](https://wiki.php.net/rfc/ffi), the potential for all sorts of crazy is HUGE. 
 
-Right now, it produces errors on large scales.
+So here we go :)
 
-Errors upon errors upon errors.
+# Installation
 
-Some in PHP.
+Install PHP 7.4, being sure to enable the FFI extension (`--with-ffi`).
 
-Some in C.
+Also, you need to install the system dependency `libgccjit`. On Ubuntu:
 
-Some in unknown places.
-
-Some are easy to fix.
-
-Some are ungodly security holes.
-
-But every once in a while.
-
-When the planets and the code aligns *just* right.
-
-Out pops some working code.
-
-And that moment is what it's all about.
-
-## Example
-
-Given the following PHP code:
-
-```php
-<?php
-
-class Foo {
-    /**
-     * @var int
-     */
-    public $foo;
-}
-?>
+```console
+me@local:~$ sudo apt-get install libgccjit-6-dev
 ```
 
-Fed into the compiler, will output a metric-ton of C code.
 
-Check out `demo.php` to see how.
+Then simply `composer install`.
 
-But when you load the compiled extension, you get the following result:
+# Running Code
 
-    $ php -d "extension=modules/compiled_123.so" -r "var_dump(new Foo);"
-    object(Foo)#1 (1) {
-      ["foo"]=>
-      int(0)
-    }
+There are three main ways of using this compiler:
 
-Which is just what you'd expect.
+## VM - Virtual Machine
 
-Wait. Why is it `0`? We never defaulted it...
+This compiler mode implements its own PHP Virtual Machine, just like PHP does. This is effectively a giant switch statement in a loop.
 
-I wonder...
+No, seriously. It's literally [a giant switch statement](lib/PHPCompiler/VM/VM.php)...
 
-    $foo = new Foo;
-    $foo->foo = "123";
+Practically, it's a REALLY slow way to run your PHP code. Well, it's slow because it's in PHP, and PHP is already running on top of a VM written in C. 
 
-    // PHP Fatal error:  Uncaught Error: Parameter is not an int in Command line code:1
+But what if we could change that...
 
-Woah. Where's that error coming from?
+## JIT - Just In Time
 
-This is weird.
+This compiler mode takes PHP code and generates machine code out of it. Then, instead of letting the code run in the VM above, it just calls to the machine code.
 
-And this is compiled code. You declared it as an integer, and as an integer it will be.
+It's WAY faster to run (faster than PHP 7.4, when you don't account for compile time).
 
-## Types supported
+But it also takes a long time to compile (compiling is SLOW, because it's being compiled from PHP).
 
-Too few to note right now
+Every time you run it, it compiles again. 
 
-## Why?
+That brings us to our final mode:
 
-I'm crazy. Simple as that.
+## Compile - Ahead Of Time Compilation
+
+This compiler mode actually generates native machine code, and outputs it to an executable.
+
+This means, that you can take PHP code, and generate a standalone binary. One that's implemented **without a VM**. That means it's (in theory at least) as fast as native C.
+
+Well, that's not true. But it's pretty dang fast.
+
+# Okay, Enough, How can I try?
+
+There are four CLI entrypoints, and all 4 behave (somewhat) like the PHP cli:
+
+ * `php bin/vm.php` - Run code in a VM
+ * `php bin/jit.php` - Compile all code, and then run it
+ * `php bin/compile.php` - Compile all code, and output a `.o` file.
+ * `php bin/print.php` - Compile and output CFG and the generated OpCodes (useful for debugging)
+
+ Specifying code from `STDIN` (this works for all 4 entrypoints):
+
+```console
+me@local:~$ echo '<?php echo "Hello World\n";' | php bin/vm.php
+Hello World
+```
+
+You can also specify on the CLI via `-r` argument:
+
+```console
+me@local:~$ php bin/jit.php -r 'echo "Hello World\n";'
+Hello World
+```
+
+And you can specify a file:
+
+```console
+me@local:~$ php bin/vm.php test.php
+```
+
+When compiling using `bin/compile.php`, you can also specify an "output file" with `-o` (this defaults to the input file, with `.php` replaced with `.o`).
+
+```console
+me@local:~$ php bin/compile.php -o other.o test.php
+```
+
+Or, using the default:
+
+```console
+me@local:~$ php bin/compile.php test.php
+// generates test.o
+```

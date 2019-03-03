@@ -26,7 +26,7 @@ nextframe:
         }
 restart:
         if (!is_null($frame->block->handler)) {
-            ($frame->block->handler->callback)($frame);
+            $frame->block->handler->execute($frame);
             goto nextframe;
         }
 

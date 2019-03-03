@@ -15,6 +15,7 @@ abstract class Builtin {
     const LOAD_TYPE_EXPORT = 1;
     const LOAD_TYPE_IMPORT = 2;
     const LOAD_TYPE_EMBED = 3;
+    const LOAD_TYPE_STANDALONE = 4;
 
     protected Context $context;
     protected int $loadType;

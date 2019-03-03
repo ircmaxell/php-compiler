@@ -36,6 +36,9 @@ class Context {
     private ?string $debugFile = null;
     public Scope $scope;
     private array $scopeStack;
+    private ?\gcc_jit_function_ptr $main = null;
+    private ?\gcc_jit_function_ptr $initFunc = null;
+    private ?\gcc_jit_function_ptr $shutdownFunc = null;
 
     private array $exports = [];
 
@@ -47,7 +50,7 @@ class Context {
         $this->location = new Location("Unknown", 1, 1);
         
         $this->refcount = new Builtin\Refcount($this, $loadType);
-        $this->memory = new Builtin\MemoryManager($this, $loadType);
+        $this->memory = Builtin\MemoryManager::load($this, $loadType);
         $this->output = new Builtin\Output($this, $loadType);
         $this->type = new Builtin\Type($this, $loadType);
 
@@ -56,6 +59,10 @@ class Context {
 
     public function __destruct() {
         \gcc_jit_context_release($this->context);
+    }
+
+    public function setMain(\gcc_jit_function_ptr $func): void {
+        $this->main = $func;
     }
 
     public function addExport(string $name, string $signature, Block $block): void {
@@ -94,71 +101,113 @@ class Context {
     }
 
     private function defineBuiltins(int $loadType): void {
-      foreach ($this->builtins as $builtin) {
-          $this->location = new Location(get_class($builtin) . '::register', 1, 1, $this->location);
-          // this is a separate loop, since implementation may
-          // depend on global variables set during init()
-          // so this way, cross-builtin dependencies are honored
-          $builtin->register();
-          $this->location = $this->location->prev;
-      }
-      if ($loadType === Builtin::LOAD_TYPE_IMPORT) {
-          return;
-      }
-      foreach ($this->builtins as $builtin) {
-          $this->location = new Location(get_class($builtin) . '::implement', 1, 1, $this->location);
-          // this is a separate loop, since initialize may
-          // depend on functions defined during implement()
-          // so this way, cross-builtin dependencies are honored
-          $builtin->implement();
-          $this->location = $this->location->prev;
-      }
-      $initFunc = \gcc_jit_context_new_function(
-          $this->context,
-          null,
-          \GCC_JIT_FUNCTION_EXPORTED,
-          $this->getTypeFromString('void'),
-          '__init__',
-          0,
-          null,
-          0
-      );
+        foreach ($this->builtins as $builtin) {
+            $this->location = new Location(get_class($builtin) . '::register', 1, 1, $this->location);
+            // this is a separate loop, since implementation may
+            // depend on global variables set during init()
+            // so this way, cross-builtin dependencies are honored
+            $builtin->register();
+            $this->location = $this->location->prev;
+        }
+        if ($loadType === Builtin::LOAD_TYPE_IMPORT) {
+            return;
+        }
+        foreach ($this->builtins as $builtin) {
+            $this->location = new Location(get_class($builtin) . '::implement', 1, 1, $this->location);
+            // this is a separate loop, since initialize may
+            // depend on functions defined during implement()
+            // so this way, cross-builtin dependencies are honored
+            $builtin->implement();
+            $this->location = $this->location->prev;
+        }
+        $this->initFunc = \gcc_jit_context_new_function(
+            $this->context,
+            null,
+            \GCC_JIT_FUNCTION_EXPORTED,
+            $this->getTypeFromString('void'),
+            '__init__',
+            0,
+            null,
+            0
+        );
 
-      $this->initBlock = \gcc_jit_function_new_block($initFunc, 'initblock');
-      foreach ($this->builtins as $builtin) {
-          $this->location = new Location(get_class($builtin) . '::initialize', 1, 1, $this->location);
-          $builtin->initialize($initFunc);
-          $this->location = $this->location->prev;
-      }
-      $shutdownFunc = \gcc_jit_context_new_function(
-          $this->context,
-          null,
-          \GCC_JIT_FUNCTION_EXPORTED,
-          $this->getTypeFromString('void'),
-          '__shutdown__',
-          0,
-          null,
-          0
-      );
-      $this->shutdownBlock = \gcc_jit_function_new_block($shutdownFunc, 'shutdownblock');
+        $this->initBlock = \gcc_jit_function_new_block($this->initFunc, 'initblock');
+        foreach ($this->builtins as $builtin) {
+            $this->location = new Location(get_class($builtin) . '::initialize', 1, 1, $this->location);
+            $builtin->initialize($this->initFunc);
+            $this->location = $this->location->prev;
+        }
+        $this->shutdownFunc = \gcc_jit_context_new_function(
+            $this->context,
+            null,
+            \GCC_JIT_FUNCTION_EXPORTED,
+            $this->getTypeFromString('void'),
+            '__shutdown__',
+            0,
+            null,
+            0
+        );
+        $this->shutdownBlock = \gcc_jit_function_new_block($this->shutdownFunc, 'shutdownblock');
       
+    }
+
+    public function compileToFile(string $file) {
+        // add main function
+        if (!is_null($this->main)) {
+            $main = \gcc_jit_context_new_function(
+                $this->context,
+                null,
+                \GCC_JIT_FUNCTION_EXPORTED,
+                $this->getTypeFromString('void'),
+                'main',
+                0,
+                null,
+                0
+            );
+            $block = \gcc_jit_function_new_block($main, 'main');
+            $this->helper->eval(
+                $block,
+                \gcc_jit_context_new_call(
+                    $this->context,
+                    $this->location(),
+                    $this->initFunc,
+                    0,
+                    null
+                )
+            );
+            $this->helper->eval(
+                $block,
+                \gcc_jit_context_new_call(
+                    $this->context,
+                    $this->location(),
+                    $this->main,
+                    0,
+                    null
+                )
+            );
+            $this->helper->eval(
+                $block,
+                \gcc_jit_context_new_call(
+                    $this->context,
+                    $this->location(),
+                    $this->shutdownFunc,
+                    0,
+                    null
+                )
+            );
+            \gcc_jit_block_end_with_void_return($block, null);
+        }
+        $this->compileCommon();
+        \gcc_jit_context_compile_to_file(
+            $this->context,
+            \GCC_JIT_OUTPUT_KIND_EXECUTABLE,
+            $file
+        );
     }
 
     public function compileInPlace() {
         if (is_null($this->result)) {
-            \gcc_jit_block_end_with_void_return($this->initBlock, $this->location());
-            \gcc_jit_block_end_with_void_return($this->shutdownBlock, $this->location());
-            if (!is_null($this->debugFile)) {
-                gcc_jit_context_dump_reproducer_to_file(
-                    $this->context,
-                    $this->debugFile . '.reproduce.c'
-                );
-                \gcc_jit_context_dump_to_file(
-                    $this->context,
-                    $this->debugFile . '.debug.c',
-                    1
-                );
-            }
+            $this->compileCommon();
 
             $this->result = new Result(
                 \gcc_jit_context_compile($this->context),
@@ -167,6 +216,22 @@ class Context {
             foreach ($this->exports as $export) {
                 $export[2]->handler = $this->result->getHandler($export[0], $export[1]);
             }
+        }
+    }
+
+    private function compileCommon() {
+        \gcc_jit_block_end_with_void_return($this->initBlock, $this->location());
+        \gcc_jit_block_end_with_void_return($this->shutdownBlock, $this->location());
+        if (!is_null($this->debugFile)) {
+            gcc_jit_context_dump_reproducer_to_file(
+                $this->context,
+                $this->debugFile . '.reproduce.c'
+            );
+            \gcc_jit_context_dump_to_file(
+                $this->context,
+                $this->debugFile . '.debug.c',
+                1
+            );
         }
     }
 
@@ -334,9 +399,10 @@ class Context {
                 true
             );
             $this->stringConstantMap[$string] = $global;
-            $this->helper->eval($this->shutdownBlock, $this->memory->efree(
+            $this->memory->free(
+                $this->shutdownBlock,
                 $global->asRValue()
-            ));
+            );
         }
         return $this->stringConstantMap[$string]->asRValue();
     }

@@ -18,7 +18,7 @@ class Context {
     public array $constants = [];
 
     public function __construct() {
-        (new Builtins\Basic)->register($this);
+        Handler\Builtins::load($this);
     }
 
     public function constantFetch(string $name): ?PHPVar {

@@ -59,8 +59,6 @@ abstract class BaseTest extends TestCase {
         }
     }
 
-
-
     private static function parsePHPT(string $filename, string $basename): array {
         $sections = [];
         $section = '';
