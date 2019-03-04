@@ -84,17 +84,18 @@ And you can specify a file:
 me@local:~$ php bin/vm.php test.php
 ```
 
-When compiling using `bin/compile.php`, you can also specify an "output file" with `-o` (this defaults to the input file, with `.php` replaced with `.o`).
+When compiling using `bin/compile.php`, you can also specify an "output file" with `-o` (this defaults to the input file, with `.php` removed).
 
 ```console
-me@local:~$ php bin/compile.php -o other.o test.php
+me@local:~$ php bin/compile.php -o other test.php
+// generates other
 ```
 
 Or, using the default:
 
 ```console
 me@local:~$ php bin/compile.php test.php
-// generates test.o
+// generates test
 ```
 
 ## Linting Code
