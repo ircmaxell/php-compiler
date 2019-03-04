@@ -1,8 +1,8 @@
 <?php
 
 use PHPCfg\Printer\Text as CfgPrinter;
-use PHPCompiler\Backend\VM\Printer as OpCodePrinter;
-use PHPCompiler\Backend\VM\Runtime;
+use PHPCompiler\Printer as OpCodePrinter;
+use PHPCompiler\Runtime;
 
 function run(string $filename, string $code, array $options) {
     $runtime = new Runtime;

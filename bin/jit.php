@@ -1,6 +1,6 @@
 <?php
 
-use PHPCompiler\Backend\VM\Runtime;
+use PHPCompiler\Runtime;
 
 function run(string $filename, string $code, array $options) {
     $runtime = new Runtime;
