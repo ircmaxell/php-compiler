@@ -9,7 +9,15 @@ function run(string $filename, string $code, array $options) {
         if (!isset($options['-o']) || $options['-o'] === true) {
             $options['-o'] = str_replace('.php', '', $filename);
         }
-        $runtime->standalone($block, $options['-o']);
+        $debugFile = null;
+        if (isset($options['-y'])) {
+            if ($options['-y'] === true) {
+                $debugFile = $options['-o'];
+            } else {
+                $debugFile = $options['-y'];
+            }
+        }
+        $runtime->standalone($block, $options['-o'], $debugFile);
     }
 }
 

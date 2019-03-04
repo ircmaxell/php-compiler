@@ -17,10 +17,20 @@ while (!empty($opts)) {
         case '-l':
             $options['-l'] = true;
             break;
+        case '-y':
+            if (empty($opts) || substr($opts[0], 0, 1) === '-') {
+                $options['-y'] = true;
+            } elseif (count($opts) === 1 && substr($opts[0], -4) === '.php') {
+                // will assume the same name as the input file...
+                $options['-y'] = true;
+            } else {
+                $options['-y'] = array_shift($opts);
+            }
+            break;
         case '-o':
             if (empty($opts) || substr($opts[0], 0, 1) === '-') {
                 $options['-o'] = true;
-            } elseif (count($opts) === 1 && substr($opts[0], 0, -4) === '.php') {
+            } elseif (count($opts) === 1 && substr($opts[0], -4) === '.php') {
                 // will assume the same name as the input file...
                 $options['-o'] = true;
             } else {

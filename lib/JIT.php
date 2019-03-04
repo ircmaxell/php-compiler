@@ -40,8 +40,11 @@ class JIT {
         OpCode::TYPE_DIV => \GCC_JIT_BINARY_OP_DIVIDE,
     ];
 
-    public static function compile(Block $block, int $loadType, ?string $debugfile = null): Context {
+    public static function compile(Block $block, int $loadType, ?string $debugFile = null): Context {
         $context = new Context($loadType);
+        if (!is_null($debugFile)) {
+            $context->setDebugFile($debugFile);
+        }
         $context->setMain(self::compileBlock($context, $block));
         return $context;
     }

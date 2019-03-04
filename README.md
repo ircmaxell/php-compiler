@@ -16,7 +16,6 @@ Also, you need to install the system dependency `libgccjit`. On Ubuntu:
 me@local:~$ sudo apt-get install libgccjit-6-dev
 ```
 
-
 Then simply `composer install`.
 
 # Running Code
@@ -135,3 +134,19 @@ block_0:
 Right now, this only supports an EXTREMELY limited subset of PHP. There is no support for dynamic anything. Arrays aren't supported. Neither Object properties nor methods are not supported. And the only builtin functions that are supported are `var_dump` and `strlen`.
 
 But it's a start...
+
+# Debugging
+
+Since this is bleeding edge, debuggability is key. To that vein, both `bin/jit.php` and `bin/compile.php` accept a `-y` flag which will output a pair of debugging files (they default to the prefix of the name of the script, but you can specify another prefix following the flag).
+
+```console
+me@local:~$ echo '<?php echo "Hello World\n";' > demo.php
+me@local:~$ php bin/compile.php -y demo.php
+# Produces: 
+#   demo - executable of the code
+#   demo.debug.c - A pseudo-c version of the PHP code
+#   demo.reproduce.c - All the libgccjit calls needed to reproduct the output
+```
+
+Checkout the committed [`demo.debug.c`](demo.debug.c) and [`demo.reproduce.c`](demo.reproduce.c) for more info...
+
