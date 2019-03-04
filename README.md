@@ -26,7 +26,7 @@ There are three main ways of using this compiler:
 
 This compiler mode implements its own PHP Virtual Machine, just like PHP does. This is effectively a giant switch statement in a loop.
 
-No, seriously. It's literally [a giant switch statement](lib/PHPCompiler/Backend/VM/VM.php)...
+No, seriously. It's literally [a giant switch statement](lib/VM.php)...
 
 Practically, it's a REALLY slow way to run your PHP code. Well, it's slow because it's in PHP, and PHP is already running on top of a VM written in C. 
 
