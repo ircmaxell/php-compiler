@@ -81,21 +81,26 @@ Hello World
 And you can specify a file:
 
 ```console
+me@local:~$ echo '<?php echo "Hello World\n";' > test.php
 me@local:~$ php bin/vm.php test.php
 ```
 
-When compiling using `bin/compile.php`, you can also specify an "output file" with `-o` (this defaults to the input file, with `.php` removed).
+When compiling using `bin/compile.php`, you can also specify an "output file" with `-o` (this defaults to the input file, with `.php` removed). This will generate an executable binary on your system, ready to execute
 
 ```console
+me@local:~$ echo '<?php echo "Hello World\n";' > test.php
 me@local:~$ php bin/compile.php -o other test.php
-// generates other
+me@local:~$ ./other
+Hello World
 ```
 
 Or, using the default:
 
 ```console
+me@local:~$ echo '<?php echo "Hello World\n";' > test.php
 me@local:~$ php bin/compile.php test.php
-// generates test
+me@local:~$ ./test
+Hello World
 ```
 
 ## Linting Code
