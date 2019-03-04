@@ -23,19 +23,20 @@ class Context {
     private array $typeMap = [];
     private array $intConstant = [];
     private array $stringConstant = [];
+    private array $builtins;
+    private array $stringConstantMap = [];
+    
     private ?Result $result = null;
     public Builtin\MemoryManager $memory;
     public Builtin\Output $output;
     public Builtin\Type $type;
     public Builtin\Refcount $refcount;
     public Helper $helper;
-    private array $builtins;
     private int $loadType;
     private static int $stringConstantCounter = 0;
-    private array $stringConstantMap = [];
     private ?string $debugFile = null;
+
     public Scope $scope;
-    private array $scopeStack;
     private ?\gcc_jit_function_ptr $main = null;
     private ?\gcc_jit_function_ptr $initFunc = null;
     private ?\gcc_jit_function_ptr $shutdownFunc = null;
@@ -134,7 +135,7 @@ class Context {
         $this->initBlock = \gcc_jit_function_new_block($this->initFunc, 'initblock');
         foreach ($this->builtins as $builtin) {
             $this->location = new Location(get_class($builtin) . '::initialize', 1, 1, $this->location);
-            $builtin->initialize($this->initFunc);
+            $builtin->initialize();
             $this->location = $this->location->prev;
         }
         $this->shutdownFunc = \gcc_jit_context_new_function(
@@ -220,6 +221,11 @@ class Context {
     }
 
     private function compileCommon() {
+        foreach ($this->builtins as $builtin) {
+            $this->location = new Location(get_class($builtin) . '::shutdown', 1, 1, $this->location);
+            $builtin->shutdown();
+            $this->location = $this->location->prev;
+        }
         \gcc_jit_block_end_with_void_return($this->initBlock, $this->location());
         \gcc_jit_block_end_with_void_return($this->shutdownBlock, $this->location());
         if (!is_null($this->debugFile)) {

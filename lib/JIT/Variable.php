@@ -17,6 +17,7 @@ class Variable {
     const TYPE_NATIVE_LONG = 1;
     const TYPE_NATIVE_BOOL = 2;
     const TYPE_STRING = 3 | self::IS_REFCOUNTED;
+    const TYPE_OBJECT = 4 | self::IS_REFCOUNTED;
 
     const TYPE_MAP = [
         Type::TYPE_LONG => self::TYPE_NATIVE_LONG,
@@ -28,6 +29,7 @@ class Variable {
         self::TYPE_NATIVE_LONG => 'long long',
         self::TYPE_NATIVE_BOOL => 'bool',
         self::TYPE_STRING => '__string__*',
+        self::TYPE_OBJECT => '__object__*',
     ];
 
     const IS_REFCOUNTED = 1 << 16;
@@ -62,12 +64,17 @@ class Variable {
     }
 
     public static function getStringType(int $type): string {
-        return self::NATIVE_TYPE_MAP[$type];
+        if (isset(self::NATIVE_TYPE_MAP[$type])) {
+            return self::NATIVE_TYPE_MAP[$type];
+        }
     }
 
     public static function getTypeFromType(Type $type): int {
         if (isset(self::TYPE_MAP[$type->type])) {
             return self::TYPE_MAP[$type->type];
+        }
+        if ($type->type === Type::TYPE_OBJECT) {
+            return self::TYPE_OBJECT;
         }
         throw new \LogicException("Unsupported Type: " . $type->toString());
     }

@@ -17,7 +17,7 @@ class String_ extends Type {
     private \gcc_jit_struct_ptr $struct;
     public \gcc_jit_type_ptr $pointer;
     private \gcc_jit_lvalue_ptr $size;
-    private array $fields;
+    protected array $fields;
 
     public function register(): void {
         $this->struct = \gcc_jit_context_new_opaque_struct(
@@ -262,6 +262,14 @@ class String_ extends Type {
         \gcc_jit_block_end_with_void_return($block, $this->context->location());   
     }
 
+    public function initialize(): void {
+        \gcc_jit_block_add_assignment(
+            $this->context->initBlock,
+            null,
+            $this->size,
+            $this->sizeof($this->context->getTypeFromString('__string__'))
+        );
+    }
 
     public function readSize(\gcc_jit_rvalue_ptr $struct): \gcc_jit_rvalue_ptr {
         return gcc_jit_rvalue_access_field(
@@ -312,15 +320,6 @@ class String_ extends Type {
                 $this->context->location()
             ),
             'char*'
-        );
-    }
-
-    public function initialize(): void {
-        \gcc_jit_block_add_assignment(
-            $this->context->initBlock,
-            null,
-            $this->size,
-            $this->sizeof($this->context->getTypeFromString('__string__'))
         );
     }
 

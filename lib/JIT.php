@@ -271,6 +271,10 @@ class JIT {
                     $context->scope->args[] = $context->getVariableFromOp($block->getOperand($op->arg1))->rvalue;
                     break;
                 case OpCode::TYPE_FUNCCALL_EXEC_NORETURN:
+                    if (is_null($context->scope->toCall)) {
+                        // short circuit
+                        break;
+                    }
                     $context->helper->eval($gccBlock,
                         \gcc_jit_context_new_call(
                             $context->context,
@@ -295,6 +299,22 @@ class JIT {
                         $result
                     );
                     break;
+                case OpCode::TYPE_DECLARE_CLASS:
+                    $context->pushScope();
+                    $context->scope->classId = $context->type->class->declare($block->getOperand($op->arg1));
+                    self::compileClass($context->block1);
+                    $context->popScope();
+                    break;
+                case OpCode::TYPE_NEW:
+                    $class = $context->type->class->lookup($block->getOperand($op->arg2));
+                    $context->helper->assign(
+                        $gccBlock,
+                        $context->getVariableFromOp($block->getOperand($op->arg1))->lvalue,
+                        $context->type->object->allocate($class)
+                    );
+                    $context->scope->toCall = null;
+                    $context->scope->args = [];
+                    break;
                 default:
                     throw new \LogicException("Unknown JIT opcode: ". $op->getType());
             }
@@ -302,6 +322,13 @@ class JIT {
 void_return:
         \gcc_jit_block_end_with_void_return($gccBlock, null);
         return $gccBlock;
+    }
+
+    private static function compileClass(?Block $block) {
+        if ($block === null) {
+            return;
+        }
+        assert(empty($block->opCodes));
     }
 
     private static function compileArg(Operand $op): \gcc_jit_param_ptr {

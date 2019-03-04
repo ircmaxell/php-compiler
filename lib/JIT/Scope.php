@@ -12,7 +12,7 @@ namespace PHPCompiler\JIT;
 use PHPCfg\Operand;
 
 class Scope {
-
+    public int $classId = 0;
     public \SplObjectStorage $blockStorage;
     public \SplObjectStorage $variables;
     public ?\gcc_jit_function_ptr $toCall = null;
