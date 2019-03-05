@@ -168,12 +168,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/ircmaxell/php-types.git",
-                "reference": "0502c7de0693b9e918e1f8a7f7e71bec0e00791d"
+                "reference": "303fb4ceaf1e7e4d1f173262e5794f67c4c12011"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/ircmaxell/php-types/zipball/0502c7de0693b9e918e1f8a7f7e71bec0e00791d",
-                "reference": "0502c7de0693b9e918e1f8a7f7e71bec0e00791d",
+                "url": "https://api.github.com/repos/ircmaxell/php-types/zipball/303fb4ceaf1e7e4d1f173262e5794f67c4c12011",
+                "reference": "303fb4ceaf1e7e4d1f173262e5794f67c4c12011",
                 "shasum": ""
             },
             "require": {
@@ -201,7 +201,7 @@
                 }
             ],
             "description": "A PHP CFG Type Inference / Reconstruction Engine",
-            "time": "2019-03-01 17:59:22"
+            "time": "2019-03-04 23:49:56"
         },
         {
             "name": "nikic/php-parser",
@@ -2210,12 +2210,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/debug.git",
-                "reference": "dc5d5513c14d3606b74751fc4af001b04e1aa562"
+                "reference": "878d05a2eb80e8c5be1d15939b024d96265193e9"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/debug/zipball/dc5d5513c14d3606b74751fc4af001b04e1aa562",
-                "reference": "dc5d5513c14d3606b74751fc4af001b04e1aa562",
+                "url": "https://api.github.com/repos/symfony/debug/zipball/878d05a2eb80e8c5be1d15939b024d96265193e9",
+                "reference": "878d05a2eb80e8c5be1d15939b024d96265193e9",
                 "shasum": ""
             },
             "require": {
@@ -2258,7 +2258,7 @@
             ],
             "description": "Symfony Debug Component",
             "homepage": "https://symfony.com",
-            "time": "2019-02-27 08:20:51"
+            "time": "2019-03-04 10:54:25"
         },
         {
             "name": "symfony/event-dispatcher",
@@ -2329,12 +2329,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/filesystem.git",
-                "reference": "4ec22fee45f077f59f38fc1375bf622602d7b9b8"
+                "reference": "acf99758b1df8e9295e6b85aa69f294565c9fedb"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/filesystem/zipball/4ec22fee45f077f59f38fc1375bf622602d7b9b8",
-                "reference": "4ec22fee45f077f59f38fc1375bf622602d7b9b8",
+                "url": "https://api.github.com/repos/symfony/filesystem/zipball/acf99758b1df8e9295e6b85aa69f294565c9fedb",
+                "reference": "acf99758b1df8e9295e6b85aa69f294565c9fedb",
                 "shasum": ""
             },
             "require": {
@@ -2371,7 +2371,7 @@
             ],
             "description": "Symfony Filesystem Component",
             "homepage": "https://symfony.com",
-            "time": "2019-02-27 08:20:51"
+            "time": "2019-02-04 21:34:32"
         },
         {
             "name": "symfony/finder",

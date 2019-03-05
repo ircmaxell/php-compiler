@@ -13,6 +13,7 @@ use PHPTypes\Type;
 use PHPCompiler\VM\Context;
 use PHPCompiler\VM\ClassEntry;
 use PHPCompiler\VM\ObjectEntry;
+use PHPCompiler\VM\Variable;
 
 class VM {
     const SUCCESS = 1;
@@ -47,49 +48,49 @@ restart:
                     $arg1 = $frame->scope[$op->arg1];
                     $arg2 = $frame->scope[$op->arg2]->toInt();
                     $arg3 = $frame->scope[$op->arg3]->toInt();
-                    $arg1->type = Type::TYPE_BOOLEAN;
+                    $arg1->type = Variable::TYPE_BOOLEAN;
                     $arg1->bool = $arg2 < $arg3;
                     break;
                 case OpCode::TYPE_GREATER:
                     $arg1 = $frame->scope[$op->arg1];
                     $arg2 = $frame->scope[$op->arg2]->toInt();
                     $arg3 = $frame->scope[$op->arg3]->toInt();
-                    $arg1->type = Type::TYPE_BOOLEAN;
+                    $arg1->type = Variable::TYPE_BOOLEAN;
                     $arg1->bool = $arg2 > $arg3;
                     break;
                 case OpCode::TYPE_PLUS:
                     $arg1 = $frame->scope[$op->arg1];
                     $arg2 = $frame->scope[$op->arg2]->toInt();
                     $arg3 = $frame->scope[$op->arg3]->toInt();
-                    $arg1->type = Type::TYPE_LONG;
+                    $arg1->type = Variable::TYPE_INTEGER;
                     $arg1->integer = $arg2 + $arg3;
                     break;
                 case OpCode::TYPE_MINUS:
                     $arg1 = $frame->scope[$op->arg1];
                     $arg2 = $frame->scope[$op->arg2]->toInt();
                     $arg3 = $frame->scope[$op->arg3]->toInt();
-                    $arg1->type = Type::TYPE_LONG;
+                    $arg1->type = Variable::TYPE_INTEGER;
                     $arg1->integer = $arg2 - $arg3;
                     break;
                 case OpCode::TYPE_MUL:
                     $arg1 = $frame->scope[$op->arg1];
                     $arg2 = $frame->scope[$op->arg2]->toInt();
                     $arg3 = $frame->scope[$op->arg3]->toInt();
-                    $arg1->type = Type::TYPE_LONG;
+                    $arg1->type = Variable::TYPE_INTEGER;
                     $arg1->integer = $arg2 * $arg3;
                     break;
                 case OpCode::TYPE_DIV:
                     $arg1 = $frame->scope[$op->arg1];
                     $arg2 = $frame->scope[$op->arg2]->toInt();
                     $arg3 = $frame->scope[$op->arg3]->toInt();
-                    $arg1->type = Type::TYPE_LONG;
+                    $arg1->type = Variable::TYPE_INTEGER;
                     $arg1->integer = $arg2 / $arg3;
                     break;
                 case OpCode::TYPE_CONCAT:
                     $arg1 = $frame->scope[$op->arg1];
                     $arg2 = $frame->scope[$op->arg2]->toString();
                     $arg3 = $frame->scope[$op->arg3]->toString();
-                    $arg1->type = Type::TYPE_STRING;
+                    $arg1->type = Variable::TYPE_STRING;
                     $arg1->string = $arg2 . $arg3;
                     break;
                 case OpCode::TYPE_ECHO:
@@ -178,7 +179,7 @@ restart:
                         throw new \LogicException("Duplicate class definition for $name");
                     }
                     $classEntry = new ClassEntry($name);
-                    self::defineClass($classEntry, $op->block1);
+                    self::defineClass($context, $classEntry, $op->block1);
                     $context->classes[$lcname] = $classEntry;
                     break;
                 case OpCode::TYPE_NEW:
@@ -189,10 +190,20 @@ restart:
                         throw new \LogicException("Attempting to instantiate non-existing class $name");
                     }
                     $class = $context->classes[$lcname];
-                    $result->type = Type::TYPE_OBJECT;
+                    $result->type = Variable::TYPE_OBJECT;
                     $result->object = new ObjectEntry($class);
                     $frame->call = $result->object->constructor;
                     $frame->callArgs = [$result];
+                    break;
+                case OpCode::TYPE_PROPERTY_FETCH:
+                    $result = $frame->scope[$op->arg1];
+                    $var = $frame->scope[$op->arg2]->resolveIndirect();
+                    $name = $frame->scope[$op->arg3]->toString();
+                    if ($var->type !== Variable::TYPE_OBJECT) {
+                        throw new \LogicException("Unsupported property fetch on non-object");
+                    }
+                    $result->type = Variable::TYPE_INDIRECT;
+                    $result->indirect = $var->object->getProperty($name);
                     break;
                 default:
                     throw new \LogicException("VM OpCode Not Implemented: " . $op->getType());
@@ -201,11 +212,25 @@ restart:
         return self::SUCCESS;
     }
 
-    protected static function defineClass(ClassEntry $entry, Block $block): void {
+    protected static function defineClass(Context $context, ClassEntry $entry, Block $block): void {
+        $frame = $block->getFrame($context);
         // TODO
         foreach ($block->opCodes as $op) {
-            var_dump($op);
-            die("Class body not implemented yet\n");
+            switch ($op->type) {
+                case OpCode::TYPE_DECLARE_PROPERTY:
+                    $name = $frame->scope[$op->arg1];
+                    assert(is_null($op->arg2)); // no defaults for now
+                    $entry->properties[] = new VM\ClassProperty(
+                        $name->toString(),
+                        null,
+                        $frame->scope[$op->arg3]
+                    );
+                    break;
+                default:
+                    var_dump($op);
+                    throw new \LogicException('Other class body types are not jittable for now');
+            }
+            
         }
     }
 

@@ -243,6 +243,7 @@ class Context {
 
     public function setDebugFile(string $file): void {
         $this->debugFile = $file;
+        $this->setDebug(true);
     }
 
     public function setDebug(bool $value): void {
@@ -301,6 +302,7 @@ class Context {
         static $map = [
             Type::TYPE_LONG => 'long long',
             Type::TYPE_STRING => '__string__*',
+            Type::TYPE_OBJECT => '__object__*',
         ];
         if (isset($map[$type->type])) {
             return $this->getTypeFromString($map[$type->type]);
@@ -343,16 +345,24 @@ class Context {
                 $map[$type]
             );
         }
+        if (substr($type, -1) === '*') {
+            return \gcc_jit_type_get_pointer(
+                $this->getTypeFromString(substr($type, 0, -1))
+            );
+        }
         switch ($type) {
-            case 'char*':
-                return \gcc_jit_type_get_pointer(
-                    $this->getTypeFromString('char')
-                );
             case 'char[1]':
                 return \gcc_jit_context_new_array_type(
                     $this->context,
                     null,
                     $this->getTypeFromString('char'),
+                    1
+                );
+            case 'long long[1]':
+                return \gcc_jit_context_new_array_type(
+                    $this->context,
+                    null,
+                    $this->getTypeFromString('long long'),
                     1
                 );
             default:

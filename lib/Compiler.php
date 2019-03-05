@@ -44,8 +44,12 @@ class Compiler {
     }
 
     protected function compileBlock(Block $block) {
+        $this->compileOps($block->orig->children, $block);
+    }
+
+    protected function compileOps(array $ops, Block $block): void {
         // First hoist functions and class definitions
-        foreach ($block->orig->children as $child) {
+        foreach ($ops as $child) {
             switch (get_class($child)) {
                 case Op\Stmt\Function_::class:
                     $block->addOpCode($this->compileFunction($child, $block));
@@ -57,8 +61,7 @@ class Compiler {
                     break;
             }
         }
-
-        foreach ($block->orig->children as $child) {
+        foreach ($ops as $child) {
             switch (get_class($child)) {
                 case Op\Stmt\Function_::class:
                 case Op\Stmt\Class_::class:
@@ -72,17 +75,63 @@ class Compiler {
     }
 
     protected function compileClassLike(Op\Stmt\ClassLike $class, Block $block): OpCode {
+        $type = 0;
         if ($class instanceof Op\Stmt\Class_) {
-            $return = new OpCode(
-                OpCode::TYPE_DECLARE_CLASS,
-                $this->compileOperand($class->name, $block, true)
-            );
+            $type = OpCode::TYPE_DECLARE_CLASS;
+            assert(null === $class->extends);
+            assert(empty($class->implements));
         } else {
             throw new \LogicException('Unsupported class type: ' . get_class($class));
         }
-        $return->block1 = $this->compileCfgBlock($class->stmts);
+        $return = new OpCode(
+            $type,
+            $this->compileOperand($class->name, $block, true)
+        );
+        $return->block1 = $this->compileClassBody($class->stmts, $type);
         return $return;
     }
+
+    protected function compileClassBody(CfgBlock $block, int $type): Block {
+        $result = new Block($block);
+        foreach ($block->children as $child) {
+            switch (get_class($child)) {
+                case Op\Stmt\Property::class:
+                    if ($type !== OpCode::TYPE_DECLARE_CLASS) {
+                        throw new \LogicException('Properties are only supported on classes for now');
+                    }
+                    if (!is_null($child->defaultBlock)) {
+                        $this->compileOps($child->defaultBlock, $result);
+                    }
+                    $result->addOpCode(new OpCode(
+                        OpCode::TYPE_DECLARE_PROPERTY,
+                        $this->compileOperand($child->name, $result, true),
+                        is_null($child->defaultVar) ? null : $this->compileOperand($child->defaultVar, $result, true),
+                        $this->compileTypeConstrainedVariable($result, $child->type)
+                    ));
+                    break;
+                default:
+                    throw new \LogicException('Unsupported class body element: ' . get_class($child));
+            }
+        }
+        return $result;
+    }
+
+    protected function compileTypeConstrainedVariable(Block $block, Type $type): int {
+        $var = new Variable(Variable::TYPE_UNKNOWN);
+        $operand = new Operand\Temporary;
+        $operand->type = $type;
+        $return = $block->registerConstant($operand, $var);
+        $mappedType = Variable::mapFromType($type);
+        if ($mappedType === Variable::TYPE_UNKNOWN) {
+            // Mixed
+            return $return;
+        } elseif ($mappedType === Variable::TYPE_OBJECT) {
+            $var->classConstraint = $type->userType;
+        }
+        $var->typeConstraint = $mappedType;
+        return $return;
+    }
+
 
     protected function compileParam(Op\Expr\Param $param, Block $block, int $paramIdx): OpCode {
         assert(false === $param->byRef);
@@ -106,11 +155,6 @@ class Compiler {
         );
         $return->block1 = $funcBlock;
         return $return;
-    }
-
-    protected function compileClass(Op\Stmt\Class_ $class, Block $block) {
-        var_dump($class);
-        throw new \LogicException("Not implemented: class definition support");
     }
 
     protected function compileOp(Op $op, Block $block) {
@@ -255,6 +299,13 @@ class Compiler {
                     OpCode::TYPE_FUNCCALL_EXEC_NORETURN
                 );
                 return $return;
+            case Op\Expr\PropertyFetch::class:
+                return [new OpCode(
+                    OpCode::TYPE_PROPERTY_FETCH,
+                    $this->compileOperand($expr->result, $block, false),
+                    $this->compileOperand($expr->var, $block, true),
+                    $this->compileOperand($expr->name, $block, true)
+                )];
         }
         throw new \LogicException("Unsupported expression: " . $expr->getType());
     }
@@ -262,12 +313,12 @@ class Compiler {
     protected function compileOperand(Operand $operand, Block $block, bool $isRead): int {
         if ($operand instanceof Operand\Literal) {
             assert($isRead === true);
-            $return = new Variable($operand->type->type);
-            switch ($operand->type->type) {
-                case Type::TYPE_STRING:
+            $return = new Variable(Variable::mapFromType($operand->type));
+            switch ($return->type) {
+                case Variable::TYPE_STRING:
                     $return->string = $operand->value;
                     break;
-                case Type::TYPE_LONG:
+                case Variable::TYPE_INTEGER:
                     $return->integer = $operand->value;
                     break;
                 default:

@@ -33,6 +33,8 @@ class OpCode {
     const TYPE_MUL = 21;
     const TYPE_DIV = 22;
     const TYPE_GREATER = 23;
+    const TYPE_DECLARE_PROPERTY = 24;
+    const TYPE_PROPERTY_FETCH = 25;
 
     public int $type;
     public ?int $arg1;

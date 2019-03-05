@@ -23,6 +23,7 @@ class Variable {
         Type::TYPE_LONG => self::TYPE_NATIVE_LONG,
         Type::TYPE_BOOLEAN => self::TYPE_NATIVE_BOOL,
         Type::TYPE_STRING => self::TYPE_STRING,
+        Type::TYPE_OBJECT => self::TYPE_OBJECT,
     ];
 
     const NATIVE_TYPE_MAP = [

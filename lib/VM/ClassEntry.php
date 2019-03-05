@@ -17,6 +17,7 @@ class ClassEntry {
 
     public string $name;
     public ?Block $constructor = null;
+    public array $properties = [];
 
     public function __construct(string $name) {
         $this->name = $name;

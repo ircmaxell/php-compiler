@@ -117,7 +117,7 @@ class Block {
                     throw new \LogicException("Could not resolve argument");
                 }
             } else { 
-                $scope[$pos] = new Variable;
+                $scope[$pos] = new Variable(Variable::TYPE_NULL);
             }
         }
 

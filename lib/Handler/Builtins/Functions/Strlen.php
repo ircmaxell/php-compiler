@@ -11,6 +11,7 @@ namespace PHPCompiler\Handler\Builtins\Functions;
 
 use PHPCompiler\Handler\Builtins\Functions;
 use PHPCompiler\Frame;
+use PHPCompiler\VM\Variable;
 use PHPTypes\Type;
 
 class Strlen extends Functions {
@@ -22,7 +23,7 @@ class Strlen extends Functions {
     public function execute(Frame $frame): void {
         $var = $frame->calledArgs[0];
         if (!is_null($frame->returnVar)) {
-            $frame->returnVar->type = Type::TYPE_LONG;
+            $frame->returnVar->type = Variable::TYPE_INTEGER;
             $frame->returnVar->integer = strlen($var->toString());
         }
     }

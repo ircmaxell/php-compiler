@@ -301,12 +301,12 @@ class JIT {
                     break;
                 case OpCode::TYPE_DECLARE_CLASS:
                     $context->pushScope();
-                    $context->scope->classId = $context->type->class->declare($block->getOperand($op->arg1));
-                    self::compileClass($context->block1);
+                    $context->scope->classId = $context->type->object->declareClass($block->getOperand($op->arg1));
+                    self::compileClass($context, $op->block1, $context->scope->classId);
                     $context->popScope();
                     break;
                 case OpCode::TYPE_NEW:
-                    $class = $context->type->class->lookup($block->getOperand($op->arg2));
+                    $class = $context->type->object->lookupOperand($block->getOperand($op->arg2));
                     $context->helper->assign(
                         $gccBlock,
                         $context->getVariableFromOp($block->getOperand($op->arg1))->lvalue,
@@ -314,6 +314,18 @@ class JIT {
                     );
                     $context->scope->toCall = null;
                     $context->scope->args = [];
+                    break;
+                case OpCode::TYPE_PROPERTY_FETCH:
+                    $result = $block->getOperand($op->arg1);
+                    $obj = $block->getOperand($op->arg2);
+                    $name = $block->getOperand($op->arg3);
+                    assert($name instanceof Operand\Literal);
+                    assert($obj->type->type === Type::TYPE_OBJECT);
+                    $context->scope->variables[$result] = $context->type->object->propertyFetch(
+                        $context->getVariableFromOp($obj)->rvalue,
+                        $obj->type->userType,
+                        $name->value
+                    );
                     break;
                 default:
                     throw new \LogicException("Unknown JIT opcode: ". $op->getType());
@@ -324,11 +336,25 @@ void_return:
         return $gccBlock;
     }
 
-    private static function compileClass(?Block $block) {
+    private static function compileClass(Context $context, ?Block $block, int $classId) {
         if ($block === null) {
             return;
         }
-        assert(empty($block->opCodes));
+        foreach ($block->opCodes as $op) {
+            switch ($op->type) {
+                case OpCode::TYPE_DECLARE_PROPERTY:
+                    $name = $block->getOperand($op->arg1);
+                    assert($name instanceof Operand\Literal);
+                    assert(is_null($op->arg2)); // no defaults for now
+                    $type = Variable::getTypeFromType($block->getOperand($op->arg3)->type);
+                    $context->type->object->defineProperty($classId, $name->value, $type);
+                    break;
+                default:
+                    var_dump($op);
+                    throw new \LogicException('Other class body types are not jittable for now');
+            }
+            
+        }
     }
 
     private static function compileArg(Operand $op): \gcc_jit_param_ptr {

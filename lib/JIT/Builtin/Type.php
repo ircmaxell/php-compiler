@@ -18,10 +18,8 @@ class Type extends Builtin {
 
     public function register(): void {
         $this->string = new Type\String_($this->context, $this->loadType);
-        $this->class = new Type\Class_($this->context, $this->loadType);
         $this->object = new Type\Object_($this->context, $this->loadType);
         $this->string->register();
-        $this->class->register();
         $this->object->register();
 
     }
@@ -30,11 +28,11 @@ class Type extends Builtin {
         if (!isset($this->fields[$name])) {
             throw new \LogicException("Could not read field $name");
         }
-        return gcc_jit_rvalue_access_field(
+        return gcc_jit_rvalue_dereference_field(
             $struct,
             $this->context->location(),
             $this->fields[$name]
-        );
+        )->asRValue();
     }
 
     protected function writeField(string $name, \gcc_jit_rvalue_ptr $pointer): \gcc_jit_lvalue_ptr {

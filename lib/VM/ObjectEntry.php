@@ -26,6 +26,16 @@ class ObjectEntry {
     public function __construct(ClassEntry $class) {
         $this->class = $class;
         $this->id = ++self::$counter;
+        foreach ($class->properties as $property) {
+            $this->properties[$property->name] = $property->getVariable();
+        }
+    }
+
+    public function getProperty(string $name): Variable {
+        if (!isset($this->properties[$name])) {
+            throw new \LogicException("Undefined property access");
+        }
+        return $this->properties[$name];
     }
 
     public function getProperties(int $purpose): array {

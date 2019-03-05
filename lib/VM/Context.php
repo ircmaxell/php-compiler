@@ -26,13 +26,13 @@ class Context {
     public function constantFetch(string $name): ?Variable {
         switch (strtolower($name)) {
             case 'null':
-                return new Variable(Type::TYPE_NULL);
+                return new Variable(Variable::TYPE_NULL);
             case 'false':
-                $var = new Variable(Type::TYPE_BOOLEAN);
+                $var = new Variable(Variable::TYPE_BOOLEAN);
                 $var->bool = false;
                 return $var;
             case 'true':
-                $var = new Variable(Type::TYPE_BOOLEAN);
+                $var = new Variable(Variable::TYPE_BOOLEAN);
                 $var->bool = true;
                 return $var;
         }

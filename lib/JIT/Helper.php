@@ -198,7 +198,7 @@ class Helper {
         Operand $result,
         Variable $value
     ): void {
-        if (empty($result->usages)) {
+        if (empty($result->usages) && !$this->context->scope->variables->contains($result)) {
             // optimize out assignment
             return;
         }
