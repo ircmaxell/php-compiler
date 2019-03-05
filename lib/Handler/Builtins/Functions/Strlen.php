@@ -23,8 +23,7 @@ class Strlen extends Functions {
     public function execute(Frame $frame): void {
         $var = $frame->calledArgs[0];
         if (!is_null($frame->returnVar)) {
-            $frame->returnVar->type = Variable::TYPE_INTEGER;
-            $frame->returnVar->integer = strlen($var->toString());
+            $frame->returnVar->int(strlen($var->toString()));
         }
     }
 

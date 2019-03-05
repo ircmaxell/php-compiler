@@ -34,17 +34,20 @@ class VarDump extends Functions {
 restart:
         switch ($var->type) {
             case Variable::TYPE_INTEGER:
-                printf("int(%d)\n", $var->integer);
+                printf("int(%d)\n", $var->toInt());
+                break;
+            case Variable::TYPE_FLOAT:
+                printf("float(%G)\n", $var->toFloat());
                 break;
             case Variable::TYPE_STRING:
-                printf("string(%d) \"%s\"\n", strlen($var->string), $var->string);
+                printf("string(%d) \"%s\"\n", strlen($var->toString()), $var->toString());
                 break;
             case Variable::TYPE_BOOLEAN:
-                printf("bool(%s)\n", $var->bool ? 'true' : 'false');
+                printf("bool(%s)\n", $var->toBool() ? 'true' : 'false');
                 break;
             case Variable::TYPE_OBJECT:
                 $props = $var->object->getProperties(ClassEntry::PROP_PURPOSE_DEBUG);
-                printf("object(%s)#%d (%d) {\n", $var->object->class->name, $var->object->id, count($props));
+                printf("object(%s)#%d (%d) {\n", $var->toObject()->class->name, $var->toObject()->id, count($props));
                 foreach ($props as $key => $prop) {
                     $this->var_dump_object_property($key, $prop, $level);
                 }
@@ -54,7 +57,7 @@ restart:
                 echo "}\n";
                 break;
             case Variable::TYPE_INDIRECT:
-                $var = $var->indirect;
+                $var = $var->resolveIndirect();
                 goto restart;
             default:
                 throw new \LogicException("var_dump not implemented for type");

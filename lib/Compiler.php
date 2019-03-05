@@ -314,12 +314,15 @@ class Compiler {
         if ($operand instanceof Operand\Literal) {
             assert($isRead === true);
             $return = new Variable(Variable::mapFromType($operand->type));
-            switch ($return->type) {
+            switch (Variable::mapFromType($operand->type)) {
                 case Variable::TYPE_STRING:
-                    $return->string = $operand->value;
+                    $return->string($operand->value);
                     break;
                 case Variable::TYPE_INTEGER:
-                    $return->integer = $operand->value;
+                    $return->int($operand->value);
+                    break;
+                case Variable::TYPE_FLOAT:
+                    $return->float($operand->value);
                     break;
                 default:
                     throw new \LogicException("Unknown Literal Operand Type: " . $operand->type);
