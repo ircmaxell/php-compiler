@@ -217,6 +217,12 @@ class Compiler {
             return OpCode::TYPE_SMALLER;
         } elseif ($expr instanceof Op\Expr\BinaryOp\Greater) {
             return OpCode::TYPE_GREATER;
+        } elseif ($expr instanceof Op\Expr\BinaryOp\SmallerOrEqual) {
+            return OpCode::TYPE_SMALLER_OR_EQUAL;
+        } elseif ($expr instanceof Op\Expr\BinaryOp\GreaterOrEqual) {
+            return OpCode::TYPE_GREATER_OR_EQUAL;
+        } elseif ($expr instanceof Op\Expr\BinaryOp\Equal) {
+            return OpCode::TYPE_EQUAL;
         } elseif ($expr instanceof Op\Expr\BinaryOp\Identical) {
             return OpCode::TYPE_IDENTICAL;
         } elseif ($expr instanceof Op\Expr\BinaryOp\Minus) {
@@ -229,6 +235,48 @@ class Compiler {
         throw new \LogicException("Unknown BinaryOp Type: " . $expr->getType());
     }
 
+    protected function getOpCodeTypeFromCastOp(Op\Expr\Cast $expr): int {
+        if ($expr instanceof Op\Expr\Cast\Array_) {
+            return OpCode::TYPE_CAST_ARRAY;
+        } elseif ($expr instanceof Op\Expr\Cast\Bool_) {
+            return OpCode::TYPE_CAST_BOOL;
+        } elseif ($expr instanceof Op\Expr\Cast\Double) {
+            return OpCode::TYPE_CAST_FLOAT;
+        } elseif ($expr instanceof Op\Expr\Cast\Int_) {
+            return OpCode::TYPE_CAST_INT;
+        } elseif ($expr instanceof Op\Expr\Cast\Object_) {
+            return OpCode::TYPE_CAST_OBJECT;
+        } elseif ($expr instanceof Op\Expr\Cast\String_) {
+            return OpCode::TYPE_CAST_STRING;
+        } elseif ($expr instanceof Op\Expr\Cast\Unset_) {
+            return OpCode::TYPE_CAST_UNSET;
+        }
+        throw new \LogicException("Unknown CastOp Type: " . $expr->getType());
+    }
+
+    protected function getOpCodeTypeFromUnaryOp(Op\Expr $expr): int {
+        if ($expr instanceof Op\Expr\UnaryMinus) {
+            return OpCode::TYPE_UNARY_MINUS;
+        } elseif ($expr instanceof Op\Expr\UnaryPlus) {
+            return OpCode::TYPE_UNARY_PLUS;
+        } elseif ($expr instanceof Op\Expr\BitwiseNot) {
+            return OpCode::TYPE_BITWISE_NOT;
+        } elseif ($expr instanceof Op\Expr\BooleanNot) {
+            return OpCode::TYPE_BOOLEAN_NOT;
+        } elseif ($expr instanceof Op\Expr\Clone_) {
+            return OpCode::TYPE_CLONE;
+        } elseif ($expr instanceof Op\Expr\Empty_) {
+            return OpCode::TYPE_EMPTY;
+        } elseif ($expr instanceof Op\Expr\Eval_) {
+            return OpCode::TYPE_EVAL;
+        } elseif ($expr instanceof Op\Expr\Exit_) {
+            return OpCode::TYPE_EXIT;
+        } elseif ($expr instanceof Op\Expr\Print_) {
+            return OpCode::TYPE_PRINT;
+        }
+        throw new \LogicException("Unknown UnaryOp Type: " . $expr->getType());
+    }
+
     protected function compileExpr(Op\Expr $expr, Block $block): array {
         if ($expr instanceof Op\Expr\BinaryOp) {
             return [new OpCode(
@@ -236,6 +284,12 @@ class Compiler {
                 $this->compileOperand($expr->result, $block, false),
                 $this->compileOperand($expr->left, $block, true),
                 $this->compileOperand($expr->right, $block, true),
+            )];
+        } elseif ($expr instanceof Op\Expr\Cast) {
+            return [new OpCode(
+                $this->getOpCodeTypeFromCastOp($expr),
+                $this->compileOperand($expr->result, $block, false),
+                $this->compileOperand($expr->expr, $block, true),
             )];
         }
         switch (get_class($expr)) {
@@ -245,6 +299,20 @@ class Compiler {
                     $this->compileOperand($expr->result, $block, false),   
                     $this->compileOperand($expr->var, $block, false),
                     $this->compileOperand($expr->expr, $block, true) 
+                )];
+            case Op\Expr\UnaryMinus::class:
+            case Op\Expr\UnaryPlus::class:
+            case Op\Expr\BitwiseNot::class:
+            case Op\Expr\BooleanNot::class:
+            case Op\Expr\Clone_::class:
+            case Op\Expr\Empty_::class:
+            case Op\Expr\Eval_::class:
+            case Op\Expr\Exit_::class:
+            case Op\Expr\Print_::class:
+                return [new OpCode(
+                    $this->getOpCodeTypeFromUnaryOp($expr),
+                    $this->compileOperand($expr->result, $block, false),
+                    $this->compileOperand($expr->expr, $block, true)
                 )];
             case Op\Expr\ConstFetch::class:
                 $nsName = null;
@@ -323,6 +391,9 @@ class Compiler {
                     break;
                 case Variable::TYPE_FLOAT:
                     $return->float($operand->value);
+                    break;
+                case Variable::TYPE_BOOLEAN:
+                    $return->bool($operand->value);
                     break;
                 default:
                     throw new \LogicException("Unknown Literal Operand Type: " . $operand->type);

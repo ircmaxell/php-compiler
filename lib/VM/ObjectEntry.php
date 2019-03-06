@@ -15,6 +15,7 @@ use PHPCfg\Block as CfgBlock;
 use PHPCfg\Operand;
 use PHPCfg\Script;
 use PHPTypes\Type;
+use PHPCompiler\Block;
 
 class ObjectEntry {
 
@@ -22,6 +23,7 @@ class ObjectEntry {
     public ClassEntry $class;
     public int $id;
     private array $properties = [];
+    public ?Block $constructor = null;
 
     public function __construct(ClassEntry $class) {
         $this->class = $class;

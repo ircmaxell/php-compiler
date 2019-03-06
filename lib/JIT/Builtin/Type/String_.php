@@ -123,7 +123,6 @@ class String_ extends Type {
         $this->implementRealloc();
         $this->implementSeparate();
         $this->implementStrlen();
-        $this->context->functions['strlen'] = $this->context->lookupFunction('__string__strlen')->func;
     }
 
     private function implementStrlen(): void {

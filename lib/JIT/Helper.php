@@ -49,37 +49,98 @@ class Helper {
         );
     }
 
+    public function numericUnaryOp(
+        int $op,
+        Operand $result,
+        Variable $expr
+    ): \gcc_jit_rvalue_ptr {
+        switch ($expr->type) {
+            case Variable::TYPE_NATIVE_LONG:
+                $resultType = Variable::TYPE_NATIVE_LONG;
+                $rvalue = $this->unaryOp(
+                    $op,
+                    Variable::getStringType(Variable::TYPE_NATIVE_LONG),
+                    $expr->rvalue
+                );
+                break;
+            case Variable::TYPE_NATIVE_DOUBLE:
+                $resultType = Variable::TYPE_NATIVE_DOUBLE;
+                $rvalue = $this->unaryOp(
+                    $op,
+                    Variable::getStringType(Variable::TYPE_NATIVE_DOUBLE),
+                    $expr->rvalue
+                );
+                break;
+            default:
+                throw new \LogicException("Unhandled type: " . $expr->type);
+        }
+        $neededResultType = Variable::getTypeFromType($result->type);
+        if ($neededResultType === $resultType) {
+            return $rvalue;
+        }
+        // Need to cast
+        throw new \LogicException("Unhandled type cast needed for " . $neededResultType . " from " . $resultType);
+    }
+
+    public function unaryOp(
+        int $op, 
+        string $type, 
+        \gcc_jit_rvalue_ptr $expr
+    ): \gcc_jit_rvalue_ptr {
+        return \gcc_jit_context_new_unary_op(
+            $this->context->context, 
+            $this->context->location(), 
+            $op, 
+            $this->context->getTypeFromString($type), 
+            $expr
+        );
+    }
+
     public function numericBinaryOp(
         int $op,
         Operand $result,
         Variable $left,
         Variable $right 
     ): \gcc_jit_rvalue_ptr {
-        if ($left->type === $right->type) {
-            switch ($left->type) {
-                case Variable::TYPE_NATIVE_LONG:
-                    $resultType = Variable::TYPE_NATIVE_LONG;
-                    $rvalue = $this->binaryOp(
-                        $op,
-                        Variable::getStringType(Variable::TYPE_NATIVE_LONG),
-                        $left->rvalue,
-                        $right->rvalue
-                    );
-                    break;
-                case Variable::TYPE_NATIVE_DOUBLE:
-                    $resultType = Variable::TYPE_NATIVE_DOUBLE;
-                    $rvalue = $this->binaryOp(
-                        $op,
-                        Variable::getStringType(Variable::TYPE_NATIVE_DOUBLE),
-                        $left->rvalue,
-                        $right->rvalue
-                    );
-                    break;
-                default:
-                    throw new \LogicException("Unhandled type: " . $left->type);
-            }
-        } else {
-            throw new \LogicException("Unhandled type pair: " . $left->type . ' and ' . $right->type);
+        switch (type_pair($left->type, $right->type)) {
+            case TYPE_PAIR_NATIVE_LONG_NATIVE_LONG:
+                $resultType = Variable::TYPE_NATIVE_LONG;
+                $rvalue = $this->binaryOp(
+                    $op,
+                    Variable::getStringType(Variable::TYPE_NATIVE_LONG),
+                    $left->rvalue,
+                    $right->rvalue
+                );
+                break;
+            case TYPE_PAIR_NATIVE_DOUBLE_NATIVE_DOUBLE:
+                $resultType = Variable::TYPE_NATIVE_DOUBLE;
+                $rvalue = $this->binaryOp(
+                    $op,
+                    Variable::getStringType(Variable::TYPE_NATIVE_DOUBLE),
+                    $left->rvalue,
+                    $right->rvalue
+                );
+                break;
+            case TYPE_PAIR_NATIVE_LONG_NATIVE_DOUBLE:
+                $resultType = Variable::TYPE_NATIVE_DOUBLE;
+                $rvalue = $this->binaryOp(
+                    $op,
+                    Variable::getStringType(Variable::TYPE_NATIVE_DOUBLE),
+                    $this->cast($left->rvalue, 'double'),
+                    $right->rvalue
+                );
+                break;
+            case TYPE_PAIR_NATIVE_DOUBLE_NATIVE_LONG:
+                $resultType = Variable::TYPE_NATIVE_DOUBLE;
+                $rvalue = $this->binaryOp(
+                    $op,
+                    Variable::getStringType(Variable::TYPE_NATIVE_DOUBLE),
+                    $left->rvalue,
+                    $this->cast($right->rvalue, 'double')
+                );
+                break;
+            default:
+                throw new \LogicException("Unhandled type pair: " . $left->type . ' and ' . $right->type);
         }
         $neededResultType = Variable::getTypeFromType($result->type);
         if ($neededResultType === $resultType) {
@@ -111,22 +172,37 @@ class Helper {
         Variable $left,
         Variable $right 
     ): \gcc_jit_rvalue_ptr {
-        if ($left->type === $right->type) {
-            switch ($left->type) {
-                case Variable::TYPE_NATIVE_LONG:
-                    $rvalue = \gcc_jit_context_new_comparison(
-                        $this->context->context,
-                        $this->context->location(),
-                        $op,
-                        $left->rvalue,
-                        $right->rvalue
-                    );
-                    break;
-                default:
-                    throw new \LogicException("Unhandled type: " . $left->type);
-            }
-        } else {
-            throw new \LogicException("Unhandled type pair: " . $left->type . ' and ' . $right->type);
+        switch (type_pair($left->type, $right->type)) {
+            case TYPE_PAIR_NATIVE_LONG_NATIVE_LONG:
+            case TYPE_PAIR_NATIVE_DOUBLE_NATIVE_DOUBLE:
+                $rvalue = \gcc_jit_context_new_comparison(
+                    $this->context->context,
+                    $this->context->location(),
+                    $op,
+                    $left->rvalue,
+                    $right->rvalue
+                );
+                break;
+            case TYPE_PAIR_NATIVE_LONG_NATIVE_DOUBLE:
+                $rvalue = \gcc_jit_context_new_comparison(
+                    $this->context->context,
+                    $this->context->location(),
+                    $op,
+                    $this->cast($left->rvalue, 'double'),
+                    $right->rvalue
+                );
+                break;
+            case TYPE_PAIR_NATIVE_DOUBLE_NATIVE_LONG:
+                $rvalue = \gcc_jit_context_new_comparison(
+                    $this->context->context,
+                    $this->context->location(),
+                    $op,
+                    $left->rvalue,
+                    $this->cast($right->rvalue, 'double')
+                );
+                break;
+            default:
+                throw new \LogicException("Unhandled type pair: " . $left->type . ' and ' . $right->type);
         }
         $neededResultType = Variable::getTypeFromType($result->type);
         if ($neededResultType === Variable::TYPE_NATIVE_BOOL) {
@@ -211,7 +287,15 @@ class Helper {
             // optimize out assignment
             return;
         }
+
         $result = $this->context->getVariableFromOp($result);
+        if ($result instanceof Operand\Temporary && $result->original instanceof Operand\Variable && $result->original->name instanceof Operand\Literal) {
+            gcc_jit_block_add_comment($block, 
+                  gcc_jit_object_get_debug_string(gcc_jit_lvalue_as_object($result->lvalue)) 
+                . ' = ' 
+                . gcc_jit_object_get_debug_string(gcc_jit_rvalue_as_object($value->rvalue))
+            );
+        }
         if ($value->type === $result->type) {
             if ($value->type === Variable::TYPE_STRING) {
                 $this->context->refcount->delref($block, $result->rvalue);

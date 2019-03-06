@@ -22,6 +22,9 @@ class Variable {
     const TYPE_OBJECT = 5;
     const TYPE_INDIRECT = 6;
 
+
+    const NUMERIC = self::TYPE_INTEGER | self::TYPE_FLOAT;
+
     public int $type = self::TYPE_NULL;
 
     private string $string;
@@ -210,6 +213,34 @@ class Variable {
         unset($this->indirect);
     }
 
+    public function castFrom(int $type, self $var) {
+        $this->reset();
+        $this->type = $type;
+        switch ($type) {
+            case Variable::NUMERIC:
+                $number = $var->toNumeric();
+                if (is_int($number)) {
+                    $this->castFrom(Variable::TYPE_INTEGER, $var);
+                } else {
+                    $this->castFrom(Variable::TYPE_FLOAT, $var);
+                }
+            case Variable::TYPE_INTEGER:
+                $this->integer = $var->toInt();
+                break;
+            case Variable::TYPE_FLOAT:
+                $this->float = $var->toFloat();
+                break;
+            case Variable::TYPE_BOOLEAN:
+                $this->bool = $var->toBool();
+                break;
+            case Variable::TYPE_STRING:
+                $this->string = $var->toString();
+                break;
+            default:
+                throw new \LogicException("Unsupported cast type $type");
+        }
+    }
+
     public function copyFrom(self $var): void {
         if ($this->type === self::TYPE_INDIRECT) {
             // always assign to the indirection
@@ -242,28 +273,73 @@ class Variable {
         }
     }
 
+    public function identicalTo(Variable $other): bool {
+        $self = $this->resolveIndirect();
+        $other = $other->resolveIndirect();
+        if ($self->type !== $other->type) {
+            return false;
+        }
+        return $self->equals($other);
+    }
+
+    public function equals(Variable $other): bool {
+        $self = $this;
+restart:
+        $pair = type_pair($self->type, $other->type);
+        switch ($pair) {
+            case TYPE_PAIR_INTEGER_INTEGER:
+                return $self->integer === $other->integer;
+            case TYPE_PAIR_FLOAT_FLOAT:
+                return $self->float === $other->float;
+            case TYPE_PAIR_STRING_STRING:
+                return $self->string === $other->string;
+            case TYPE_PAIR_OBJECT_OBJECT:
+                return $self->object === $other->object;
+            case TYPE_PAIR_INTEGER_FLOAT:
+                return ((float) $self->integer) === $other->float;
+            case TYPE_PAIR_FLOAT_INTEGER:
+                return $self->float === ((float) $other->integer);
+            default:
+                if ($self->type === self::TYPE_INDIRECT) {
+                    $self = $self->indrect;
+                    goto restart;
+                } elseif ($other->type === self::TYPE_INDIRECT) {
+                    $other = $other->indirect;
+                    goto restart;
+                }
+        }
+        throw new \LogicException("Equals comparison between {$self->type} and {$other->type} not implemented");
+    }
+
     public function compareOp(int $opCode, Variable $left, Variable $right): void {
         $this->reset();
 restart:
-        $pair = type_pair($left->type, $right->type);
-        if ($pair === TYPE_PAIR_INTEGER_INTEGER) {
-            $this->bool($this->_compareOp($opCode, $left->integer, $right->integer));
-        } elseif ($pair === TYPE_PAIR_INTEGER_FLOAT) {
-            $this->bool($this->_compareOp($opCode, $left->integer, $right->float));
-        } elseif ($pair === TYPE_PAIR_FLOAT_INTEGER) {
-            $this->bool($this->_compareOp($opCode, $left->float, $right->integer));
-        } elseif ($pair === TYPE_PAIR_FLOAT_FLOAT) {
-            $this->bool($this->_compareOp($opCode, $left->float, $right->float));
-        } elseif ($pair === TYPE_PAIR_STRING_STRING) {
-            $this->bool($this->_compareOp($opCode, $left->string, $right->string));
-        } elseif ($left->type === self::TYPE_INDIRECT) {
-            $left = $left->indirect;
-            goto restart;
-        } elseif ($right->type === self::TYPE_INDIRECT) {
-            $right = $right->indirect;
-            goto restart;
-        } else {
-            $this->bool($this->_compareOp($opCode, $left->toNumeric(), $right->toNumeric()));
+        switch (type_pair($left->type, $right->type)) {
+            case TYPE_PAIR_INTEGER_INTEGER:
+                $this->bool($this->_compareOp($opCode, $left->integer, $right->integer));
+                break;
+            case TYPE_PAIR_INTEGER_FLOAT:
+                $this->bool($this->_compareOp($opCode, $left->integer, $right->float));
+                break;
+            case TYPE_PAIR_FLOAT_INTEGER:
+                $this->bool($this->_compareOp($opCode, $left->float, $right->integer));
+                break;
+            case TYPE_PAIR_FLOAT_FLOAT:
+                $this->bool($this->_compareOp($opCode, $left->float, $right->float));
+                break;
+            case TYPE_PAIR_STRING_STRING:
+                $this->bool($this->_compareOp($opCode, $left->string, $right->string));
+                break;
+            default:
+                if ($left->type === self::TYPE_INDIRECT) {
+                    $left = $left->indirect;
+                    goto restart;
+                } elseif ($right->type === self::TYPE_INDIRECT) {
+                    $right = $right->indirect;
+                    goto restart;
+                } else {
+                    $this->bool($this->_compareOp($opCode, $left->toNumeric(), $right->toNumeric()));
+                }
         }
     }
 
@@ -274,7 +350,11 @@ restart:
             case OpCode::TYPE_GREATER:
                 return $left > $right;
             case OpCode::TYPE_SMALLER:
-                return $left < $right;
+               return $left < $right;
+            case OpCode::TYPE_GREATER_OR_EQUAL:
+                return $left >= $right;
+            case OpCode::TYPE_SMALLER_OR_EQUAL:
+                return $left <= $right;
             default:
                 throw new \LogicException("Non-implemented numeric comparison operation $opCode");
         }
@@ -327,6 +407,31 @@ restart:
                 throw new \LogicException("Non-implemented numeric binary operation $opCode");
         }
     }
+
+    public function unaryOp(int $opCode, Variable $expr): void {
+        $this->reset();
+restart:
+        switch ($opCode) {
+            case OpCode::TYPE_UNARY_PLUS:
+                $this->castFrom(self::NUMERIC, $expr);
+                return;
+            case OpCode::TYPE_UNARY_MINUS:
+                if ($expr->type === Variable::TYPE_INTEGER) {
+                    $this->copyFrom($expr);
+                    $this->integer *= -1;
+                    return;
+                } elseif($expr->type === Variable::TYPE_FLOAT) {
+                    $this->copyFrom($expr);
+                    $this->float *= -1.0;
+                    return;
+                } else {
+                    $this->castFrom(self::NUMERIC($expr));
+                    goto restart;
+                }
+                break;
+        }
+        throw new \LogicException("UnaryOp $opCode not implemented for type $expr->type");
+    }
 }
 
 const TYPE_PAIR_INTEGER_INTEGER = (Variable::TYPE_INTEGER << 8) | Variable::TYPE_INTEGER;
@@ -334,6 +439,7 @@ const TYPE_PAIR_FLOAT_INTEGER = (Variable::TYPE_FLOAT << 8) | Variable::TYPE_INT
 const TYPE_PAIR_INTEGER_FLOAT = (Variable::TYPE_INTEGER << 8) | Variable::TYPE_FLOAT;
 const TYPE_PAIR_FLOAT_FLOAT = (Variable::TYPE_FLOAT << 8) | Variable::TYPE_FLOAT;
 const TYPE_PAIR_STRING_STRING = (Variable::TYPE_STRING << 8) | Variable::TYPE_STRING;
+const TYPE_PAIR_OBJECT_OBJECT = (Variable::TYPE_OBJECT << 8) | Variable::TYPE_OBJECT;
 
 function type_pair(int $left, int $right): int {
     return ($left << 8) | $right;

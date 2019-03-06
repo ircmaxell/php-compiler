@@ -44,8 +44,25 @@ restart:
                     $arg2->copyFrom($arg3);
                     $arg1->copyFrom($arg3); 
                     break;
+                case OpCode::TYPE_CAST_BOOL:
+                    $frame->scope[$op->arg1]->castFrom(Variable::TYPE_BOOLEAN, $frame->scope[$op->arg2]);
+                    break;
+                case OpCode::TYPE_IDENTICAL:
+                    $arg1 = $frame->scope[$op->arg1];
+                    $arg2 = $frame->scope[$op->arg2];
+                    $arg3 = $frame->scope[$op->arg3];
+                    $arg1->bool($arg2->identicalTo($arg3));
+                    break;
+                case OpCode::TYPE_EQUAL:
+                    $arg1 = $frame->scope[$op->arg1];
+                    $arg2 = $frame->scope[$op->arg2];
+                    $arg3 = $frame->scope[$op->arg3];
+                    $arg1->bool($arg2->equals($arg3));
+                    break;
                 case OpCode::TYPE_SMALLER:
                 case OpCode::TYPE_GREATER:
+                case OpCode::TYPE_SMALLER_OR_EQUAL:
+                case OpCode::TYPE_GREATER_OR_EQUAL:
                     $arg1 = $frame->scope[$op->arg1];
                     $arg2 = $frame->scope[$op->arg2];
                     $arg3 = $frame->scope[$op->arg3];
@@ -60,6 +77,12 @@ restart:
                     $arg3 = $frame->scope[$op->arg3];
                     $arg1->numericOp($op->type, $arg2, $arg3);
                     break;
+                case OpCode::TYPE_UNARY_MINUS:
+                case OpCode::TYPE_UNARY_PLUS:
+                    $arg1 = $frame->scope[$op->arg1];
+                    $arg2 = $frame->scope[$op->arg2];
+                    $arg1->unaryOp($op->type, $arg2);
+                    break;
                 case OpCode::TYPE_CONCAT:
                     $arg1 = $frame->scope[$op->arg1];
                     $arg2 = $frame->scope[$op->arg2]->toString();
@@ -68,6 +91,10 @@ restart:
                     break;
                 case OpCode::TYPE_ECHO:
                     echo $frame->scope[$op->arg1]->toString();
+                    break;
+                case OpCode::TYPE_PRINT:
+                    echo $frame->scope[$op->arg2]->toString();
+                    $frame->scope[$op->arg1]->int(1);
                     break;
                 case OpCode::TYPE_JUMP:
                     $frame = $op->block1->getFrame(

@@ -196,7 +196,7 @@ class Object_ extends Type {
     private function implementPropFetch(): void {
         $fetch = $this->context->lookupFunction('__object__propfetch');
         $block = \gcc_jit_function_new_block($fetch->func, 'main');
-        $defaultBlock = \gcc_jit_function_new_block($fetch->func, 'default');
+        $defaultBlock = \gcc_jit_function_new_block($fetch->func, 'default_');
         \gcc_jit_block_end_with_return(
             $defaultBlock,
             $this->context->location(), 

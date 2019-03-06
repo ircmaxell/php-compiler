@@ -35,6 +35,25 @@ class OpCode {
     const TYPE_GREATER = 23;
     const TYPE_DECLARE_PROPERTY = 24;
     const TYPE_PROPERTY_FETCH = 25;
+    const TYPE_UNARY_MINUS = 26;
+    const TYPE_UNARY_PLUS = 27;
+    const TYPE_BITWISE_NOT = 28;
+    const TYPE_BOOLEAN_NOT = 29;
+    const TYPE_PRINT = 30;
+    const TYPE_CLONE = 31;
+    const TYPE_EMPTY = 32;
+    const TYPE_EVAL = 33;
+    const TYPE_EXIT = 34;
+    const TYPE_SMALLER_OR_EQUAL = 35;
+    const TYPE_GREATER_OR_EQUAL = 36;
+    const TYPE_CAST_ARRAY = 37;
+    const TYPE_CAST_BOOL = 38;
+    const TYPE_CAST_FLOAT = 39;
+    const TYPE_CAST_INT = 40;
+    const TYPE_CAST_OBJECT = 41;
+    const TYPE_CAST_STRING = 42;
+    const TYPE_CAST_UNSET = 43;
+    const TYPE_EQUAL = 44;
 
     public int $type;
     public ?int $arg1;

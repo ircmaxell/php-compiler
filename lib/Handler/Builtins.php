@@ -9,16 +9,24 @@
 
 namespace PHPCompiler\Handler;
 
-use PHPCompiler\VM\Context;
+use PHPCompiler\JIT\Context as JITContext;
+use PHPCompiler\VM\Context as VMContext;
 use PHPCompiler\Handler;
 
 abstract class Builtins implements Handler {
 
-    abstract public function register(Context $context): void;
+    abstract public function registerVM(VMContext $context): void;
+    abstract public function registerJIT(JITContext $context): void;
 
-    public static function load(Context $context): void {
+    public static function loadVM(VMContext $context): void {
         foreach (self::loadBuiltins() as $handler) {
-            $handler->register($context);
+            $handler->registerVM($context);
+        }
+    }
+
+    public static function loadJIT(JITContext $context): void {
+        foreach (self::loadBuiltins() as $handler) {
+            $handler->registerJIT($context);
         }
     }
 

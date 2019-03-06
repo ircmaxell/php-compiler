@@ -19,9 +19,10 @@ class Type extends Builtin {
     public function register(): void {
         $this->string = new Type\String_($this->context, $this->loadType);
         $this->object = new Type\Object_($this->context, $this->loadType);
+        $this->value = new Type\Value($this->context, $this->loadType);
         $this->string->register();
         $this->object->register();
-
+        $this->value->register();
     }
 
     protected function readField(string $name, \gcc_jit_rvalue_ptr $struct): \gcc_jit_rvalue_ptr {

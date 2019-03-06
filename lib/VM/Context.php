@@ -20,7 +20,7 @@ class Context {
     public array $constants = [];
 
     public function __construct() {
-        Builtins::load($this);
+        Builtins::loadVM($this);
     }
 
     public function constantFetch(string $name): ?Variable {

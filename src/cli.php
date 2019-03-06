@@ -4,6 +4,9 @@ use PHPCompiler\Backend\VM\Runtime;
 
 require __DIR__ . '/../vendor/autoload.php';
 
+ini_set('memory_limit', '16G');
+error_reporting(~0);
+
 $opts = $argv;
 // get rid of this
 array_shift($opts);

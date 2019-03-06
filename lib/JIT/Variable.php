@@ -19,6 +19,7 @@ class Variable {
     const TYPE_NATIVE_DOUBLE = 3;
     const TYPE_STRING = 4 | self::IS_REFCOUNTED;
     const TYPE_OBJECT = 5 | self::IS_REFCOUNTED;
+    const TYPE_VALUE = 6;
 
     const TYPE_MAP = [
         Type::TYPE_DOUBLE => self::TYPE_NATIVE_DOUBLE,
@@ -34,9 +35,10 @@ class Variable {
         self::TYPE_NATIVE_DOUBLE => 'double',
         self::TYPE_STRING => '__string__*',
         self::TYPE_OBJECT => '__object__*',
+        self::TYPE_VALUE => '__value__'
     ];
 
-    const IS_REFCOUNTED = 1 << 16;
+    const IS_REFCOUNTED = 1 << 8;
     public int $type;
 
     const KIND_VARIABLE = 1;
@@ -80,7 +82,7 @@ class Variable {
         if ($type->type === Type::TYPE_OBJECT) {
             return self::TYPE_OBJECT;
         }
-        throw new \LogicException("Unsupported Type: " . $type->toString());
+        return self::TYPE_VALUE;
     }
 
     /**
@@ -141,6 +143,9 @@ class Variable {
             case self::TYPE_NATIVE_DOUBLE:
                 $rvalue = $context->constantFromFloat($op->value, self::getStringType($type));
                 break;
+            case self::TYPE_NATIVE_BOOL:
+                $rvalue = $context->constantFromInteger($op->value ? 1 : 0, self::getStringType($type));
+                break;
             default:
                 throw new \LogicException("Literal type " . self::getStringType($type) . " not yet supported");
         }
@@ -151,6 +156,23 @@ class Variable {
             $rvalue,
             null
         );
+    }
+
+    public function castTo(int $type): self {
+        switch ($type) {
+            case self::TYPE_NATIVE_LONG:
+            case self::TYPE_NATIVE_BOOL:
+            case self::TYPE_NATIVE_DOUBLE:
+                return new self(
+                    $this->context,
+                    $type,
+                    self::KIND_VALUE,
+                    $this->context->helper->cast($this->rvalue, self::getStringType($type)),
+                    null
+                );
+            default:
+                throw new \LogicException('Unhandlable cast operation to type: ' . $type);
+        }
     }
 
     public function addref(\gcc_jit_block_ptr $block): void {
@@ -166,6 +188,7 @@ class Variable {
         switch ($this->type) {
             case self::TYPE_NATIVE_LONG:
             case self::TYPE_NATIVE_BOOL:
+            case self::TYPE_NATIVE_DOUBLE:
                 return;
         }
         if ($this->type & self::IS_REFCOUNTED) {
@@ -199,4 +222,13 @@ class Variable {
                 return $this;
         }
     }
+}
+
+const TYPE_PAIR_NATIVE_LONG_NATIVE_LONG = (Variable::TYPE_NATIVE_LONG << 16) | Variable::TYPE_NATIVE_LONG;
+const TYPE_PAIR_NATIVE_DOUBLE_NATIVE_DOUBLE = (Variable::TYPE_NATIVE_DOUBLE << 16) | Variable::TYPE_NATIVE_DOUBLE;
+const TYPE_PAIR_NATIVE_LONG_NATIVE_DOUBLE = (Variable::TYPE_NATIVE_LONG << 16) | Variable::TYPE_NATIVE_DOUBLE;
+const TYPE_PAIR_NATIVE_DOUBLE_NATIVE_LONG = (Variable::TYPE_NATIVE_DOUBLE << 16) | Variable::TYPE_NATIVE_LONG;
+
+function type_pair(int $left, int $right): int {
+    return ($left << 16) | $right;
 }

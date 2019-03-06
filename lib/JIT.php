@@ -28,6 +28,8 @@ class JIT {
     private static array $builtIns = [];
 
     const COMPARE_MAP = [
+        OpCode::TYPE_SMALLER_OR_EQUAL => \GCC_JIT_COMPARISON_LE,
+        OpCode::TYPE_GREATER_OR_EQUAL => \GCC_JIT_COMPARISON_GE,
         OpCode::TYPE_GREATER => \GCC_JIT_COMPARISON_GT,
         OpCode::TYPE_SMALLER => \GCC_JIT_COMPARISON_LT,
         OpCode::TYPE_IDENTICAL => \GCC_JIT_COMPARISON_EQ,
@@ -38,6 +40,12 @@ class JIT {
         OpCode::TYPE_PLUS => \GCC_JIT_BINARY_OP_PLUS,
         OpCode::TYPE_MUL => \GCC_JIT_BINARY_OP_MULT,
         OpCode::TYPE_DIV => \GCC_JIT_BINARY_OP_DIVIDE,
+    ];
+
+    const UNARYOP_MAP = [
+        OpCode::TYPE_UNARY_MINUS => \GCC_JIT_UNARY_OP_MINUS,
+        OpCode::TYPE_BITWISE_NOT => \GCC_JIT_UNARY_OP_BITWISE_NEGATE,
+        OpCode::TYPE_BOOLEAN_NOT => \GCC_JIT_UNARY_OP_LOGICAL_NEGATE
     ];
 
     public static function compile(Block $block, int $loadType, ?string $debugFile = null): Context {
@@ -118,7 +126,7 @@ class JIT {
     }
 
     private static int $blockNumber = 0;
-    private function compileBlockInternal(
+    private static function compileBlockInternal(
         Context $context, 
         \gcc_jit_function_ptr $func,
         Block $block,
@@ -127,7 +135,7 @@ class JIT {
         if ($context->scope->blockStorage->contains($block)) {
             return $context->scope->blockStorage[$block];
         }
-        $context->scope->blockNumber++;
+        self::$blockNumber++;
         $gccBlock = \gcc_jit_function_new_block($func, 'block_' . self::$blockNumber);
         $context->scope->blockStorage[$block] = $gccBlock;
         // Handle hoisted variables
@@ -151,8 +159,14 @@ class JIT {
                     $right = $context->getVariableFromOp($block->getOperand($op->arg3));
                     $context->type->string->concat($gccBlock, $result, $left, $right);
                     break;
+                case OpCode::TYPE_CAST_BOOL:
+                    $value = $context->getVariableFromOp($block->getOperand($op->arg2));
+                    $context->helper->assignOperand($gccBlock, $block->getOperand($op->arg1), $value->castTo(Variable::TYPE_NATIVE_BOOL));
+                    break;
                 case OpCode::TYPE_ECHO:
-                    $arg = $context->getVariableFromOp($block->getOperand($op->arg1));
+                case OpCode::TYPE_PRINT:
+                    $argOffset = $op->type === OpCode::TYPE_ECHO ? $op->arg1 : $op->arg2;
+                    $arg = $context->getVariableFromOp($block->getOperand($argOffset));
                     switch ($arg->type) {
                         case Variable::TYPE_STRING:
                             $context->helper->eval(
@@ -180,7 +194,7 @@ class JIT {
                                 $gccBlock,
                                 $context->helper->call(
                                     'printf',
-                                    $context->constantFromString('%f'),
+                                    $context->constantFromString('%G'),
                                     $arg->rvalue
                                 )
                             );
@@ -188,7 +202,13 @@ class JIT {
                         default: 
                             throw new \LogicException("Echo for type $arg->type not implemented");
                     }
-                    
+                    if ($op->type === OpCode::TYPE_PRINT) {
+                        $context->helper->assignOperand(
+                            $gccBlock, 
+                            $block->getOperand($op->arg1),
+                            new Variable($context, Variable::TYPE_NATIVE_LONG, Variable::KIND_VALUE, $context->constantFromInteger(1), null)
+                        );
+                    }
                     break;
                 case OpCode::TYPE_MUL:
                 case OpCode::TYPE_PLUS:
@@ -205,6 +225,8 @@ class JIT {
                         $result
                     );
                     break;
+                case OpCode::TYPE_GREATER_OR_EQUAL:
+                case OpCode::TYPE_SMALLER_OR_EQUAL:
                 case OpCode::TYPE_GREATER:
                 case OpCode::TYPE_SMALLER:
                 case OpCode::TYPE_IDENTICAL:
@@ -218,6 +240,36 @@ class JIT {
                         ),
                         $result
                     );
+                    break;
+                case OpCode::TYPE_EQUAL:
+                    $result = $block->getOperand($op->arg1);
+                    $left = $context->getVariableFromOp($block->getOperand($op->arg2));
+                    $right = $context->getVariableFromOp($block->getOperand($op->arg3));
+                    if ($left->type === $right->type) {
+                        $context->makeVariableFromRValueOp(
+                            $context->helper->compareOp(
+                                \GCC_JIT_COMPARISON_EQ, 
+                                $result, 
+                                $left,
+                                $right
+                            ),
+                            $result
+                        );
+                    } else {
+                        throw new \LogicException('Equals between disparate types not implemented yet');
+                    }
+                    break;
+                case OpCode::TYPE_UNARY_MINUS:
+                    $result = $block->getOperand($op->arg1);
+                    $context->makeVariableFromRValueOp(
+                        $context->helper->numericUnaryOp(
+                            self::UNARYOP_MAP[$op->type], 
+                            $result, 
+                            $context->getVariableFromOp($block->getOperand($op->arg2))
+                        ),
+                        $result
+                    );
+                    break;
                     break;
                 case OpCode::TYPE_JUMP:
                     $newBlock = self::compileBlockInternal($context, $func, $op->block1, ...$args);

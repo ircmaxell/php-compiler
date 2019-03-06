@@ -12,6 +12,7 @@ namespace PHPCompiler\JIT;
 use PHPCfg\Operand;
 use PHPCompiler\Handler;
 use PHPCompiler\Block;
+use PHPCompiler\Handler\Builtins;
 use PHPTypes\Type;
 
 class Context {
@@ -22,7 +23,6 @@ class Context {
     public array $functionScope = [];
     private array $typeMap = [];
     private array $intConstant = [];
-    private array $floatConstant = [];
     private array $stringConstant = [];
     private array $builtins;
     private array $stringConstantMap = [];
@@ -33,7 +33,7 @@ class Context {
     public Builtin\Type $type;
     public Builtin\Refcount $refcount;
     public Helper $helper;
-    private int $loadType;
+    public int $loadType;
     private static int $stringConstantCounter = 0;
     private ?string $debugFile = null;
 
@@ -55,8 +55,10 @@ class Context {
         $this->memory = Builtin\MemoryManager::load($this, $loadType);
         $this->output = new Builtin\Output($this, $loadType);
         $this->type = new Builtin\Type($this, $loadType);
+        $this->internal = new Builtin\Internal($this, $loadType);
 
         $this->defineBuiltins($loadType);
+        Builtins::loadJIT($this);
     }
 
     public function __destruct() {
@@ -150,7 +152,7 @@ class Context {
             0
         );
         $this->shutdownBlock = \gcc_jit_function_new_block($this->shutdownFunc, 'shutdownblock');
-      
+        
     }
 
     public function compileToFile(string $file) {
@@ -240,6 +242,7 @@ class Context {
                 1
             );
         }
+
     }
 
     public function setDebugFile(string $file): void {
@@ -253,6 +256,13 @@ class Context {
             \GCC_JIT_BOOL_OPTION_DEBUGINFO,
             $value ? 1 : 0
         );
+        if ($value) {
+            \gcc_jit_context_set_bool_option(
+                $this->context,
+                \GCC_JIT_BOOL_OPTION_DUMP_INITIAL_GIMPLE,
+                1
+            );
+        }
     }
 
     public function setOption(int $option, $value) {
@@ -333,6 +343,7 @@ class Context {
             'void*' => \GCC_JIT_TYPE_VOID_PTR,
             'const char*' => \GCC_JIT_TYPE_CONST_CHAR_PTR,
             'char' => \GCC_JIT_TYPE_CHAR,
+            'unsigned char' => \GCC_JIT_TYPE_UNSIGNED_CHAR,
             'int' => \GCC_JIT_TYPE_INT,
             'long long' => \GCC_JIT_TYPE_LONG_LONG,
             'unsigned long long' => \GCC_JIT_TYPE_UNSIGNED_LONG_LONG,
@@ -390,20 +401,11 @@ class Context {
     }
 
     public function constantFromFloat(float $value, ?string $type = null): \gcc_jit_rvalue_ptr {
-        if (!isset($this->floatConstant[$value])) {
-            $this->floatConstant[$value] = \gcc_jit_context_new_rvalue_from_double(
-                $this->context,
-                $this->getTypeFromString('double'),
-                $value
-            );
-        }
-        if (!is_null($type)) {
-            return $this->helper->cast(
-                $this->floatConstant[$value],
-                $type
-            );
-        }
-        return $this->floatConstant[$value];
+        return \gcc_jit_context_new_rvalue_from_double(
+            $this->context,
+            $this->getTypeFromString(is_null($type) ? 'double' : $type),
+            $value
+        );
     }
 
     public function constantFromString(string $string): \gcc_jit_rvalue_ptr {
