@@ -175,6 +175,16 @@ class JIT {
                                 )
                             );
                             break;
+                        case Variable::TYPE_NATIVE_DOUBLE:
+                            $context->helper->eval(
+                                $gccBlock,
+                                $context->helper->call(
+                                    'printf',
+                                    $context->constantFromString('%f'),
+                                    $arg->rvalue
+                                )
+                            );
+                            break;
                         default: 
                             throw new \LogicException("Echo for type $arg->type not implemented");
                     }

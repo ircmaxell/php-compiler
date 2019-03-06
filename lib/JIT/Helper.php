@@ -66,6 +66,15 @@ class Helper {
                         $right->rvalue
                     );
                     break;
+                case Variable::TYPE_NATIVE_DOUBLE:
+                    $resultType = Variable::TYPE_NATIVE_DOUBLE;
+                    $rvalue = $this->binaryOp(
+                        $op,
+                        Variable::getStringType(Variable::TYPE_NATIVE_DOUBLE),
+                        $left->rvalue,
+                        $right->rvalue
+                    );
+                    break;
                 default:
                     throw new \LogicException("Unhandled type: " . $left->type);
             }

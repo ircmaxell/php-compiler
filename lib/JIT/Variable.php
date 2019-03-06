@@ -16,10 +16,12 @@ use PHPTypes\Type;
 class Variable {
     const TYPE_NATIVE_LONG = 1;
     const TYPE_NATIVE_BOOL = 2;
-    const TYPE_STRING = 3 | self::IS_REFCOUNTED;
-    const TYPE_OBJECT = 4 | self::IS_REFCOUNTED;
+    const TYPE_NATIVE_DOUBLE = 3;
+    const TYPE_STRING = 4 | self::IS_REFCOUNTED;
+    const TYPE_OBJECT = 5 | self::IS_REFCOUNTED;
 
     const TYPE_MAP = [
+        Type::TYPE_DOUBLE => self::TYPE_NATIVE_DOUBLE,
         Type::TYPE_LONG => self::TYPE_NATIVE_LONG,
         Type::TYPE_BOOLEAN => self::TYPE_NATIVE_BOOL,
         Type::TYPE_STRING => self::TYPE_STRING,
@@ -29,6 +31,7 @@ class Variable {
     const NATIVE_TYPE_MAP = [
         self::TYPE_NATIVE_LONG => 'long long',
         self::TYPE_NATIVE_BOOL => 'bool',
+        self::TYPE_NATIVE_DOUBLE => 'double',
         self::TYPE_STRING => '__string__*',
         self::TYPE_OBJECT => '__object__*',
     ];
@@ -134,6 +137,9 @@ class Variable {
                 break;
             case self::TYPE_STRING:
                 $rvalue = $context->constantStringFromString($op->value);
+                break;
+            case self::TYPE_NATIVE_DOUBLE:
+                $rvalue = $context->constantFromFloat($op->value, self::getStringType($type));
                 break;
             default:
                 throw new \LogicException("Literal type " . self::getStringType($type) . " not yet supported");

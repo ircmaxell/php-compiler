@@ -45,12 +45,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/ircmaxell/libgccffi.git",
-                "reference": "3f63d7a81c8f480781ffbf9c1dead7936bd31b65"
+                "reference": "770b9d83af8c0ed92896da1eaf34f22fa3e16119"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/ircmaxell/libgccffi/zipball/3f63d7a81c8f480781ffbf9c1dead7936bd31b65",
-                "reference": "3f63d7a81c8f480781ffbf9c1dead7936bd31b65",
+                "url": "https://api.github.com/repos/ircmaxell/libgccffi/zipball/770b9d83af8c0ed92896da1eaf34f22fa3e16119",
+                "reference": "770b9d83af8c0ed92896da1eaf34f22fa3e16119",
                 "shasum": ""
             },
             "require": {
@@ -76,7 +76,7 @@
                 }
             ],
             "description": "A wrapper for FFI with libgccjit",
-            "time": "2019-02-23 21:29:01"
+            "time": "2019-03-06 03:15:47"
         },
         {
             "name": "ircmaxell/php-cfg",

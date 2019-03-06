@@ -22,6 +22,7 @@ class Context {
     public array $functionScope = [];
     private array $typeMap = [];
     private array $intConstant = [];
+    private array $floatConstant = [];
     private array $stringConstant = [];
     private array $builtins;
     private array $stringConstantMap = [];
@@ -338,6 +339,7 @@ class Context {
             'size_t' => \GCC_JIT_TYPE_SIZE_T,
             'uint32_t' => \GCC_JIT_TYPE_UNSIGNED_LONG,
             'bool' => \GCC_JIT_TYPE_BOOL,
+            'double' => \GCC_JIT_TYPE_DOUBLE,
         ];
         if (isset($map[$type])) {
             return \gcc_jit_context_get_type (
@@ -385,6 +387,23 @@ class Context {
             );
         }
         return $this->intConstant[$value];
+    }
+
+    public function constantFromFloat(float $value, ?string $type = null): \gcc_jit_rvalue_ptr {
+        if (!isset($this->floatConstant[$value])) {
+            $this->floatConstant[$value] = \gcc_jit_context_new_rvalue_from_double(
+                $this->context,
+                $this->getTypeFromString('double'),
+                $value
+            );
+        }
+        if (!is_null($type)) {
+            return $this->helper->cast(
+                $this->floatConstant[$value],
+                $type
+            );
+        }
+        return $this->floatConstant[$value];
     }
 
     public function constantFromString(string $string): \gcc_jit_rvalue_ptr {
