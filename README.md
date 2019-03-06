@@ -150,3 +150,19 @@ me@local:~$ php bin/compile.php -y demo.php
 
 Checkout the committed [`demo.debug.c`](demo.debug.c) and [`demo.reproduce.c`](demo.reproduce.c) for more info...
 
+# Performance
+
+So, is this thing any fast? Well, let's look at the internal benchmarks. You can run them yourself with `php bench.php`, and it'll give you the following output (running 5 iterations of each test, and averaging the time):
+
+| Test Name          | Native PHP Time (s) |                JIT Time (s) | Compilation Time (s) |                 Compiled Time (s) |
+|--------------------|---------------------|-----------------------------|----------------------|-----------------------------------|
+|           ack(3,7) |            0.120350 |   0.252491 (-52.33% faster) |             0.247157 |      0.000805 ( 14842.45% faster) |
+|           fibo(30) |            0.417364 |   0.258276 ( 61.60% faster) |             0.246989 |      0.000825 ( 50514.43% faster) |
+|         mandelbrot |            0.363032 |   0.322568 ( 12.54% faster) |             0.305411 |      0.015091 (  2305.65% faster) |
+|             simple |            0.240994 |   0.283408 (-14.97% faster) |             0.267056 |      0.014322 (  1582.66% faster) |
+
+So note, a few tests are actually slower with the JIT compiler. That's because the test itself is slower than the baseline time to parse and compile a file (about 0.24 seconds right now).
+
+And note that this is running the compiler on top of PHP. At some point, the goal is to get the compiler to compile itself, hopefully cutting the time to compile down by at least a few hundred percent.
+
+So yeah, there's definitely potential here... *evil grin*

@@ -27,6 +27,8 @@ class JIT {
     private static array $intConstant = [];
     private static array $builtIns = [];
 
+    private static array $queue = [];
+
     const COMPARE_MAP = [
         OpCode::TYPE_SMALLER_OR_EQUAL => \GCC_JIT_COMPARISON_LE,
         OpCode::TYPE_GREATER_OR_EQUAL => \GCC_JIT_COMPARISON_GE,
@@ -54,9 +56,16 @@ class JIT {
             $context->setDebugFile($debugFile);
         }
         $context->setMain(self::compileBlock($context, $block));
+        self::runQueue($context);
         return $context;
     }
 
+    private static function runQueue(Context $context): void {
+        while (!empty(self::$queue)) {
+            $run = array_shift(self::$queue);
+            self::compileBlockInternal($context, $run[0], $run[1], ...$run[2]);
+        }
+    }
 
     private static function compileBlock(Context $context, Block $block, ?string $funcName = null): \gcc_jit_function_ptr {
         $internalName = "internal_" . (++self::$functionNumber);
@@ -86,13 +95,20 @@ class JIT {
             $callbackType .= '(*)(';
             $callbackSep = '';
             foreach ($block->func->params as $idx => $param) {
-                $type = $context->getTypeFromType($param->result->type);
+                if (empty($param->result->usages)) {
+                    // only compile for param
+                    assert($param->declaredType instanceof Op\Type\Literal);
+                    $rawType = Type::fromDecl($param->declaredType->name);
+                } else {
+                    $rawType = $param->result->type;
+                }
+                $type = $context->getTypeFromType($rawType);
                 $callbackType .= $callbackSep . $context->getStringFromType($type);
                 $callbackSep = ', ';
                 $args[] = $arg = \gcc_jit_context_new_param($context->context, $context->location(), $type, 'param_' . $idx);
                 $argVars[] = new Variable(
                     $context,
-                    Variable::getTypeFromType($param->result->type),
+                    Variable::getTypeFromType($rawType),
                     Variable::KIND_VARIABLE,
                     $arg->asRValue(),
                     $arg->asLValue()
@@ -118,7 +134,7 @@ class JIT {
             $context->functions[strtolower($funcName)] = $func;
         }
 
-        self::compileBlockInternal($context, $func, $block, ...$argVars);
+        self::$queue[] = [$func, $block, $argVars];
         if ($callbackType === 'void(*)()') {
             $context->addExport($internalName, $callbackType, $block);
         }
@@ -313,9 +329,7 @@ class JIT {
                 case OpCode::TYPE_FUNCDEF:
                     $nameOp = $block->getOperand($op->arg1);
                     assert($nameOp instanceof Operand\Literal);
-                    $context->pushScope();
                     self::compileBlock($context, $op->block1, $nameOp->value);
-                    $context->popScope();
                     break;
                 case OpCode::TYPE_FUNCCALL_INIT:
                     $nameOp = $block->getOperand($op->arg1);
