@@ -231,6 +231,8 @@ class Compiler {
             return OpCode::TYPE_MUL;
         } elseif ($expr instanceof Op\Expr\BinaryOp\Div) {
             return OpCode::TYPE_DIV;
+        } elseif ($expr instanceof Op\Expr\BinaryOp\Mod) {
+            return OpCode::TYPE_MODULO;
         }
         throw new \LogicException("Unknown BinaryOp Type: " . $expr->getType());
     }
@@ -313,6 +315,13 @@ class Compiler {
                     $this->getOpCodeTypeFromUnaryOp($expr),
                     $this->compileOperand($expr->result, $block, false),
                     $this->compileOperand($expr->expr, $block, true)
+                )];
+            case Op\Expr\ArrayDimFetch::class:
+                return [new OpCode(
+                    OpCode::TYPE_ARRAY_DIM_FETCH,
+                    $this->compileOperand($expr->result, $block, false),
+                    $this->compileOperand($expr->var, $block, true),
+                    $this->compileOperand($expr->dim, $block, true)
                 )];
             case Op\Expr\ConstFetch::class:
                 $nsName = null;

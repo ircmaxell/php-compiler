@@ -42,6 +42,7 @@ class JIT {
         OpCode::TYPE_PLUS => \GCC_JIT_BINARY_OP_PLUS,
         OpCode::TYPE_MUL => \GCC_JIT_BINARY_OP_MULT,
         OpCode::TYPE_DIV => \GCC_JIT_BINARY_OP_DIVIDE,
+        OpCode::TYPE_MODULO => \GCC_JIT_BINARY_OP_MODULO,
     ];
 
     const UNARYOP_MAP = [
@@ -169,6 +170,19 @@ class JIT {
                     $context->helper->assignOperand($gccBlock, $block->getOperand($op->arg2), $value);
                     $context->helper->assignOperand($gccBlock, $block->getOperand($op->arg1), $value);
                     break;  
+                case OpCode::TYPE_ARRAY_DIM_FETCH:
+                    $value = $context->getVariableFromOp($block->getOperand($op->arg2));
+                    $dim = $context->getVariableFromOp($block->getOperand($op->arg3));
+                    if ($value->type === Variable::TYPE_STRING) {
+                        $context->helper->assignOperand(
+                            $gccBlock, 
+                            $block->getOperand($op->arg1),
+                            $value->dimFetch($dim)
+                        );
+                    } else {
+                        throw new \LogicException("Illegal dim fetch");
+                    }
+                    break;
                 case OpCode::TYPE_CONCAT:
                     $result = $context->getVariableFromOp($block->getOperand($op->arg1));
                     $left = $context->getVariableFromOp($block->getOperand($op->arg2));
@@ -230,6 +244,7 @@ class JIT {
                 case OpCode::TYPE_PLUS:
                 case OpCode::TYPE_MINUS:
                 case OpCode::TYPE_DIV:
+                case OpCode::TYPE_MODULO:
                     $result = $block->getOperand($op->arg1);
                     $context->makeVariableFromRValueOp(
                         $context->helper->numericBinaryOp(

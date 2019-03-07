@@ -17,6 +17,7 @@ class String_ extends Type {
     private \gcc_jit_struct_ptr $struct;
     public \gcc_jit_type_ptr $pointer;
     private \gcc_jit_lvalue_ptr $size;
+    private \gcc_jit_lvalue_ptr $strCharConsts;
     protected array $fields;
 
     public function register(): void {
@@ -116,6 +117,18 @@ class String_ extends Type {
             null,
             count($this->fields),
             \gcc_jit_field_ptr_ptr::fromArray(...array_values($this->fields))
+        );
+        $this->strCharConsts = \gcc_jit_context_new_global(
+            $this->context->context,
+            null,
+            \GCC_JIT_GLOBAL_INTERNAL,
+            \gcc_jit_context_new_array_type(
+                $this->context->context,
+                $this->context->location(),
+                $this->context->getTypeFromString('__string__'),
+                256
+            ),
+            '__string__single_char_consts'
         );
 
         $this->implementAlloc();
@@ -268,6 +281,37 @@ class String_ extends Type {
             $this->size,
             $this->sizeof($this->context->getTypeFromString('__string__'))
         );
+        for ($i = 0; $i < 256; $i++) {
+            $ptr = \gcc_jit_lvalue_get_address(
+                gcc_jit_context_new_array_access(
+                    $this->context->context,
+                    $this->context->location(),
+                    $this->strCharConsts->asRValue(),
+                    $this->context->constantFromInteger($i, 'size_t')
+                ),
+                $this->context->location()
+            );
+            $this->context->refcount->init(
+                $this->context->initBlock, 
+                $ptr,
+                Refcount::TYPE_INFO_NONREFCOUNTED | Refcount::TYPE_INFO_TYPE_STRING
+            );
+            $this->context->helper->assign(
+                $this->context->initBlock,
+                $this->writeSize($ptr),
+                $this->context->constantFromInteger(1, 'size_t')
+            );
+            $this->context->helper->assign(
+                $this->context->initBlock,
+                \gcc_jit_context_new_array_access(
+                    $this->context->context,
+                    $this->context->location(),
+                    $this->writeValue($ptr)->asRValue(),
+                    $this->context->constantFromInteger(0, 'size_t')
+                ),
+                $this->context->constantFromInteger($i, 'char')
+            );
+        }
     }
 
     public function readSize(\gcc_jit_rvalue_ptr $struct): \gcc_jit_rvalue_ptr {
@@ -470,7 +514,6 @@ class String_ extends Type {
                 $this->size($right)
             )
         );
-        
     }
 
     private function copy(\gcc_jit_block_ptr $block, Variable $dest, Variable $other, \gcc_jit_rvalue_ptr $offset): void {
@@ -501,6 +544,26 @@ class String_ extends Type {
             default:
                 throw new \LogicException("Unhandled type for copy $other->type");
         }
+    }
+
+    public function dimFetch(\gcc_jit_rvalue_ptr $str, \gcc_jit_rvalue_ptr $dim): \gcc_jit_rvalue_ptr {
+        return \gcc_jit_lvalue_get_address(\gcc_jit_context_new_array_access(
+            $this->context->context,
+            $this->context->location(),
+            $this->strCharConsts->asRValue(),
+            $this->context->helper->cast(
+                \gcc_jit_context_new_array_access(
+                    $this->context->context,
+                    $this->context->location(),
+                    $this->valuePtr($str),
+                    $this->context->helper->cast(
+                        $dim,
+                        'size_t'
+                    )
+                )->asRValue(),
+                'size_t'
+            )
+        ), $this->context->location());
     }
 
 }

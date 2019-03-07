@@ -44,6 +44,16 @@ restart:
                     $arg2->copyFrom($arg3);
                     $arg1->copyFrom($arg3); 
                     break;
+                case OpCode::TYPE_ARRAY_DIM_FETCH:
+                    $arg1 = $frame->scope[$op->arg1];
+                    $arg2 = $frame->scope[$op->arg2];
+                    $arg3 = $frame->scope[$op->arg3];
+                    if ($arg2->type === Variable::TYPE_STRING) {
+                        $arg1->string($arg2->toString()[$arg3->toInt()]);
+                    } else {
+                        throw new \LogicException('Illegal offset');
+                    }
+                    break;
                 case OpCode::TYPE_CAST_BOOL:
                     $frame->scope[$op->arg1]->castFrom(Variable::TYPE_BOOLEAN, $frame->scope[$op->arg2]);
                     break;

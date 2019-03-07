@@ -54,6 +54,8 @@ class OpCode {
     const TYPE_CAST_STRING = 42;
     const TYPE_CAST_UNSET = 43;
     const TYPE_EQUAL = 44;
+    const TYPE_ARRAY_DIM_FETCH=45;
+    const TYPE_MODULO = 46;
 
     public int $type;
     public ?int $arg1;

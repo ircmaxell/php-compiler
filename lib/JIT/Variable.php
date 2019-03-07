@@ -222,6 +222,20 @@ class Variable {
                 return $this;
         }
     }
+
+    public function dimFetch(self $dim): Variable {
+        switch ($this->type) {
+            case self::TYPE_STRING:
+                $ptr = $this->context->type->string->dimFetch($this->rvalue, $dim->rvalue);
+                return new Variable(
+                    $this->context,
+                    self::TYPE_STRING,
+                    self::KIND_VARIABLE,
+                    $ptr,
+                    null
+                );
+        }
+    }
 }
 
 const TYPE_PAIR_NATIVE_LONG_NATIVE_LONG = (Variable::TYPE_NATIVE_LONG << 16) | Variable::TYPE_NATIVE_LONG;
