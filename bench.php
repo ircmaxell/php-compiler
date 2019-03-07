@@ -2,44 +2,81 @@
 
 const ITERATIONS = 5;
 
+$runtimes = [];
+foreach ($_ENV as $key => $value) {
+    if (substr($key, 0, 4) === 'PHP_') {
+        $runtimes[str_replace('_', '.', substr($key, 4))] = $value;
+    }
+}
+ksort($runtimes, SORT_STRING);
+if (!isset($runtimes['7.4'])) {
+    die("At least a PHP 7.4 runtime must be specified via PHP_7_4\n");
+}
+
 $it = new GlobIterator(__DIR__ . '/benchmarks/*.php');
 $results = [];
 
 echo "Running " . ITERATIONS . " iterations of each test, and averaging\n";
 foreach ($it as $file) {
     echo "Running " . $file->getBasename('.php') . ":\n";
-    $results[$file->getBasename('.php')] = bench($file->getPathname());
+    $results[$file->getBasename('.php')] = bench($file->getPathname(), $runtimes);
 }
 
 echo "All Tests Completed, Results: \n\n";
-echo "| Test Name          | Native PHP Time (s) |                JIT Time (s) | Compilation Time (s) |                 Compiled Time (s) |\n";
-echo "|--------------------|---------------------|-----------------------------|----------------------|-----------------------------------|\n";
+echo "| Test Name          ";
+foreach ($runtimes as $name => $path) {
+    printf('| %14s (s)', $name);
+}
+echo "| bin/jit.php (s) | bin/compile.php (s) | compiled time (s) |\n";
+
+echo '|--------------------';
+foreach ($runtimes as $name => $path) {
+    echo '|' . str_repeat('-', 19);
+}
+echo "|-----------------|---------------------|-------------------|\n";
 foreach ($results as $name => $resultset) {
-    printf(
-        "| %18s |            %2.6F |   %2.6F (%6.2F%% faster) |             %2.6F |      %2.6F (%9.2F%% faster) |\n", 
-        $name, 
-        $resultset['native'], 
-        $resultset['jit'],
-        100 * (($resultset['native'] / $resultset['jit']) - 1), 
-        $resultset['aotcompile'], 
-        $resultset['aot'],
-        100 * (($resultset['native'] / $resultset['aot']) - 1)
-    );
+    printf("| %18s ", $name);
+    foreach ($runtimes as $name => $_) {
+        printf('|      %12.4f ', $resultset[$name]);
+    }
+    printf('|    %12.4f ', $resultset['jit']);
+    printf('|        %12.4f ', $resultset['aotcompile']);
+    printf('|      %12.4f ', $resultset['aot']);
+    printf("|\n");
 }
 
 
 
 
-function bench(string $file) {
+function bench(string $file, array $runtimes) {
+    echo "Testing each method:\n";
+    $result = runDebug($runtimes['7.4'] . ' ' . __DIR__ . '/bin/jit.php', $file);
+    run($runtimes['7.4'] . ' ' . __DIR__ . '/bin/compile.php', $file);
+    $tmpResult = runDebug(str_replace('.php', '', $file), '');
+    if ($result !== $tmpResult) {
+        var_dump($result, $tmpResult);
+        die("Failure for bin/compile.php\n");
+    }
+    foreach ($runtimes as $name => $binary) {
+        $tmpResult = runDebug($binary, $file);
+        if ($result !== $tmpResult) {
+            var_dump($result, $tmpResult);
+            die("Failure for test $name\n");
+        }
+
+    }
+    echo "Tests passed for $file, all runtimes agree\n";
     $times = [];
     $start = microtime(true);
-    run('', $file);
-    $times['native'] = microtime(true);
-    run('bin/jit.php', $file);
+    foreach ($runtimes as $name => $binary) {
+        run($binary, $file);
+        $times[$name] = microtime(true);
+    }
+    run($runtimes['7.4'] . ' ' . __DIR__ . '/bin/jit.php', $file);
     $times['jit'] = microtime(true);
-    run('bin/compile.php', $file);
+    run($runtimes['7.4'] . ' ' . __DIR__ . '/bin/compile.php', $file);
     $times['aotcompile'] = microtime(true);
-    runCmd(str_replace('.php', '', $file));
+    run(str_replace('.php', '', $file), '');
     $times['aot'] = microtime(true);
     unlink(str_replace('.php', '', $file));
 
@@ -53,14 +90,12 @@ function bench(string $file) {
 }
 
 function run(string $BIN, string $file) {
-    if (!isset($_SERVER['_'])) {
-        $PHP = 'php';
-    } elseif ($_SERVER['_'][0] === '/') {
-        $PHP = $_SERVER['_'];
-    } else {
-        $PHP = realpath($_SERVER['PWD'] . '/' . $_SERVER['_']);
-    }
-    runCmd("$PHP {$BIN} " . escapeshellarg($file));
+    runCmd(escapeshellcmd($BIN) . ' ' . escapeshellarg($file));
+}
+
+function runDebug(string $BIN, string $file): string {
+    $command = escapeshellcmd($BIN) . ' ' . escapeshellarg($file);
+    return _runCmd($command);
 }
 
 function runCmd(string $cmd) {
@@ -69,7 +104,7 @@ function runCmd(string $cmd) {
     }
 }
 
-function _runCmd(string $cmd) {
+function _runCmd(string $cmd): string {
     $descriptorSepc = [
         0 => ['pipe', 'r'],
         1 => ['pipe', 'w'],
@@ -80,4 +115,5 @@ function _runCmd(string $cmd) {
     $result = stream_get_contents($pipes[1]);
     fclose($pipes[1]);
     proc_close($proc);
+    return $result;
 }

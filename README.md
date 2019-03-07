@@ -154,12 +154,15 @@ Checkout the committed [`demo.debug.c`](demo.debug.c) and [`demo.reproduce.c`](d
 
 So, is this thing any fast? Well, let's look at the internal benchmarks. You can run them yourself with `php bench.php`, and it'll give you the following output (running 5 iterations of each test, and averaging the time):
 
+
 | Test Name          |            7.3 (s)| 7.3.NO.OPCACHE (s)|            7.4 (s)| 7.4.NO.OPCACHE (s)|          8.JIT (s)|        8.NOJIT (s)| bin/jit.php (s) | bin/compile.php (s) | compiled time (s) |
 |--------------------|-------------------|-------------------|-------------------|-------------------|-------------------|-------------------|-----------------|---------------------|-------------------|
-|           ack(3,9) |            0.2982 |            0.3658 |            0.3012 |            0.3677 |            0.1669 |            0.2933 |          0.1787 |              0.1265 |            0.0012 |
-|           fibo(30) |            0.0672 |            0.0872 |            0.0714 |            0.0920 |            0.0432 |            0.0688 |          0.1358 |              0.1268 |            0.0011 |
-|         mandelbrot |            0.0379 |            0.1202 |            0.0383 |            0.1485 |            0.0203 |            0.0371 |          0.1530 |              0.1401 |            0.0142 |
-|             simple |            0.0491 |            0.0725 |            0.0563 |            0.0795 |            0.0215 |            0.0587 |          0.1496 |              0.1318 |            0.0141 |
+|          Ack(3,10) |            1.1593 |            1.8823 |            1.1823 |            1.8654 |            0.6622 |            1.1565 |          0.3368 |              0.1257 |            0.2134 |
+|           Ack(3,8) |            0.0787 |            0.1015 |            0.0821 |            0.1100 |            0.0470 |            0.0792 |          0.1392 |              0.1263 |            0.0147 |
+|           Ack(3,9) |            0.2985 |            0.3657 |            0.3027 |            0.3673 |            0.1676 |            0.2944 |          0.1770 |              0.1269 |            0.0539 |
+|           fibo(30) |            0.0672 |            0.0872 |            0.0710 |            0.0860 |            0.0438 |            0.0701 |          0.1357 |              0.1266 |            0.0116 |
+|         mandelbrot |            0.0371 |            0.1150 |            0.0378 |            0.1513 |            0.0207 |            0.0371 |          0.1533 |              0.1399 |            0.0142 |
+|             simple |            0.0491 |            0.0724 |            0.0554 |            0.0748 |            0.0215 |            0.0591 |          0.1566 |              0.1330 |            0.0141 |
 
 To run the benchmarks yourself, you need to pass a series of ENV vars for each PHP version you want to test. For example, the above chart is generated with::
 
