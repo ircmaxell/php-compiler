@@ -154,15 +154,25 @@ Checkout the committed [`demo.debug.c`](demo.debug.c) and [`demo.reproduce.c`](d
 
 So, is this thing any fast? Well, let's look at the internal benchmarks. You can run them yourself with `php bench.php`, and it'll give you the following output (running 5 iterations of each test, and averaging the time):
 
-| Test Name          | Native PHP Time (s) |                JIT Time (s) | Compilation Time (s) |                 Compiled Time (s) |
-|--------------------|---------------------|-----------------------------|----------------------|-----------------------------------|
-|           ack(3,7) |            0.120350 |   0.252491 (-52.33% faster) |             0.247157 |      0.000805 ( 14842.45% faster) |
-|           fibo(30) |            0.417364 |   0.258276 ( 61.60% faster) |             0.246989 |      0.000825 ( 50514.43% faster) |
-|         mandelbrot |            0.363032 |   0.322568 ( 12.54% faster) |             0.305411 |      0.015091 (  2305.65% faster) |
-|             simple |            0.240994 |   0.283408 (-14.97% faster) |             0.267056 |      0.014322 (  1582.66% faster) |
+| Test Name          |            7.3 (s)| 7.3.NO.OPCACHE (s)|            7.4 (s)| 7.4.NO.OPCACHE (s)|          8.JIT (s)|        8.NOJIT (s)| bin/jit.php (s) | bin/compile.php (s) | compiled time (s) |
+|--------------------|-------------------|-------------------|-------------------|-------------------|-------------------|-------------------|-----------------|---------------------|-------------------|
+|           ack(3,9) |            0.2982 |            0.3658 |            0.3012 |            0.3677 |            0.1669 |            0.2933 |          0.1787 |              0.1265 |            0.0012 |
+|           fibo(30) |            0.0672 |            0.0872 |            0.0714 |            0.0920 |            0.0432 |            0.0688 |          0.1358 |              0.1268 |            0.0011 |
+|         mandelbrot |            0.0379 |            0.1202 |            0.0383 |            0.1485 |            0.0203 |            0.0371 |          0.1530 |              0.1401 |            0.0142 |
+|             simple |            0.0491 |            0.0725 |            0.0563 |            0.0795 |            0.0215 |            0.0587 |          0.1496 |              0.1318 |            0.0141 |
 
-So note, a few tests are actually slower with the JIT compiler. That's because the test itself is slower than the baseline time to parse and compile a file (about 0.24 seconds right now).
+To run the benchmarks yourself, you need to pass a series of ENV vars for each PHP version you want to test. For example, the above chart is generated with::
+
+```console
+me@local:~$ PHP_7_3=../../PHP/php-7.3 PHP_7_4=../../PHP/php-7.4 PHP_8_JIT=../../PHP/php-8-jit PHP_8_NOJIT=../../PHP/php-8-nojit PHP_7_3_NO_OPCACHE="../../PHP/php-7.3 -dopcache.enable=0" PHP_7_4_NO_OPCACHE="../../PHP/php-7.4 -dopcache.enable=0" php bench.php 
+```
+
+Without opcache doing optimizations, the `bin/jit.php` is actually able to hang up with ack(3,9) and mandelbrot for 7.3 and 7.4. It's even able to hang with PHP 8's experimental JIT compiler for ack(3,9). 
+
+Most other tests are actually WAY slower with the `bin/jit.php` compiler. That's because the test itself is slower than the baseline time to parse and compile a file (about 0.12 seconds right now).
 
 And note that this is running the compiler on top of PHP. At some point, the goal is to get the compiler to compile itself, hopefully cutting the time to compile down by at least a few hundred percent.
+
+Simply look at the difference between everything and the "compiled time" column (which is the result of the AOT compiler generating a binary). This shows the potential in this compilation approach. If we can solve the overhead of parsing/compiling in PHP for the `bin/jit.php` examples, then man could this fly...
 
 So yeah, there's definitely potential here... *evil grin*

@@ -6,5 +6,5 @@ function Ack(int $m, int $n): int {
   return Ack($m - 1, Ack($m, ($n - 1)));
 }
 
-echo Ack(3, 7);
+echo Ack(3, 9);
 echo "\n";

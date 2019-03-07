@@ -146,6 +146,7 @@ class Helper {
         if ($neededResultType === $resultType) {
             return $rvalue;
         }
+        var_dump($result);
         // Need to cast
         throw new \LogicException("Unhandled type cast needed for " . $neededResultType . " from " . $resultType);
     }

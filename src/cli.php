@@ -4,7 +4,7 @@ use PHPCompiler\Backend\VM\Runtime;
 
 require __DIR__ . '/../vendor/autoload.php';
 
-ini_set('memory_limit', '16G');
+ini_set('memory_limit', '-1');
 error_reporting(~0);
 
 $opts = $argv;
