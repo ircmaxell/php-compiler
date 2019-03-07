@@ -131,7 +131,7 @@ block_0:
 
 # Future Work
 
-Right now, this only supports an EXTREMELY limited subset of PHP. There is no support for dynamic anything. Arrays aren't supported. Neither Object properties nor methods are not supported. And the only builtin functions that are supported are `var_dump` and `strlen`.
+Right now, this only supports an EXTREMELY limited subset of PHP. There is no support for dynamic anything. Arrays aren't supported. Neither Object properties nor methods are supported. And the only builtin functions that are supported are `var_dump` and `strlen`.
 
 But it's a start...
 
