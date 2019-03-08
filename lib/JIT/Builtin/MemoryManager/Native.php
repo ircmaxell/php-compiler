@@ -15,36 +15,24 @@ class Native extends MemoryManager {
 
     public function register(): void {
         parent::register();
-        $this->context->registerFunction(
+        $this->context->helper->importFunction(
             'free',
-            $this->context->helper->createFunction(
-                \GCC_JIT_FUNCTION_IMPORTED,
-                'free',
-                'void',
-                false,
-                'void*'
-            )
+            'void',
+            false,
+            'void*'
         );
-        $this->context->registerFunction(
+        $this->context->helper->importFunction(
             'malloc',
-            $this->context->helper->createFunction(
-                \GCC_JIT_FUNCTION_IMPORTED,
-                'malloc',
-                'void*',
-                false,
-                'size_t'
-            )
+            'void*',
+            false,
+            'size_t'
         );
-        $this->context->registerFunction(
+        $this->context->helper->importFunction(
             'realloc',
-            $this->context->helper->createFunction(
-                \GCC_JIT_FUNCTION_IMPORTED,
-                'realloc',
-                'void*',
-                false,
-                'void*',
-                'size_t'
-            )
+            'void*',
+            false,
+            'void*',
+            'size_t'
         );
     } 
 

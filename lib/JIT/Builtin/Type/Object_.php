@@ -41,7 +41,7 @@ class Object_ extends Type {
         );
         $this->context->registerFunction(
             '__object__alloc',
-            $this->context->helper->createFunction(
+            $this->context->helper->createNativeFunction(
                 \GCC_JIT_FUNCTION_ALWAYS_INLINE,
                 '__object__alloc',
                 '__object__*',
@@ -52,7 +52,7 @@ class Object_ extends Type {
         );
         $this->context->registerFunction(
             '__object__propfetch',
-            $this->context->helper->createFunction(
+            $this->context->helper->createNativeFunction(
                 \GCC_JIT_FUNCTION_ALWAYS_INLINE,
                 '__object__propfetch',
                 'void*',

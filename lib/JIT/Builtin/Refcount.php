@@ -69,7 +69,7 @@ class Refcount extends Builtin {
         );
         $this->context->registerFunction(
             '__ref__init',
-            $this->context->helper->createFunction(
+            $this->context->helper->createNativeFunction(
                 \GCC_JIT_FUNCTION_ALWAYS_INLINE,
                 '__ref__init',
                 'void',
@@ -80,7 +80,7 @@ class Refcount extends Builtin {
         );
         $this->context->registerFunction(
             '__ref__addref',
-            $this->context->helper->createFunction(
+            $this->context->helper->createNativeFunction(
                 \GCC_JIT_FUNCTION_ALWAYS_INLINE,
                 '__ref__addref',
                 'void',
@@ -90,7 +90,7 @@ class Refcount extends Builtin {
         );
         $this->context->registerFunction(
             '__ref__delref',
-            $this->context->helper->createFunction(
+            $this->context->helper->createNativeFunction(
                 \GCC_JIT_FUNCTION_ALWAYS_INLINE,
                 '__ref__delref',
                 'void',
@@ -100,7 +100,7 @@ class Refcount extends Builtin {
         );
         $this->context->registerFunction(
             '__ref__separate',
-            $this->context->helper->createFunction(
+            $this->context->helper->createNativeFunction(
                 \GCC_JIT_FUNCTION_ALWAYS_INLINE,
                 '__ref__separate',
                 'void',

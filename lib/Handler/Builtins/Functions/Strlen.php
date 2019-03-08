@@ -11,10 +11,9 @@ namespace PHPCompiler\Handler\Builtins\Functions;
 
 use PHPCompiler\Handler\Builtins\Functions;
 use PHPCompiler\Frame;
+use PHPCompiler\JIT\Func as Func;
 
 class Strlen extends Functions {
-
-    
 
     public function execute(Frame $frame): void {
         $var = $frame->calledArgs[0];
@@ -36,14 +35,14 @@ class Strlen extends Functions {
         ];
     }
 
-    public function implement(\gcc_jit_function_ptr $func, \gcc_jit_param_ptr ...$params): void {
-        $block = \gcc_jit_function_new_block($func, 'main');
+    public function implement(Func $func): void {
+        $block = \gcc_jit_function_new_block($func->func, 'main');
         \gcc_jit_block_end_with_return(
             $block,
             $this->jitContext->location(),
             $this->jitContext->helper->call(
                 '__string__strlen',
-                $params[0]->asRValue()
+                $func->params[0]->asRValue()
             )
         );
     }

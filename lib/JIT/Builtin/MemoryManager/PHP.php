@@ -15,39 +15,27 @@ class PHP extends MemoryManager {
 
     public function register(): void {
         parent::register();
-        $this->context->registerFunction(
+        $this->context->helper->importFunction(
             '_efree',
-            $this->context->helper->createFunction(
-                \GCC_JIT_FUNCTION_IMPORTED,
-                '_efree',
-                'void',
-                false,
-                'void*',
-                ...$this->expandDebugDecl()
-            )
+            'void',
+            false,
+            'void*',
+            ...$this->expandDebugDecl()
         );
-        $this->context->registerFunction(
+        $this->context->helper->importfunction(
             '_emalloc',
-            $this->context->helper->createFunction(
-                \GCC_JIT_FUNCTION_IMPORTED,
-                '_emalloc',
-                'void*',
-                false,
-                'size_t',
-                ...$this->expandDebugDecl()
-            )
+            'void*',
+            false,
+            'size_t',
+            ...$this->expandDebugDecl()
         );
-        $this->context->registerFunction(
+        $this->context->helper->importFunction(
             '_erealloc',
-            $this->context->helper->createFunction(
-                \GCC_JIT_FUNCTION_IMPORTED,
-                '_erealloc',
-                'void*',
-                false,
-                'void*',
-                'size_t',
-                ...$this->expandDebugDecl()
-            )
+            'void*',
+            false,
+            'void*',
+            'size_t',
+            ...$this->expandDebugDecl()
         );
     } 
     

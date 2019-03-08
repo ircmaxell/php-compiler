@@ -37,7 +37,7 @@ class String_ extends Type {
         );
         $this->context->registerFunction(
             '__string__alloc',
-            $this->context->helper->createFunction(
+            $this->context->helper->createNativeFunction(
                 \GCC_JIT_FUNCTION_ALWAYS_INLINE,
                 '__string__alloc',
                 '__string__*',
@@ -47,7 +47,7 @@ class String_ extends Type {
         );
         $this->context->registerFunction(
             '__string__init',
-            $this->context->helper->createFunction(
+            $this->context->helper->createNativeFunction(
                 \GCC_JIT_FUNCTION_ALWAYS_INLINE,
                 '__string__init',
                 '__string__*',
@@ -58,7 +58,7 @@ class String_ extends Type {
         );
         $this->context->registerFunction(
             '__string__realloc',
-            $this->context->helper->createFunction(
+            $this->context->helper->createNativeFunction(
                 \GCC_JIT_FUNCTION_ALWAYS_INLINE,
                 '__string__realloc',
                 '__string__*',
@@ -69,7 +69,7 @@ class String_ extends Type {
         );
         $this->context->registerFunction(
             '__string__separate',
-            $this->context->helper->createFunction(
+            $this->context->helper->createNativeFunction(
                 \GCC_JIT_FUNCTION_ALWAYS_INLINE,
                 '__string__separate',
                 'void',
@@ -77,19 +77,19 @@ class String_ extends Type {
                 '__ref__virtual**'
             )
         );
-        $this->context->registerFunction(
-            'strlen',
-            $this->context->helper->createFunction(
-                \GCC_JIT_FUNCTION_IMPORTED,
-                'strlen',
-                'size_t',
-                false,
-                'const char*'
-            )
-        );
+        // $this->context->registerFunction(
+        //     'strlen',
+        //     $this->context->helper->createFunction(
+        //         \GCC_JIT_FUNCTION_IMPORTED,
+        //         'strlen',
+        //         'size_t',
+        //         false,
+        //         'const char*'
+        //     )
+        // );
         $this->context->registerFunction(
             '__string__strlen',
-            $this->context->helper->createFunction(
+            $this->context->helper->createNativeFunction(
                 \GCC_JIT_FUNCTION_ALWAYS_INLINE,
                 '__string__strlen',
                 'long long',

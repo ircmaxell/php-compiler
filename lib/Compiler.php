@@ -203,9 +203,46 @@ class Compiler {
             $op->block1->parents[] = $block;
             $op->block2->parents[] = $block;
             $block->addOpCode($op);
+        } elseif ($stmt instanceof Op\Stmt\Switch_) {
+            $canBeSwitch = true;
+            $type = null;
+            foreach ($stmt->cases as $case) {
+                if (!$case instanceof Operand\Literal) {
+                    $canBeSwitch = false;
+                    break;
+                }
+                if (is_null($type)) {
+                    $type = $case->type;
+                } elseif (!$type->equals($case->type)) {
+                    $canBeSwitch = false;
+                }
+            }
+            if ($canBeSwitch) {
+                $this->compileSwitchStmt($stmt, $block);
+            } else {
+                $this->compileSwitchToIfBlocks($stmt, $block);
+            }
         } else {
             throw new \LogicException("Unknown Stmt Type: " . $stmt->getType());
         }
+    }
+
+    protected function compileSwitchStmt(Op\Stmt\Switch_ $switch, Block $block): void {
+        $op = $this->compileOperand($switch->cond, $block, true);
+        foreach ($switch->cases as $key => $case) {
+            $caseOp = new OpCode(
+                OpCode::TYPE_CASE,
+                $op,
+                $this->compileOperand($case, $block, true)
+            );
+            $caseOp->block1 = $this->compileCfgBlock($switch->targets[$key]);
+            $caseOp->block1->parents[] = $block;
+            $block->addOpCode($caseOp);
+        }
+        $defaultOp = new OpCode(OpCode::TYPE_JUMP);
+        $defaultOp->block1 = $this->compileCfgBlock($switch->default);
+        $defaultOp->block1->parents[] = $block;
+        $block->addOpCode($defaultOp);
     }
 
     protected function getOpCodeTypeFromBinaryOp(Op\Expr\BinaryOp $expr): int {
@@ -233,6 +270,12 @@ class Compiler {
             return OpCode::TYPE_DIV;
         } elseif ($expr instanceof Op\Expr\BinaryOp\Mod) {
             return OpCode::TYPE_MODULO;
+        } elseif ($expr instanceof Op\Expr\BinaryOp\BitwiseAnd) {
+            return OpCode::TYPE_BITWISE_AND;
+        } elseif ($expr instanceof Op\Expr\BinaryOp\BitwiseOr) {
+            return OpCode::TYPE_BITWISE_OR;
+        } elseif ($expr instanceof Op\Expr\BinaryOp\BitwiseXor) {
+            return OpCode::TYPE_BITWISE_XOR;
         }
         throw new \LogicException("Unknown BinaryOp Type: " . $expr->getType());
     }

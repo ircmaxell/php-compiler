@@ -1,4 +1,4 @@
-<?php
+<?php declare(strict_types=1);
 
 /*
  * This file is part of PHP-Compiler, a PHP CFG Compiler for PHP code
@@ -14,6 +14,7 @@ use PHPCompiler\JIT\Context as JITContext;
 use PHPCompiler\JIT\Builtin as JITBuiltin;
 use PHPCompiler\VM\Context as VMContext;
 use PHPCompiler\Block;
+use PHPCompiler\JIT\Func as Func;
 
 abstract class Functions extends Builtins {
 
@@ -43,11 +44,10 @@ abstract class Functions extends Builtins {
         }
         $lcname = strtolower($this->getName());
         $funcName = '__builtin__' . $lcname;
-        $func = $this->jitContext->helper->createFunction(
+        $func = $this->jitContext->helper->createTrampolinedFunction(
             $kind,
             $funcName,
             $this->getReturnType(),
-            false,
             ...$this->getParamTypes()
         );
         $this->jitContext->registerFunction(
@@ -55,17 +55,14 @@ abstract class Functions extends Builtins {
             $func
         );
         if ($kind !== \GCC_JIT_FUNCTION_IMPORTED) {
-            $this->implement(
-                $func->func,
-                ...$func->params
-            );
+            $this->implement($func);
         }
-        $context->functions[$lcname] = $func->func;
+        $context->functions[$lcname] = $func;
     }
 
     abstract public function getName(): string;
     abstract public function getReturnType(): string;
     abstract public function getParamTypes(): array;
-    abstract public function implement(\gcc_jit_function_ptr $func, \gcc_jit_param_ptr ...$params): void;
+    abstract public function implement(Func $func): void;
 
 }

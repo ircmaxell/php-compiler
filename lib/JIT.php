@@ -43,6 +43,9 @@ class JIT {
         OpCode::TYPE_MUL => \GCC_JIT_BINARY_OP_MULT,
         OpCode::TYPE_DIV => \GCC_JIT_BINARY_OP_DIVIDE,
         OpCode::TYPE_MODULO => \GCC_JIT_BINARY_OP_MODULO,
+        OpCode::TYPE_BITWISE_AND => \GCC_JIT_BINARY_OP_BITWISE_AND,
+        OpCode::TYPE_BITWISE_OR => \GCC_JIT_BINARY_OP_BITWISE_OR,
+        OpCode::TYPE_BITWISE_XOR => \GCC_JIT_BINARY_OP_BITWISE_XOR,
     ];
 
     const UNARYOP_MAP = [
@@ -132,7 +135,13 @@ class JIT {
             0
         );
         if (!is_null($funcName)) {
-            $context->functions[strtolower($funcName)] = $func;
+            $context->functions[strtolower($funcName)] = new JIT\Func\Trampolined(
+                $context,
+                $funcName,
+                $func,
+                $returnType,
+                ...$args
+            );
         }
 
         self::$queue[] = [$func, $block, $argVars];
@@ -160,7 +169,8 @@ class JIT {
             $var = $context->makeVariableFromOp($func, $gccBlock, $block, $operand);
         }
 
-        foreach ($block->opCodes as $op) {
+        for ($i = 0, $length = count($block->opCodes); $i < $length; $i++) {
+            $op = $block->opCodes[$i];
             switch ($op->type) {
                 case OpCode::TYPE_ARG_RECV:
                     $context->helper->assignOperand($gccBlock, $block->getOperand($op->arg1), $args[$op->arg2]);
@@ -245,6 +255,9 @@ class JIT {
                 case OpCode::TYPE_MINUS:
                 case OpCode::TYPE_DIV:
                 case OpCode::TYPE_MODULO:
+                case OpCode::TYPE_BITWISE_AND:
+                case OpCode::TYPE_BITWISE_OR:
+                case OpCode::TYPE_BITWISE_XOR:
                     $result = $block->getOperand($op->arg1);
                     $context->makeVariableFromRValueOp(
                         $context->helper->numericBinaryOp(
@@ -301,7 +314,43 @@ class JIT {
                         $result
                     );
                     break;
-                    break;
+                case OpCode::TYPE_CASE:
+                    // the first case we arrive to. all the rest of the cases will have the same type, so we're good:
+                    $cases = [];
+                    $default = null;
+                    $condition = $context->getVariableFromOp($block->getOperand($op->arg1));
+                    while ($i < $length) {
+                        // Note, the first iteration will capture the current op, this is intentional
+                        if ($block->opCodes[$i]->type === OpCode::TYPE_CASE) {
+                            $caseCondition = $context->getVariableFromOp($block->getOperand($block->opCodes[$i]->arg2))->rvalue;
+                            $cases[] = \gcc_jit_context_new_case(
+                                $context->context,
+                                $caseCondition,
+                                $caseCondition,
+                                self::compileBlockInternal($context, $func, $block->opCodes[$i]->block1, ...$args)
+                            );
+                        } elseif ($block->opCodes[$i]->type === OpCode::TYPE_JUMP) {
+                            if (!is_null($default)) {
+                                throw new \LogicException('More than one default to switch found. Really weird');
+                            }
+                            $default = self::compileBlockInternal($context, $func, $block->opCodes[$i]->block1, ...$args);
+                        } else {
+                            throw new \LogicException('Mixed instruction inside of switch statement found: ' . $block->opCodes[$i]->getType());
+                        }
+                        $i++;
+                    }
+                    if (is_null($default)) {
+                        throw new \LogicException("Switch must have at least a default block: compile error");
+                    }
+                    \gcc_jit_block_end_with_switch(
+                        $gccBlock,
+                        $context->location(),
+                        $condition->rvalue,
+                        $default,
+                        count($cases),
+                        \gcc_jit_case_ptr_ptr::fromArray(...$cases)
+                    );
+                    return $gccBlock;
                 case OpCode::TYPE_JUMP:
                     $newBlock = self::compileBlockInternal($context, $func, $op->block1, ...$args);
                     $context->freeDeadVariables($func, $gccBlock, $block);
@@ -366,28 +415,13 @@ class JIT {
                         // short circuit
                         break;
                     }
-                    $context->helper->eval($gccBlock,
-                        \gcc_jit_context_new_call(
-                            $context->context,
-                            $context->location(),
-                            $context->scope->toCall,
-                            count($context->scope->args),
-                            \gcc_jit_rvalue_ptr_ptr::fromArray(...$context->scope->args)
-                        )
-                    );
+                    $context->helper->eval($gccBlock, $context->scope->toCall->call(...$context->scope->args));
                     break;
                 case OpCode::TYPE_FUNCCALL_EXEC_RETURN:
-                    $result = \gcc_jit_context_new_call(
-                        $context->context,
-                        $context->location(),
-                        $context->scope->toCall,
-                        count($context->scope->args),
-                        \gcc_jit_rvalue_ptr_ptr::fromArray(...$context->scope->args)
-                    );
                     $context->helper->assign(
                         $gccBlock,
                         $context->getVariableFromOp($block->getOperand($op->arg1))->lvalue,
-                        $result
+                        $context->scope->toCall->call(...$context->scope->args)
                     );
                     break;
                 case OpCode::TYPE_DECLARE_CLASS:

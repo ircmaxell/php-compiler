@@ -38,29 +38,21 @@ abstract class MemoryManager extends Builtin {
     }
 
     public function register(): void {
-        $this->context->registerFunction(
+        $this->context->helper->importFunction(
             'memcpy',
-            $this->context->helper->createFunction(
-                \GCC_JIT_FUNCTION_IMPORTED,
-                'memcpy',
-                'int',
-                false,
-                'char*',
-                'const char*',
-                'size_t'
-            )
+            'int',
+            false,
+            'char*',
+            'const char*',
+            'size_t'
         );
-        $this->context->registerFunction(
+        $this->context->helper->importFunction(
             'memset',
-            $this->context->helper->createFunction(
-                \GCC_JIT_FUNCTION_IMPORTED,
-                'memset',
-                'int',
-                false,
-                'char*',
-                'char',
-                'size_t'
-            )
+            'int',
+            false,
+            'char*',
+            'char',
+            'size_t'
         );
     }   
 

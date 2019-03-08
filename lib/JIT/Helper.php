@@ -29,14 +29,18 @@ class Helper {
         string $func, 
         ?\gcc_jit_rvalue_ptr ...$params
     ): \gcc_jit_rvalue_ptr {
-        return \gcc_jit_context_new_call(
-            $this->context->context,
-            $this->context->location(),
-            $this->context->lookupFunction($func)->func,
-            count($params),
-            \gcc_jit_rvalue_ptr_ptr::fromArray(
-                ...$params
-            )
+        return $this->context->lookupFunction($func)->call(...$params);
+    }
+
+    public function castArrayToPointer(\gcc_jit_rvalue_ptr $array, string $to): \gcc_jit_rvalue_ptr {
+        return gcc_jit_lvalue_get_address(
+            \gcc_jit_context_new_array_access(
+                $this->context->context,
+                $this->context->location(),
+                $array,
+                $this->context->constantFromInteger(0, 'size_t')
+            ),
+            $this->context->location()
         );
     }
 
@@ -219,7 +223,7 @@ class Helper {
         bool $isVariadic, 
         string ...$params
     ): void {
-        $this->context->registerFunction($funcName, $this->createFunction(
+        $this->context->registerFunction($funcName, $this->createNativeFunction(
             \GCC_JIT_FUNCTION_IMPORTED,
             $funcName,
             $returnType,
@@ -228,7 +232,99 @@ class Helper {
         ));
     }
 
-    public function createFunction(
+    public function createNativeFunction(
+        int $type, 
+        string $funcName, 
+        string $returnType, 
+        bool $isVariadic, 
+        string ...$params
+    ): Func {
+        return $this->createFunction(
+            Func\Native::class,
+            $type,
+            $funcName,
+            $returnType,
+            $isVariadic,
+            ...$params
+        );
+    }
+
+    public function createTrampolinedFunction(
+        int $type, 
+        string $funcName, 
+        string $returnType, 
+        string ...$params
+    ): Func {
+        return $this->createFunction(
+            Func\Trampolined::class,
+            $type,
+            $funcName,
+            $returnType,
+            false,
+            ...$params
+        );
+    }
+
+    public function createVarArgFunction(
+        int $type, 
+        string $funcName, 
+        string $returnType,
+        string $paramType,
+        string ...$params
+    ): Func {
+        $paramPointers = [];
+        $i = 0;
+        foreach ($params as $param) {
+            $paramPointers[] = \gcc_jit_context_new_param(
+                $this->context->context, 
+                null, 
+                $this->context->getTypeFromString($param), 
+                "{$funcName}_{$i}"
+            );
+            $i++;
+        }
+        $nargs = \gcc_jit_context_new_param(
+            $this->context->context,
+            $this->context->location(), 
+            $this->context->getTypeFromString('size_t'), 
+            'nargs'
+        );
+        $args = \gcc_jit_context_new_param(
+            $this->context->context, 
+            $this->context->location(), 
+            $this->context->getTypeFromString($paramType . '*'), 
+            'args'
+        );
+        $argParamPointers = $paramPointers;
+        $argParamPointers[] = $nargs;
+        $argParamPointers[] = $args;
+        $gccReturnType = $this->context->getTypeFromString($returnType);
+        return new Func\VarArg(
+            $this->context,
+            $funcName,
+            \gcc_jit_context_new_function(
+                $this->context->context, 
+                $this->context->location(),
+                $type,
+                $gccReturnType,
+                $funcName,
+                count($paramPointers) + 2, 
+                \gcc_jit_param_ptr_ptr::fromArray(
+                    ...$argParamPointers
+                ),
+                0
+            ),
+            $gccReturnType,
+            $paramType,
+            $nargs,
+            $args,
+            ...$paramPointers
+        );
+    }
+
+
+    private function createFunction(
+        string $funcClass,
         int $type, 
         string $funcName, 
         string $returnType, 
@@ -247,7 +343,8 @@ class Helper {
             $i++;
         }
         $gccReturnType = $this->context->getTypeFromString($returnType);
-        return new Func(
+        return new $funcClass(
+            $this->context,
             $funcName,
             \gcc_jit_context_new_function(
                 $this->context->context, 
@@ -309,7 +406,7 @@ class Helper {
             );
             return;
         }
-        throw new \LogicException("Assignment of different types not supported yet");
+        throw new \LogicException("Assignment of different types not supported yet: $value->type and $result->type");
     }
 
     public function createField(string $name, string $type): \gcc_jit_field_ptr {

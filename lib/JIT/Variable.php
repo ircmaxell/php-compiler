@@ -38,7 +38,7 @@ class Variable {
         self::TYPE_VALUE => '__value__'
     ];
 
-    const IS_REFCOUNTED = 1 << 8;
+    const IS_REFCOUNTED = 1 << 7;
     public int $type;
 
     const KIND_VARIABLE = 1;

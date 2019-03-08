@@ -56,6 +56,7 @@ class Context {
         $this->output = new Builtin\Output($this, $loadType);
         $this->type = new Builtin\Type($this, $loadType);
         $this->internal = new Builtin\Internal($this, $loadType);
+        $this->vararg = new Builtin\VarArg($this, $loadType);
 
         $this->defineBuiltins($loadType);
         Builtins::loadJIT($this);
@@ -363,24 +364,20 @@ class Context {
                 $this->getTypeFromString(substr($type, 0, -1))
             );
         }
-        switch ($type) {
-            case 'char[1]':
+        if (substr($type, -1) === ']') {
+            // array type
+            if (preg_match('(^(.*?)\\[(\d+)\\]$)', $type, $match)) {
                 return \gcc_jit_context_new_array_type(
                     $this->context,
                     null,
-                    $this->getTypeFromString('char'),
-                    1
+                    $this->getTypeFromString($match[1]),
+                    (int) $match[2]
                 );
-            case 'long long[1]':
-                return \gcc_jit_context_new_array_type(
-                    $this->context,
-                    null,
-                    $this->getTypeFromString('long long'),
-                    1
-                );
-            default:
-                throw new \LogicException("Unsupported native type $type");
+            } else {
+                throw new \LogicException("Could not parse type with array notation: $type");
+            }
         }
+        throw new \LogicException("Unsupported native type $type");
     }
 
     public function constantFromInteger(int $value, ?string $type = null): \gcc_jit_rvalue_ptr {
@@ -391,7 +388,7 @@ class Context {
                 $value
             );
         }
-        if (!is_null($type)) {
+        if (!is_null($type) && $type !== 'long long') {
             return $this->helper->cast(
                 $this->intConstant[$value],
                 $type

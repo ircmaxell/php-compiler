@@ -360,6 +360,47 @@ restart:
         }
     }
 
+    public function bitwiseOp(int $opCode, Variable $left, Variable $right): void {
+        $this->reset();
+restart:
+        $pair = type_pair($left->type, $right->type);
+        if ($pair === TYPE_PAIR_INTEGER_INTEGER) {
+            $result = $this->_bitwiseOp($opCode, $left->integer, $right->integer);        
+            if (is_int($result)) {
+                $this->int($result);
+            } else {
+                $this->float($result);
+            }
+        } elseif ($pair === TYPE_PAIR_INTEGER_FLOAT) {
+            $this->float($this->_bitwiseOp($opCode, $left->integer, $right->float));
+        } elseif ($pair === TYPE_PAIR_FLOAT_INTEGER) {
+            $this->float($this->_bitwiseOp($opCode, $left->float, $right->integer));
+        } elseif ($pair === TYPE_PAIR_FLOAT_FLOAT) {
+            $this->float($this->_bitwiseOp($opCode, $left->float, $right->float));
+        } elseif ($left->type === self::TYPE_INDIRECT) {
+            $left = $left->indirect;
+            goto restart;
+        } elseif ($right->type === self::TYPE_INDIRECT) {
+            $right = $right->indirect;
+            goto restart;
+        } else {
+            $this->string($this->_bitwiseOp($opCode, $left->toString(), $right->toString()));
+        }
+    }
+
+    private function _bitwiseOp(int $opCode, $left, $right) {
+        switch ($opCode) {
+            case OpCode::TYPE_BITWISE_AND:
+               return $left & $right;
+            case OpCode::TYPE_BITWISE_OR:
+                return $left | $right;
+            case OpCode::TYPE_BITWISE_XOR:
+                return $left ^ $right;
+            default:
+                throw new \LogicException("Non-implemented bitwise operation $opCode");
+        }
+    }
+
     public function numericOp(int $opCode, Variable $left, Variable $right): void {
         $this->reset();
 restart:

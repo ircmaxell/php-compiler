@@ -87,6 +87,15 @@ restart:
                     $arg3 = $frame->scope[$op->arg3];
                     $arg1->numericOp($op->type, $arg2, $arg3);
                     break;
+                case OpCode::TYPE_BITWISE_AND:
+                case OpCode::TYPE_BITWISE_OR:
+                case OpCode::TYPE_BITWISE_XOR:
+                    $arg1 = $frame->scope[$op->arg1];
+                    $arg2 = $frame->scope[$op->arg2];
+                    $arg3 = $frame->scope[$op->arg3];
+                    $arg1->bitwiseOp($op->type, $arg2, $arg3);
+                    break;
+
                 case OpCode::TYPE_UNARY_MINUS:
                 case OpCode::TYPE_UNARY_PLUS:
                     $arg1 = $frame->scope[$op->arg1];
@@ -120,6 +129,14 @@ restart:
                         $frame = $op->block2->getFrame($context, $frame);
                     }
                     goto restart;
+                case OpCode::TYPE_CASE:
+                    $arg1 = $frame->scope[$op->arg1];
+                    $arg2 = $frame->scope[$op->arg2];
+                    if ($arg1->equals($arg2)) {
+                        $frame = $op->block1->getFrame($context, $frame);
+                        goto restart;
+                    }
+                    break;
                 case OpCode::TYPE_CONST_FETCH:
                     $value = null;
                     if (!is_null($op->arg3)) {

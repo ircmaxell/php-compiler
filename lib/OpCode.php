@@ -56,6 +56,11 @@ class OpCode {
     const TYPE_EQUAL = 44;
     const TYPE_ARRAY_DIM_FETCH=45;
     const TYPE_MODULO = 46;
+    const TYPE_SWITCH = 47;
+    const TYPE_CASE = 48;
+    const TYPE_BITWISE_AND = 49;
+    const TYPE_BITWISE_OR = 50;
+    const TYPE_BITWISE_XOR = 51;
 
     public int $type;
     public ?int $arg1;

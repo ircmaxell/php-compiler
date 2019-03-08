@@ -15,7 +15,7 @@ class Scope {
     public int $classId = 0;
     public \SplObjectStorage $blockStorage;
     public \SplObjectStorage $variables;
-    public ?\gcc_jit_function_ptr $toCall = null;
+    public ?Func $toCall = null;
     public array $args = [];
 
     public function __construct() {

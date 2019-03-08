@@ -73,12 +73,79 @@ class Value extends Type {
         );
     }
 
+    protected function getFieldFromType(int $type): \gcc_jit_field_ptr {
+        switch ($type) {
+            case Variable::TYPE_NATIVE_LONG:
+                return $this->union['long'];
+            case Variable::TYPE_NATIVE_DOUBLE:
+                return $this->union['float'];
+            case Variable::TYPE_NATIVE_BOOL:
+                return $this->union['bool'];
+            case Variable::TYPE_STRING:
+                return $this->union['string'];
+            case Variable::TYPE_OBJECT:
+                return $this->union['object'];
+        }
+        throw new \LogicException('Unknown type provided: ' . $type);
+    }
+
     public function initialize(): void {
         \gcc_jit_block_add_assignment(
             $this->context->initBlock,
             null,
             $this->size,
             $this->sizeof($this->context->getTypeFromString('__value__'))
+        );
+    }
+
+    public function readType(\gcc_jit_rvalue_ptr $struct): \gcc_jit_rvalue_ptr {
+        return gcc_jit_rvalue_access_field($struct, $this->context->location(), $this->fields['type']);
+    }
+
+    public function readLong(\gcc_jit_rvalue_ptr $struct): \gcc_jit_rvalue_ptr {
+        return gcc_jit_rvalue_access_field(
+            \gcc_jit_rvalue_access_field($struct, $this->context->location(), $this->fields['value']), 
+            $this->context->location(), 
+            $this->union['long']
+        );
+    }
+
+    public function readValue(int $type, \gcc_jit_rvalue_ptr $struct): \gcc_jit_rvalue_ptr {
+        return gcc_jit_rvalue_access_field(
+            \gcc_jit_rvalue_access_field($struct, $this->context->location(), $this->fields['value']), 
+            $this->context->location(), 
+            $this->getFieldFromType($type)
+        );
+    }
+
+    public function writeLong(\gcc_jit_block_ptr $block, \gcc_jit_lvalue_ptr $struct, \gcc_jit_rvalue_ptr $value): void {
+        $this->writeValue(Variable::TYPE_NATIVE_LONG, $block, $struct, $value);
+    }
+
+    public function writeFloat(\gcc_jit_block_ptr $block, \gcc_jit_lvalue_ptr $struct, \gcc_jit_rvalue_ptr $value): void {
+        $this->writeValue(Variable::TYPE_NATIVE_DOUBLE, $block, $struct, $value);
+    }
+
+    public function writeString(\gcc_jit_block_ptr $block, \gcc_jit_lvalue_ptr $struct, \gcc_jit_rvalue_ptr $value): void {
+        $this->writeValue(Variable::TYPE_STRING, $block, $struct, $value);
+    }
+
+    protected function writeValue(int $type, \gcc_jit_block_ptr $block, \gcc_jit_lvalue_ptr $struct, \gcc_jit_rvalue_ptr $value): void {
+        \gcc_jit_block_add_assignment(
+            $block,
+            $this->context->location(),
+            \gcc_jit_lvalue_access_field($struct, $this->context->location(), $this->fields['type']),
+            $this->context->constantFromInteger($type, 'unsigned char')
+        );
+        \gcc_jit_block_add_assignment(
+            $block,
+            $this->context->location(),
+            \gcc_jit_lvalue_access_field(
+                \gcc_jit_lvalue_access_field($struct, $this->context->location(), $this->fields['value']),
+                $this->context->location(),
+                $this->getFieldFromType($type)
+            ),
+            $value
         );
     }
 
