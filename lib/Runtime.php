@@ -21,7 +21,7 @@ use PhpParser\NodeVisitor;
 use PhpParser\ParserFactory;
 use PHPTypes\State;
 use PHPCompiler\VM\Optimizer;
-
+use PHPCompiler\VM\Context as VMContext;
 
 class Runtime {
     private Compiler $compiler;
@@ -30,6 +30,8 @@ class Runtime {
     private Traverser $postprocessor;
     private LivenessDetector $detector;
     private Optimizer $assignOpResolver;
+    private VMContext $vmContext;
+    private array $modules = [];
 
     public function __construct() {
         $astTraverser = new NodeTraverser;
@@ -54,6 +56,27 @@ class Runtime {
 
         $this->typeReconstructor = new TypeReconstructor;
         $this->compiler = new Compiler;
+
+        $this->vmContext = new VMContext;
+        $this->loadCoreModules();
+    }
+
+    public function __destruct() {
+        foreach ($this->modules as $module) {
+            $module->shutdown();
+        }
+    }
+
+    private function loadCoreModules(): void {
+        $this->load(new ext\standard\Module);
+    }
+
+    public function load(Module $module): void {
+        $this->modules[] = $module;
+        $module->init($this);
+        foreach ($module->getFunctions() as $function) {
+            $this->vmContext->declareFunction($function);
+        }
     }
 
     public function parse(string $code, string $filename): Script {
@@ -84,7 +107,7 @@ class Runtime {
     }
 
     public function run(?Block $block) {
-        return VM::run($block);
+        return VM::run($block, $this->vmContext);
     }
 
 }

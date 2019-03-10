@@ -9,6 +9,7 @@
 
 namespace PHPCompiler\JIT;
 
+use PHPCompiler\Func;
 use PHPCompiler\Handler;
 
 class Result {
@@ -34,8 +35,20 @@ class Result {
         \gcc_jit_result_release($this->result);
     }
 
+    public function getFunc(string $publicName, string $funcName, string $callbackType): Func {
+        return new Func\JIT(
+            $publicName,
+            $this->getCallable($funcName, $callbackType),
+            $this
+        );
+    }
+
     public function getHandler(string $funcName, string $callbackType): Handler {
-        return new Handler\JIT($this->getCallable($funcName, $callbackType), $this);
+        return new Func\JIT(
+            $funcName,
+            $this->getCallable($funcName, $callbackType),
+            $this
+        );
     }
 
     public function getCallable(string $funcName, string $callbackType): callable {

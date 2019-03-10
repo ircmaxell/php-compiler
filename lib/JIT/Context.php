@@ -59,7 +59,6 @@ class Context {
         $this->vararg = new Builtin\VarArg($this, $loadType);
 
         $this->defineBuiltins($loadType);
-        Builtins::loadJIT($this);
     }
 
     public function __destruct() {

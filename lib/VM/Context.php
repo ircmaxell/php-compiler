@@ -10,6 +10,7 @@
 namespace PHPCompiler\VM;
 
 use PHPCompiler\Frame;
+use PHPCompiler\Func;
 use PHPCompiler\Handler\Builtins;
 use PHPTypes\Type;
 
@@ -18,10 +19,6 @@ class Context {
     public array $classes = [];
     private ?RunStackEntry $runStack = null;
     public array $constants = [];
-
-    public function __construct() {
-        Builtins::loadVM($this);
-    }
 
     public function constantFetch(string $name): ?Variable {
         switch (strtolower($name)) {
@@ -40,6 +37,11 @@ class Context {
             return $this->constants[$name];
         }
         return null;
+    }
+
+    public function declareFunction(Func $func): void {
+        $lcname = strtolower($func->getName());
+        $this->functions[$lcname] = $func;
     }
 
     public function save(Frame $frame): RunStackEntry {

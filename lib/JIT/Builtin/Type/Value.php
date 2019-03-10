@@ -50,9 +50,10 @@ class Value extends Type {
         $this->union = [
             'long' => $this->context->helper->createField('long', 'long long'),
             'float' => $this->context->helper->createField('float', 'double'),
-            'bool' => $this->context->helper->createField('float', 'bool'),
+            'bool' => $this->context->helper->createField('bool', 'bool'),
             'string' => $this->context->helper->createField('string', '__string__*'),
             'object' => $this->context->helper->createField('object', '__object__*'),
+            'indirect' => $this->context->helper->createField('indirect', '__value__*'),
         ];
         $this->unionType = \gcc_jit_context_new_union_type(
             $this->context->context,

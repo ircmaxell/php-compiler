@@ -38,11 +38,6 @@ class Block {
      */
     public array $constants = [];
 
-    /**
-     * @var callable():void
-     */
-    public ?Handler $handler = null;
-
     public \SplObjectStorage $args;
 
     public function __construct(?CfgBlock $block) {
@@ -121,7 +116,7 @@ class Block {
             }
         }
 
-        return new Frame($this, $frame, ...$scope);
+        return new Frame(null, $this, $frame, ...$scope);
     }
 
 

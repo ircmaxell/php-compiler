@@ -19,8 +19,8 @@ class VM {
     const SUCCESS = 1;
     const FAILURE = 2;
 
-    public static function run(Block $block, ?Context $context = null): int {
-        $context = $context ?? new Context;
+    public static function run(Block $block, Context $context): int {
+        
         $context->push($block->getFrame($context));
 nextframe:
         $frame = $context->pop();
@@ -29,10 +29,6 @@ nextframe:
             return self::SUCCESS;
         }
 restart:
-        if (!is_null($frame->block->handler)) {
-            $frame->block->handler->execute($frame);
-            goto nextframe;
-        }
 
         while ($frame->pos < $frame->block->nOpCodes) {
             $op = $frame->block->opCodes[$frame->pos++];
@@ -163,7 +159,7 @@ restart:
                     if (isset($context->functions[$lcname])) {
                         throw new \LogicException("Duplicate function definition for $lcname()");
                     }
-                    $context->functions[$lcname] = $op->block1;
+                    $context->declareFunction(new Func\PHP($name, $op->block1));
                     break;
                 case OpCode::TYPE_FUNCCALL_INIT:
                     $name = $frame->scope[$op->arg1]->toString();
@@ -177,21 +173,22 @@ restart:
                 case OpCode::TYPE_ARG_SEND:
                     $frame->callArgs[] = $frame->scope[$op->arg1];
                     break;
+                case OpCode::TYPE_FUNCCALL_EXEC_RETURN:
                 case OpCode::TYPE_FUNCCALL_EXEC_NORETURN:
                     if (is_null($frame->call)) {
                         // Used for null constructors, etc
                         break;
                     }
                     $new = $frame->call->getFrame($context);
+                    if ($op->type === OpCode::TYPE_FUNCCALL_EXEC_RETURN) {
+                        $new->returnVar = $frame->scope[$op->arg1];
+                    }
                     $new->calledArgs = $frame->callArgs;
-                    $context->push($frame); // save the frame
-                    $frame = $new;
-                    goto restart;
-                case OpCode::TYPE_FUNCCALL_EXEC_RETURN:
-                    $new = $frame->call->getFrame($context);
-                    $new->returnVar = $frame->scope[$op->arg1];
-                    $new->calledArgs = $frame->callArgs;
-                    $context->push($frame); // save the frame
+                    if ($new->hasHandler()) {
+                        $new->handler->execute($new);
+                        break;
+                    }
+                    $context->push($frame);
                     $frame = $new;
                     goto restart;
                 case OpCode::TYPE_ARG_RECV:
