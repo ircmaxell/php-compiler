@@ -22,18 +22,27 @@ use PhpParser\ParserFactory;
 use PHPTypes\State;
 use PHPCompiler\VM\Optimizer;
 use PHPCompiler\VM\Context as VMContext;
+use PHPCompiler\JIT\Context as JITContext;
 
 class Runtime {
-    private Compiler $compiler;
-    private Parser $parser;
-    private Traverser $preprocessor;
-    private Traverser $postprocessor;
-    private LivenessDetector $detector;
-    private Optimizer $assignOpResolver;
-    private VMContext $vmContext;
-    private array $modules = [];
+    const MODE_NORMAL = 1;
+    const MODE_AOT = 2;
 
-    public function __construct() {
+    public Compiler $compiler;
+    public Parser $parser;
+    public Traverser $preprocessor;
+    public Traverser $postprocessor;
+    public LivenessDetector $detector;
+    public Optimizer $assignOpResolver;
+    public VMContext $vmContext;
+    public VM $vm;
+    private ?JITContext $jitContext = null;
+    private ?JIT $jit = null;
+    public array $modules = [];
+    public int $mode;
+
+    public function __construct(int $mode = self::MODE_NORMAL) {
+        $this->mode = $mode;
         $astTraverser = new NodeTraverser;
         $astTraverser->addVisitor(
             new NodeVisitor\NameResolver
@@ -57,7 +66,8 @@ class Runtime {
         $this->typeReconstructor = new TypeReconstructor;
         $this->compiler = new Compiler;
 
-        $this->vmContext = new VMContext;
+        $this->vmContext = new VMContext($this);
+        $this->vm = new VM($this->vmContext);
         $this->loadCoreModules();
     }
 
@@ -69,6 +79,23 @@ class Runtime {
 
     private function loadCoreModules(): void {
         $this->load(new ext\standard\Module);
+    }
+
+    public function loadJit(): JIT {
+        if (is_null($this->jit)) {
+            $this->jit = new JIT($this->loadJitContext());
+        }
+        return $this->jit;
+    }
+
+    public function loadJitContext(): JITContext {
+        if (is_null($this->jitContext)) {
+            $this->jitContext = new JITContext(
+                $this,
+                $this->mode === self::MODE_NORMAL ? JIT\Builtin::LOAD_TYPE_EMBED : JIT\Builtin::LOAD_TYPE_STANDALONE
+            );
+        }
+        return $this->jitContext;
     }
 
     public function load(Module $module): void {
@@ -94,12 +121,15 @@ class Runtime {
         return $block;
     }
 
-    public function jit(?Block $block, ?string $debugFile = null) {
-        JIT::compile($block, JIT\Builtin::LOAD_TYPE_EMBED, $debugFile)->compileInPlace();
+    public function jit(?Block $block) {
+        $this->loadJit()->compile($block);
+        $this->loadJitContext()->compileInPlace();
     }
 
-    public function standalone(?Block $block, string $outfile, ?string $debugFile = null) {
-        JIT::compile($block, JIT\Builtin::LOAD_TYPE_STANDALONE, $debugFile)->compileToFile($outfile);
+    public function standalone(?Block $block, string $outfile) {
+        $context = $this->loadJitContext();
+        $context->setMain($this->loadJit()->compile($block));
+        $context->compileToFile($outfile);
     }
 
     public function parseAndCompile(string $code, string $filename): ?Block {
@@ -107,7 +137,7 @@ class Runtime {
     }
 
     public function run(?Block $block) {
-        return VM::run($block, $this->vmContext);
+        return $this->vm->run($block, $this->vmContext);
     }
 
 }

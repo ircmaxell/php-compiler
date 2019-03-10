@@ -11,6 +11,7 @@ namespace PHPCompiler\VM;
 
 use PHPCompiler\Frame;
 use PHPCompiler\Func;
+use PHPCompiler\Runtime;
 use PHPCompiler\Handler\Builtins;
 use PHPTypes\Type;
 
@@ -19,6 +20,12 @@ class Context {
     public array $classes = [];
     private ?RunStackEntry $runStack = null;
     public array $constants = [];
+
+    public Runtime $runtime;
+
+    public function __construct(Runtime $runtime) {
+        $this->runtime = $runtime;
+    }
 
     public function constantFetch(string $name): ?Variable {
         switch (strtolower($name)) {

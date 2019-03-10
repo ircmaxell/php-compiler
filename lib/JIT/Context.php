@@ -10,6 +10,7 @@
 namespace PHPCompiler\JIT;
 
 use PHPCfg\Operand;
+use PHPCompiler\Runtime;
 use PHPCompiler\Handler;
 use PHPCompiler\Block;
 use PHPCompiler\Handler\Builtins;
@@ -43,8 +44,10 @@ class Context {
     private ?\gcc_jit_function_ptr $shutdownFunc = null;
 
     private array $exports = [];
+    public Runtime $runtime;
 
-    public function __construct(int $loadType) {
+    public function __construct(Runtime $runtime, int $loadType) {
+        $this->runtime = $runtime;
         $this->scope = new Scope;
         $this->loadType = $loadType;
         $this->context = \gcc_jit_context_acquire();

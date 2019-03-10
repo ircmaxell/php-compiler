@@ -49,10 +49,4 @@ restart:
         }
     }
 
-    private function var_dump_object_property(string $key, VMVariable $prop, int $level) {
-        echo str_repeat(' ', $level + 1);
-        printf("[\"%s\"]=>\n", $key);
-        $this->var_dump($prop, $level + 2);
-    }
-
 }

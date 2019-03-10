@@ -19,11 +19,17 @@ class VM {
     const SUCCESS = 1;
     const FAILURE = 2;
 
-    public static function run(Block $block, Context $context): int {
+    public Context $context;
+
+    public function __construct(Context $context) {
+        $this->context = $context;
+    }
+
+    public function run(Block $block): int {
         
-        $context->push($block->getFrame($context));
+        $this->context->push($block->getFrame($this->context));
 nextframe:
-        $frame = $context->pop();
+        $frame = $this->context->pop();
 
         if (is_null($frame)) {
             return self::SUCCESS;
@@ -113,23 +119,23 @@ restart:
                     break;
                 case OpCode::TYPE_JUMP:
                     $frame = $op->block1->getFrame(
-                        $context,
+                        $this->context,
                         $frame 
                     );
                     goto restart;
                 case OpCode::TYPE_JUMPIF:
                     $arg1 = $frame->scope[$op->arg1]->toBool();
                     if ($arg1) {
-                        $frame = $op->block1->getFrame($context, $frame);
+                        $frame = $op->block1->getFrame($this->context, $frame);
                     } else {
-                        $frame = $op->block2->getFrame($context, $frame);
+                        $frame = $op->block2->getFrame($this->context, $frame);
                     }
                     goto restart;
                 case OpCode::TYPE_CASE:
                     $arg1 = $frame->scope[$op->arg1];
                     $arg2 = $frame->scope[$op->arg2];
                     if ($arg1->equals($arg2)) {
-                        $frame = $op->block1->getFrame($context, $frame);
+                        $frame = $op->block1->getFrame($this->context, $frame);
                         goto restart;
                     }
                     break;
@@ -137,10 +143,10 @@ restart:
                     $value = null;
                     if (!is_null($op->arg3)) {
                         // try NS constant fetch
-                        $value = $context->constantFetch($frame->scope[$op->arg3]->toString()->value);
+                        $value = $this->context->constantFetch($frame->scope[$op->arg3]->toString()->value);
                     }
                     if (is_null($value)) {
-                        $value = $context->constantFetch($frame->scope[$op->arg2]->toString()->value);
+                        $value = $this->context->constantFetch($frame->scope[$op->arg2]->toString()->value);
                     }
                     if (is_null($value)) {
                         return $this->raise('Unknown constant fetch', $frame);
@@ -156,18 +162,18 @@ restart:
                 case OpCode::TYPE_FUNCDEF:
                     $name = $frame->scope[$op->arg1]->toString();
                     $lcname = strtolower($name);
-                    if (isset($context->functions[$lcname])) {
+                    if (isset($this->context->functions[$lcname])) {
                         throw new \LogicException("Duplicate function definition for $lcname()");
                     }
-                    $context->declareFunction(new Func\PHP($name, $op->block1));
+                    $this->context->declareFunction(new Func\PHP($name, $op->block1));
                     break;
                 case OpCode::TYPE_FUNCCALL_INIT:
                     $name = $frame->scope[$op->arg1]->toString();
                     $lcname = strtolower($name);
-                    if (!isset($context->functions[$lcname])) {
+                    if (!isset($this->context->functions[$lcname])) {
                         throw new \LogicException("Call to undefined function $lcname()");
                     }
-                    $frame->call = $context->functions[$lcname];
+                    $frame->call = $this->context->functions[$lcname];
                     $frame->callArgs = [];
                     break;
                 case OpCode::TYPE_ARG_SEND:
@@ -179,7 +185,7 @@ restart:
                         // Used for null constructors, etc
                         break;
                     }
-                    $new = $frame->call->getFrame($context);
+                    $new = $frame->call->getFrame($this->context);
                     if ($op->type === OpCode::TYPE_FUNCCALL_EXEC_RETURN) {
                         $new->returnVar = $frame->scope[$op->arg1];
                     }
@@ -188,7 +194,7 @@ restart:
                         $new->handler->execute($new);
                         break;
                     }
-                    $context->push($frame);
+                    $this->context->push($frame);
                     $frame = $new;
                     goto restart;
                 case OpCode::TYPE_ARG_RECV:
@@ -199,21 +205,21 @@ restart:
                 case OpCode::TYPE_DECLARE_CLASS:
                     $name = $frame->scope[$op->arg1]->toString();
                     $lcname = strtolower($name);
-                    if (isset($context->classes[$lcname])) {
+                    if (isset($this->context->classes[$lcname])) {
                         throw new \LogicException("Duplicate class definition for $name");
                     }
                     $classEntry = new ClassEntry($name);
-                    self::defineClass($context, $classEntry, $op->block1);
-                    $context->classes[$lcname] = $classEntry;
+                    self::defineClass($classEntry, $op->block1);
+                    $this->context->classes[$lcname] = $classEntry;
                     break;
                 case OpCode::TYPE_NEW:
                     $result = $frame->scope[$op->arg1];
                     $name = $frame->scope[$op->arg2]->toString();
                     $lcname = strtolower($name);
-                    if (!isset($context->classes[$lcname])) {
+                    if (!isset($this->context->classes[$lcname])) {
                         throw new \LogicException("Attempting to instantiate non-existing class $name");
                     }
-                    $class = $context->classes[$lcname];
+                    $class = $this->context->classes[$lcname];
                     $result->object(new ObjectEntry($class));
                     $frame->call = $result->toObject()->constructor;
                     $frame->callArgs = [$result];
@@ -234,8 +240,8 @@ restart:
         return self::SUCCESS;
     }
 
-    protected static function defineClass(Context $context, ClassEntry $entry, Block $block): void {
-        $frame = $block->getFrame($context);
+    protected function defineClass(ClassEntry $entry, Block $block): void {
+        $frame = $block->getFrame($this->context);
         // TODO
         foreach ($block->opCodes as $op) {
             switch ($op->type) {

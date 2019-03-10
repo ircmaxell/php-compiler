@@ -18,16 +18,6 @@ use PHPCompiler\JIT\Variable;
 
 
 class JIT {
-    private static int $functionNumber = 0;
-
-    public static int $optimizationLevel = 3;
-
-
-    private static array $stringConstant = [];
-    private static array $intConstant = [];
-    private static array $builtIns = [];
-
-    private static array $queue = [];
 
     const COMPARE_MAP = [
         OpCode::TYPE_SMALLER_OR_EQUAL => \GCC_JIT_COMPARISON_LE,
@@ -54,24 +44,38 @@ class JIT {
         OpCode::TYPE_BOOLEAN_NOT => \GCC_JIT_UNARY_OP_LOGICAL_NEGATE
     ];
 
-    public static function compile(Block $block, int $loadType, ?string $debugFile = null): Context {
-        $context = new Context($loadType);
-        if (!is_null($debugFile)) {
-            $context->setDebugFile($debugFile);
-        }
-        $context->setMain(self::compileBlock($context, $block));
-        self::runQueue($context);
-        return $context;
+    private static int $functionNumber = 0;
+    private static int $blockNumber = 0;
+
+    public int $optimizationLevel = 3;
+
+
+    private array $stringConstant = [];
+    private array $intConstant = [];
+    private array $builtIns = [];
+
+    private array $queue = [];
+
+    private Context $context;
+
+    public function __construct(Context $context) {
+        $this->context = $context;
     }
 
-    private static function runQueue(Context $context): void {
-        while (!empty(self::$queue)) {
-            $run = array_shift(self::$queue);
-            self::compileBlockInternal($context, $run[0], $run[1], ...$run[2]);
+    public function compile(Block $block): \gcc_jit_function_ptr {
+        $return = $this->compileBlock($block);
+        $this->runQueue();
+        return $return;
+    }
+
+    private function runQueue(): void {
+        while (!empty($this->queue)) {
+            $run = array_shift($this->queue);
+            $this->compileBlockInternal($run[0], $run[1], ...$run[2]);
         }
     }
 
-    private static function compileBlock(Context $context, Block $block, ?string $funcName = null): \gcc_jit_function_ptr {
+    private function compileBlock(Block $block, ?string $funcName = null): \gcc_jit_function_ptr {
         $internalName = "internal_" . (++self::$functionNumber);
         
         $args = [];
@@ -95,7 +99,7 @@ class JIT {
             } else {
                 throw new \LogicException("Non-typed functions not implemented yet");
             }
-            $returnType = $context->getTypeFromString($callbackType);
+            $returnType = $this->context->getTypeFromString($callbackType);
             $callbackType .= '(*)(';
             $callbackSep = '';
             foreach ($block->func->params as $idx => $param) {
@@ -106,12 +110,12 @@ class JIT {
                 } else {
                     $rawType = $param->result->type;
                 }
-                $type = $context->getTypeFromType($rawType);
-                $callbackType .= $callbackSep . $context->getStringFromType($type);
+                $type = $this->context->getTypeFromType($rawType);
+                $callbackType .= $callbackSep . $this->context->getStringFromType($type);
                 $callbackSep = ', ';
-                $args[] = $arg = \gcc_jit_context_new_param($context->context, $context->location(), $type, 'param_' . $idx);
+                $args[] = $arg = \gcc_jit_context_new_param($this->context->context, $this->context->location(), $type, 'param_' . $idx);
                 $argVars[] = new Variable(
-                    $context,
+                    $this->context,
                     Variable::getTypeFromType($rawType),
                     Variable::KIND_VARIABLE,
                     $arg->asRValue(),
@@ -121,11 +125,11 @@ class JIT {
             $callbackType .= ')';
         } else {
             $callbackType = 'void(*)()';
-            $returnType = $context->getTypeFromString('void');
+            $returnType = $this->context->getTypeFromString('void');
         }
 
         $func = \gcc_jit_context_new_function(
-            $context->context, 
+            $this->context->context, 
             NULL,
             \GCC_JIT_FUNCTION_EXPORTED,
             $returnType,
@@ -135,8 +139,8 @@ class JIT {
             0
         );
         if (!is_null($funcName)) {
-            $context->functions[strtolower($funcName)] = new JIT\Func\Trampolined(
-                $context,
+            $this->context->functions[strtolower($funcName)] = new JIT\Func\Trampolined(
+                $this->context,
                 $funcName,
                 $func,
                 $returnType,
@@ -144,47 +148,46 @@ class JIT {
             );
         }
 
-        self::$queue[] = [$func, $block, $argVars];
+        $this->queue[] = [$func, $block, $argVars];
         if ($callbackType === 'void(*)()') {
-            $context->addExport($internalName, $callbackType, $block);
+            $this->context->addExport($internalName, $callbackType, $block);
         }
         return $func;
     }
 
-    private static int $blockNumber = 0;
-    private static function compileBlockInternal(
-        Context $context, 
+    
+    private function compileBlockInternal(
         \gcc_jit_function_ptr $func,
         Block $block,
         Variable ...$args
     ): \gcc_jit_block_ptr {
-        if ($context->scope->blockStorage->contains($block)) {
-            return $context->scope->blockStorage[$block];
+        if ($this->context->scope->blockStorage->contains($block)) {
+            return $this->context->scope->blockStorage[$block];
         }
         self::$blockNumber++;
         $gccBlock = \gcc_jit_function_new_block($func, 'block_' . self::$blockNumber);
-        $context->scope->blockStorage[$block] = $gccBlock;
+        $this->context->scope->blockStorage[$block] = $gccBlock;
         // Handle hoisted variables
         foreach ($block->orig->hoistedOperands as $operand) {
-            $var = $context->makeVariableFromOp($func, $gccBlock, $block, $operand);
+            $var = $this->context->makeVariableFromOp($func, $gccBlock, $block, $operand);
         }
 
         for ($i = 0, $length = count($block->opCodes); $i < $length; $i++) {
             $op = $block->opCodes[$i];
             switch ($op->type) {
                 case OpCode::TYPE_ARG_RECV:
-                    $context->helper->assignOperand($gccBlock, $block->getOperand($op->arg1), $args[$op->arg2]);
+                    $this->context->helper->assignOperand($gccBlock, $block->getOperand($op->arg1), $args[$op->arg2]);
                     break;
                 case OpCode::TYPE_ASSIGN:
-                    $value = $context->getVariableFromOp($block->getOperand($op->arg3));
-                    $context->helper->assignOperand($gccBlock, $block->getOperand($op->arg2), $value);
-                    $context->helper->assignOperand($gccBlock, $block->getOperand($op->arg1), $value);
+                    $value = $this->context->getVariableFromOp($block->getOperand($op->arg3));
+                    $this->context->helper->assignOperand($gccBlock, $block->getOperand($op->arg2), $value);
+                    $this->context->helper->assignOperand($gccBlock, $block->getOperand($op->arg1), $value);
                     break;  
                 case OpCode::TYPE_ARRAY_DIM_FETCH:
-                    $value = $context->getVariableFromOp($block->getOperand($op->arg2));
-                    $dim = $context->getVariableFromOp($block->getOperand($op->arg3));
+                    $value = $this->context->getVariableFromOp($block->getOperand($op->arg2));
+                    $dim = $this->context->getVariableFromOp($block->getOperand($op->arg3));
                     if ($value->type === Variable::TYPE_STRING) {
-                        $context->helper->assignOperand(
+                        $this->context->helper->assignOperand(
                             $gccBlock, 
                             $block->getOperand($op->arg1),
                             $value->dimFetch($dim)
@@ -194,47 +197,47 @@ class JIT {
                     }
                     break;
                 case OpCode::TYPE_CONCAT:
-                    $result = $context->getVariableFromOp($block->getOperand($op->arg1));
-                    $left = $context->getVariableFromOp($block->getOperand($op->arg2));
-                    $right = $context->getVariableFromOp($block->getOperand($op->arg3));
-                    $context->type->string->concat($gccBlock, $result, $left, $right);
+                    $result = $this->context->getVariableFromOp($block->getOperand($op->arg1));
+                    $left = $this->context->getVariableFromOp($block->getOperand($op->arg2));
+                    $right = $this->context->getVariableFromOp($block->getOperand($op->arg3));
+                    $this->context->type->string->concat($gccBlock, $result, $left, $right);
                     break;
                 case OpCode::TYPE_CAST_BOOL:
-                    $value = $context->getVariableFromOp($block->getOperand($op->arg2));
-                    $context->helper->assignOperand($gccBlock, $block->getOperand($op->arg1), $value->castTo(Variable::TYPE_NATIVE_BOOL));
+                    $value = $this->context->getVariableFromOp($block->getOperand($op->arg2));
+                    $this->context->helper->assignOperand($gccBlock, $block->getOperand($op->arg1), $value->castTo(Variable::TYPE_NATIVE_BOOL));
                     break;
                 case OpCode::TYPE_ECHO:
                 case OpCode::TYPE_PRINT:
                     $argOffset = $op->type === OpCode::TYPE_ECHO ? $op->arg1 : $op->arg2;
-                    $arg = $context->getVariableFromOp($block->getOperand($argOffset));
+                    $arg = $this->context->getVariableFromOp($block->getOperand($argOffset));
                     switch ($arg->type) {
                         case Variable::TYPE_STRING:
-                            $context->helper->eval(
+                            $this->context->helper->eval(
                                 $gccBlock,
-                                $context->helper->call(
+                                $this->context->helper->call(
                                     'printf',
-                                    $context->constantFromString('%.*s'),
-                                    $context->type->string->size($arg),
-                                    $context->type->string->value($arg)
+                                    $this->context->constantFromString('%.*s'),
+                                    $this->context->type->string->size($arg),
+                                    $this->context->type->string->value($arg)
                                 )
                             );
                             break;
                         case Variable::TYPE_NATIVE_LONG:
-                            $context->helper->eval(
+                            $this->context->helper->eval(
                                 $gccBlock,
-                                $context->helper->call(
+                                $this->context->helper->call(
                                     'printf',
-                                    $context->constantFromString('%lld'),
+                                    $this->context->constantFromString('%lld'),
                                     $arg->rvalue
                                 )
                             );
                             break;
                         case Variable::TYPE_NATIVE_DOUBLE:
-                            $context->helper->eval(
+                            $this->context->helper->eval(
                                 $gccBlock,
-                                $context->helper->call(
+                                $this->context->helper->call(
                                     'printf',
-                                    $context->constantFromString('%G'),
+                                    $this->context->constantFromString('%G'),
                                     $arg->rvalue
                                 )
                             );
@@ -243,10 +246,10 @@ class JIT {
                             throw new \LogicException("Echo for type $arg->type not implemented");
                     }
                     if ($op->type === OpCode::TYPE_PRINT) {
-                        $context->helper->assignOperand(
+                        $this->context->helper->assignOperand(
                             $gccBlock, 
                             $block->getOperand($op->arg1),
-                            new Variable($context, Variable::TYPE_NATIVE_LONG, Variable::KIND_VALUE, $context->constantFromInteger(1), null)
+                            new Variable($this->context, Variable::TYPE_NATIVE_LONG, Variable::KIND_VALUE, $this->context->constantFromInteger(1), null)
                         );
                     }
                     break;
@@ -259,12 +262,12 @@ class JIT {
                 case OpCode::TYPE_BITWISE_OR:
                 case OpCode::TYPE_BITWISE_XOR:
                     $result = $block->getOperand($op->arg1);
-                    $context->makeVariableFromRValueOp(
-                        $context->helper->numericBinaryOp(
+                    $this->context->makeVariableFromRValueOp(
+                        $this->context->helper->numericBinaryOp(
                             self::BINARYOP_MAP[$op->type], 
                             $result, 
-                            $context->getVariableFromOp($block->getOperand($op->arg2)), 
-                            $context->getVariableFromOp($block->getOperand($op->arg3))
+                            $this->context->getVariableFromOp($block->getOperand($op->arg2)), 
+                            $this->context->getVariableFromOp($block->getOperand($op->arg3))
                         ),
                         $result
                     );
@@ -275,23 +278,23 @@ class JIT {
                 case OpCode::TYPE_SMALLER:
                 case OpCode::TYPE_IDENTICAL:
                     $result = $block->getOperand($op->arg1);
-                    $context->makeVariableFromRValueOp(
-                        $context->helper->compareOp(
+                    $this->context->makeVariableFromRValueOp(
+                        $this->context->helper->compareOp(
                             self::COMPARE_MAP[$op->type], 
                             $result, 
-                            $context->getVariableFromOp($block->getOperand($op->arg2)), 
-                            $context->getVariableFromOp($block->getOperand($op->arg3))
+                            $this->context->getVariableFromOp($block->getOperand($op->arg2)), 
+                            $this->context->getVariableFromOp($block->getOperand($op->arg3))
                         ),
                         $result
                     );
                     break;
                 case OpCode::TYPE_EQUAL:
                     $result = $block->getOperand($op->arg1);
-                    $left = $context->getVariableFromOp($block->getOperand($op->arg2));
-                    $right = $context->getVariableFromOp($block->getOperand($op->arg3));
+                    $left = $this->context->getVariableFromOp($block->getOperand($op->arg2));
+                    $right = $this->context->getVariableFromOp($block->getOperand($op->arg3));
                     if ($left->type === $right->type) {
-                        $context->makeVariableFromRValueOp(
-                            $context->helper->compareOp(
+                        $this->context->makeVariableFromRValueOp(
+                            $this->context->helper->compareOp(
                                 \GCC_JIT_COMPARISON_EQ, 
                                 $result, 
                                 $left,
@@ -305,11 +308,11 @@ class JIT {
                     break;
                 case OpCode::TYPE_UNARY_MINUS:
                     $result = $block->getOperand($op->arg1);
-                    $context->makeVariableFromRValueOp(
-                        $context->helper->numericUnaryOp(
+                    $this->context->makeVariableFromRValueOp(
+                        $this->context->helper->numericUnaryOp(
                             self::UNARYOP_MAP[$op->type], 
                             $result, 
-                            $context->getVariableFromOp($block->getOperand($op->arg2))
+                            $this->context->getVariableFromOp($block->getOperand($op->arg2))
                         ),
                         $result
                     );
@@ -318,22 +321,22 @@ class JIT {
                     // the first case we arrive to. all the rest of the cases will have the same type, so we're good:
                     $cases = [];
                     $default = null;
-                    $condition = $context->getVariableFromOp($block->getOperand($op->arg1));
+                    $condition = $this->context->getVariableFromOp($block->getOperand($op->arg1));
                     while ($i < $length) {
                         // Note, the first iteration will capture the current op, this is intentional
                         if ($block->opCodes[$i]->type === OpCode::TYPE_CASE) {
-                            $caseCondition = $context->getVariableFromOp($block->getOperand($block->opCodes[$i]->arg2))->rvalue;
+                            $caseCondition = $this->context->getVariableFromOp($block->getOperand($block->opCodes[$i]->arg2))->rvalue;
                             $cases[] = \gcc_jit_context_new_case(
-                                $context->context,
+                                $this->context->context,
                                 $caseCondition,
                                 $caseCondition,
-                                self::compileBlockInternal($context, $func, $block->opCodes[$i]->block1, ...$args)
+                                $this->compileBlockInternal($func, $block->opCodes[$i]->block1, ...$args)
                             );
                         } elseif ($block->opCodes[$i]->type === OpCode::TYPE_JUMP) {
                             if (!is_null($default)) {
                                 throw new \LogicException('More than one default to switch found. Really weird');
                             }
-                            $default = self::compileBlockInternal($context, $func, $block->opCodes[$i]->block1, ...$args);
+                            $default = $this->compileBlockInternal($func, $block->opCodes[$i]->block1, ...$args);
                         } else {
                             throw new \LogicException('Mixed instruction inside of switch statement found: ' . $block->opCodes[$i]->getType());
                         }
@@ -344,7 +347,7 @@ class JIT {
                     }
                     \gcc_jit_block_end_with_switch(
                         $gccBlock,
-                        $context->location(),
+                        $this->context->location(),
                         $condition->rvalue,
                         $default,
                         count($cases),
@@ -352,48 +355,48 @@ class JIT {
                     );
                     return $gccBlock;
                 case OpCode::TYPE_JUMP:
-                    $newBlock = self::compileBlockInternal($context, $func, $op->block1, ...$args);
-                    $context->freeDeadVariables($func, $gccBlock, $block);
+                    $newBlock = $this->compileBlockInternal($func, $op->block1, ...$args);
+                    $this->context->freeDeadVariables($func, $gccBlock, $block);
                     \gcc_jit_block_end_with_jump(
                         $gccBlock,
-                        $context->location(),
+                        $this->context->location(),
                         $newBlock
                     );
                     return $gccBlock;
                 case OpCode::TYPE_JUMPIF:
-                    $if = self::compileBlockInternal($context, $func, $op->block1, ...$args);
-                    $else = self::compileBlockInternal($context, $func, $op->block2, ...$args);
-                    $condition = $context->castToBool(
-                        $context->getVariableFromOp($block->getOperand($op->arg1))->rvalue
+                    $if = $this->compileBlockInternal($func, $op->block1, ...$args);
+                    $else = $this->compileBlockInternal($func, $op->block2, ...$args);
+                    $condition = $this->context->castToBool(
+                        $this->context->getVariableFromOp($block->getOperand($op->arg1))->rvalue
                     );
 
-                    $context->freeDeadVariables($func, $gccBlock, $block);
+                    $this->context->freeDeadVariables($func, $gccBlock, $block);
                     \gcc_jit_block_end_with_conditional(
                         $gccBlock,
-                        $context->location(),
+                        $this->context->location(),
                         $condition,
                         $if,
                         $else
                     );
                     return $gccBlock;
                 case OpCode::TYPE_RETURN_VOID:
-                    $context->freeDeadVariables($func, $gccBlock, $block);
+                    $this->context->freeDeadVariables($func, $gccBlock, $block);
                     goto void_return;
                     break;
                 case OpCode::TYPE_RETURN:
-                    $return = $context->getVariableFromOp($block->getOperand($op->arg1));
+                    $return = $this->context->getVariableFromOp($block->getOperand($op->arg1));
                     $return->addref($gccBlock);
-                    $context->freeDeadVariables($func, $gccBlock, $block);
+                    $this->context->freeDeadVariables($func, $gccBlock, $block);
                     \gcc_jit_block_end_with_return(
                         $gccBlock,
-                        $context->location(),
+                        $this->context->location(),
                         $return->rvalue
                     );
                     return $gccBlock;
                 case OpCode::TYPE_FUNCDEF:
                     $nameOp = $block->getOperand($op->arg1);
                     assert($nameOp instanceof Operand\Literal);
-                    self::compileBlock($context, $op->block1, $nameOp->value);
+                    $this->compileBlock($op->block1, $nameOp->value);
                     break;
                 case OpCode::TYPE_FUNCCALL_INIT:
                     $nameOp = $block->getOperand($op->arg1);
@@ -401,44 +404,44 @@ class JIT {
                         throw new \LogicException("Variable function calls not yet supported");
                     }
                     $lcname = strtolower($nameOp->value);
-                    if (!isset($context->functions[$lcname])) {
+                    if (!isset($this->context->functions[$lcname])) {
                         throw new \RuntimeException("Call to undefined function $lcname");
                     }
-                    $context->scope->toCall = $context->functions[$lcname];
-                    $context->scope->args = [];
+                    $this->context->scope->toCall = $this->context->functions[$lcname];
+                    $this->context->scope->args = [];
                     break;
                 case OpCode::TYPE_ARG_SEND:
-                    $context->scope->args[] = $context->getVariableFromOp($block->getOperand($op->arg1))->rvalue;
+                    $this->context->scope->args[] = $this->context->getVariableFromOp($block->getOperand($op->arg1))->rvalue;
                     break;
                 case OpCode::TYPE_FUNCCALL_EXEC_NORETURN:
-                    if (is_null($context->scope->toCall)) {
+                    if (is_null($this->context->scope->toCall)) {
                         // short circuit
                         break;
                     }
-                    $context->helper->eval($gccBlock, $context->scope->toCall->call(...$context->scope->args));
+                    $this->context->helper->eval($gccBlock, $this->context->scope->toCall->call(...$this->context->scope->args));
                     break;
                 case OpCode::TYPE_FUNCCALL_EXEC_RETURN:
-                    $context->helper->assign(
+                    $this->context->helper->assign(
                         $gccBlock,
-                        $context->getVariableFromOp($block->getOperand($op->arg1))->lvalue,
-                        $context->scope->toCall->call(...$context->scope->args)
+                        $this->context->getVariableFromOp($block->getOperand($op->arg1))->lvalue,
+                        $this->context->scope->toCall->call(...$this->context->scope->args)
                     );
                     break;
                 case OpCode::TYPE_DECLARE_CLASS:
-                    $context->pushScope();
-                    $context->scope->classId = $context->type->object->declareClass($block->getOperand($op->arg1));
-                    self::compileClass($context, $op->block1, $context->scope->classId);
-                    $context->popScope();
+                    $this->context->pushScope();
+                    $this->context->scope->classId = $this->context->type->object->declareClass($block->getOperand($op->arg1));
+                    $this->compileClass($op->block1, $this->context->scope->classId);
+                    $this->context->popScope();
                     break;
                 case OpCode::TYPE_NEW:
-                    $class = $context->type->object->lookupOperand($block->getOperand($op->arg2));
-                    $context->helper->assign(
+                    $class = $this->context->type->object->lookupOperand($block->getOperand($op->arg2));
+                    $this->context->helper->assign(
                         $gccBlock,
-                        $context->getVariableFromOp($block->getOperand($op->arg1))->lvalue,
-                        $context->type->object->allocate($class)
+                        $this->context->getVariableFromOp($block->getOperand($op->arg1))->lvalue,
+                        $this->context->type->object->allocate($class)
                     );
-                    $context->scope->toCall = null;
-                    $context->scope->args = [];
+                    $this->context->scope->toCall = null;
+                    $this->context->scope->args = [];
                     break;
                 case OpCode::TYPE_PROPERTY_FETCH:
                     $result = $block->getOperand($op->arg1);
@@ -446,8 +449,8 @@ class JIT {
                     $name = $block->getOperand($op->arg3);
                     assert($name instanceof Operand\Literal);
                     assert($obj->type->type === Type::TYPE_OBJECT);
-                    $context->scope->variables[$result] = $context->type->object->propertyFetch(
-                        $context->getVariableFromOp($obj)->rvalue,
+                    $this->context->scope->variables[$result] = $this->context->type->object->propertyFetch(
+                        $this->context->getVariableFromOp($obj)->rvalue,
                         $obj->type->userType,
                         $name->value
                     );
@@ -461,7 +464,7 @@ void_return:
         return $gccBlock;
     }
 
-    private static function compileClass(Context $context, ?Block $block, int $classId) {
+    private function compileClass(?Block $block, int $classId) {
         if ($block === null) {
             return;
         }
@@ -472,7 +475,7 @@ void_return:
                     assert($name instanceof Operand\Literal);
                     assert(is_null($op->arg2)); // no defaults for now
                     $type = Variable::getTypeFromType($block->getOperand($op->arg3)->type);
-                    $context->type->object->defineProperty($classId, $name->value, $type);
+                    $this->context->type->object->defineProperty($classId, $name->value, $type);
                     break;
                 default:
                     var_dump($op);
