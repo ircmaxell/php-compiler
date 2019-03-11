@@ -39,6 +39,11 @@ restart:
         while ($frame->pos < $frame->block->nOpCodes) {
             $op = $frame->block->opCodes[$frame->pos++];
             switch ($op->type) {
+                case OpCode::TYPE_TYPE_ASSERT:
+                    $arg1 = $frame->scope[$op->arg1];
+                    $arg2 = $frame->scope[$op->arg2];
+                    $arg1->copyFrom($arg2); 
+                    break;
                 case OpCode::TYPE_ASSIGN:
                     $arg1 = $frame->scope[$op->arg1];
                     $arg2 = $frame->scope[$op->arg2];

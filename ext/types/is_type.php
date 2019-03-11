@@ -9,16 +9,16 @@
 
 namespace PHPCompiler\ext\types;
 
-use PHPCompiler\Func\Internal;
+use PHPCompiler\Func\Internal\JITInlined;
 use PHPCompiler\Frame;
 use PHPCompiler\VM\Variable;
+use PHPCompiler\JIT\Variable as JITVariable;
 use PHPCompiler\JIT;
 use PHPCompiler\JIT\Func as JITFunc;
 
-class is_type extends Internal implements JIT {
+class is_type extends JITInlined {
 
     private int $type;
-    private JIT $jit;
 
     public function __construct(string $name, int $type) {
         parent::__construct($name);
@@ -35,20 +35,24 @@ class is_type extends Internal implements JIT {
         }
     }
 
-    public function jit(JIT $jit): JITFunc {
-        $this->jit = $jit;
-    }
-
     public function call(\gcc_jit_rvalue_ptr ... $args): \gcc_jit_rvalue_ptr {
         if (count($args) !== 1) {
             throw new \LogicException('Too few args passed to ' . $this->name . '()');
         }
-        $type = $jit->context->getStringFromType(\gcc_jit_rvalue_get_type($args[0]));
+        $type = $this->jit->context->getStringFromType(\gcc_jit_rvalue_get_type($args[0]));
         switch ($type) {
             case 'long long':
-                return $jit->context->constantFromBool($this->type === Variable::TYPE_INTEGER);
+                return $this->jit->context->constantFromBool($this->type === Variable::TYPE_INTEGER);
             case '__string__*':
-                return $jit->context->constantFromBool($this->type === Variable::TYPE_STRING);
+                return $this->jit->context->constantFromBool($this->type === Variable::TYPE_STRING);
+            case '__value__':
+                return \gcc_jit_context_new_comparison(
+                    $this->jit->context->context,
+                    $this->jit->context->location(),
+                    \GCC_JIT_COMPARISON_EQ,
+                    $this->jit->context->type->value->readType($args[0]),
+                    $this->jit->context->constantFromInteger(JITVariable::fromVMVariable($this->type), 'unsigned char')
+                );
             default:
                 throw new \LogicException('Non-implemented type handled for ' . $this->name . '(): ' . $type);
         }

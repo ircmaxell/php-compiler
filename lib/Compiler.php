@@ -347,6 +347,18 @@ class Compiler {
             )];
         }
         switch (get_class($expr)) {
+            case Op\Expr\Assertion::class:
+                if ($expr->result instanceof Operand\Literal) {
+                    //short circuit
+                    return [];
+                } elseif ($expr->expr === $expr->result) {
+                    return [];
+                }
+                return [new OpCode(
+                    OpCode::TYPE_TYPE_ASSERT,
+                    $this->compileOperand($expr->result, $block, false),   
+                    $this->compileOperand($expr->expr, $block, true) 
+                )];
             case Op\Expr\Assign::class:
                 return [new OpCode(
                     OpCode::TYPE_ASSIGN,

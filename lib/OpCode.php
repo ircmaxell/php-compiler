@@ -61,6 +61,7 @@ class OpCode {
     const TYPE_BITWISE_AND = 49;
     const TYPE_BITWISE_OR = 50;
     const TYPE_BITWISE_XOR = 51;
+    const TYPE_TYPE_ASSERT = 52;
 
     public int $type;
     public ?int $arg1;

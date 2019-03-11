@@ -84,12 +84,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/ircmaxell/php-cfg.git",
-                "reference": "5f6d0c8635a293d17987906031e388dfe19a0d83"
+                "reference": "d33766f22f1d8eb06c1e4ce92e16eae3267632b8"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/ircmaxell/php-cfg/zipball/5f6d0c8635a293d17987906031e388dfe19a0d83",
-                "reference": "5f6d0c8635a293d17987906031e388dfe19a0d83",
+                "url": "https://api.github.com/repos/ircmaxell/php-cfg/zipball/d33766f22f1d8eb06c1e4ce92e16eae3267632b8",
+                "reference": "d33766f22f1d8eb06c1e4ce92e16eae3267632b8",
                 "shasum": ""
             },
             "require": {
@@ -118,7 +118,7 @@
                 }
             ],
             "description": "A Control Flow Graph implementation for PHP",
-            "time": "2019-02-28 22:32:07"
+            "time": "2019-03-06 18:46:21"
         },
         {
             "name": "ircmaxell/php-optimizer",
@@ -2210,12 +2210,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/debug.git",
-                "reference": "878d05a2eb80e8c5be1d15939b024d96265193e9"
+                "reference": "adbdd5d66342fb0a0bce7422ba68181842b6610d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/debug/zipball/878d05a2eb80e8c5be1d15939b024d96265193e9",
-                "reference": "878d05a2eb80e8c5be1d15939b024d96265193e9",
+                "url": "https://api.github.com/repos/symfony/debug/zipball/adbdd5d66342fb0a0bce7422ba68181842b6610d",
+                "reference": "adbdd5d66342fb0a0bce7422ba68181842b6610d",
                 "shasum": ""
             },
             "require": {
@@ -2258,7 +2258,7 @@
             ],
             "description": "Symfony Debug Component",
             "homepage": "https://symfony.com",
-            "time": "2019-03-04 10:54:25"
+            "time": "2019-03-10T17:07:42+00:00"
         },
         {
             "name": "symfony/event-dispatcher",

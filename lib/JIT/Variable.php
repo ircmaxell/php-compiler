@@ -12,6 +12,7 @@ namespace PHPCompiler\JIT;
 use PHPCompiler\Block;
 use PHPCfg\Operand;
 use PHPTypes\Type;
+use PHPCompiler\VM\Variable as VMVariable;
 
 final class Variable {
     const TYPE_NATIVE_LONG = 1;
@@ -63,6 +64,16 @@ final class Variable {
         $this->kind = $kind;
         $this->rvalue = $rvalue;
         $this->lvalue = $lvalue;
+    }
+
+    public static function fromVMVariable(int $type): int {
+        switch ($type) {
+            case VMVariable::TYPE_INTEGER: return self::TYPE_NATIVE_LONG;
+            case VMVariable::TYPE_FLOAT: return self::TYPE_NATIVE_DOUBLE;
+            case VMVariable::TYPE_BOOLEAN: return self::TYPE_NATIVE_BOOL;
+            case VMVariable::TYPE_STRING: return self::TYPE_STRING;
+        }
+        throw new \LogicException("Not implemented type conversion: $type");
     }
 
     public static function getStringTypeFromType(Type $type): string {
@@ -190,6 +201,10 @@ final class Variable {
             case self::TYPE_NATIVE_BOOL:
             case self::TYPE_NATIVE_DOUBLE:
                 return;
+        }
+        if ($this->type === self::TYPE_VALUE) {
+            // TODO: free owned resources
+            return;
         }
         if ($this->type & self::IS_REFCOUNTED) {
             $this->context->refcount->delref($block, $this->rvalue);

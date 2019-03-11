@@ -368,12 +368,25 @@ class Helper {
         \gcc_jit_lvalue_ptr $result,
         \gcc_jit_rvalue_ptr $value
     ): void {
-        \gcc_jit_block_add_assignment(
-            $block,
-            $this->context->location(),
-            $result,
-            $value
-        );
+        $to = $this->context->getStringFromType(\gcc_jit_rvalue_get_type(\gcc_jit_lvalue_as_rvalue($result)));
+        $from = $this->context->getStringFromType(\gcc_jit_rvalue_get_type($value));
+        if ($to === $from) {
+            \gcc_jit_block_add_assignment(
+                $block,
+                $this->context->location(),
+                $result,
+                $value
+            );
+            return;
+        }
+        if ($to === '__value__') {
+            switch ($from) {
+                case 'long long':
+                    $this->context->type->value->writeLong($block, $result, $value);
+                    return;
+            }
+        }
+        throw new \LogicException("From $from to $to not implemented yet");       
     }
 
     public function assignOperand(

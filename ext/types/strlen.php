@@ -9,12 +9,12 @@
 
 namespace PHPCompiler\ext\types;
 
-use PHPCompiler\Func\Internal;
+use PHPCompiler\Func\Internal\JITInlined;
 use PHPCompiler\Frame;
 use PHPCompiler\JIT;
 use PHPCompiler\JIT\Func as JITFunc;
 
-class strlen extends Internal implements JITFunc {
+class strlen extends JITInlined {
 
     public function execute(Frame $frame): void {
         if (count($frame->calledArgs) !== 1) {
@@ -26,19 +26,14 @@ class strlen extends Internal implements JITFunc {
         }
     }
 
-    public function jit(JIT $jit): JITFunc {
-        $this->jit = $jit;
-        return $this;
-    }
-
     public function call(\gcc_jit_rvalue_ptr ... $args): \gcc_jit_rvalue_ptr {
         if (count($args) !== 1) {
             throw new \LogicException('Too few args passed to strlen()');
         }
-        $type = $jit->context->getStringFromType(\gcc_jit_rvalue_get_type($args[0]));
+        $type = $this->jit->context->getStringFromType(\gcc_jit_rvalue_get_type($args[0]));
         switch ($type) {
             case '__string__*':
-                return $jit->context->helper->call('__string__strlen', $args[0]);
+                return $this->jit->context->helper->call('__string__strlen', $args[0]);
             default:
                 throw new \LogicException('Non-implemented type handled: ' . $type);
         }

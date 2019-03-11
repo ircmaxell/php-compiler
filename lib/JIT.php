@@ -230,7 +230,7 @@ class JIT {
                 case OpCode::TYPE_PRINT:
                     $argOffset = $op->type === OpCode::TYPE_ECHO ? $op->arg1 : $op->arg2;
                     $arg = $this->context->getVariableFromOp($block->getOperand($argOffset));
-                    switch ($arg->type) {
+                    switch ($arg->type) {                            
                         case Variable::TYPE_STRING:
                             $this->context->helper->eval(
                                 $gccBlock,
