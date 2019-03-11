@@ -157,6 +157,9 @@ restart:
                     // TODO
                     goto nextframe;
                 case OpCode::TYPE_RETURN:
+                    if (is_null($frame->returnVar)) {
+                        var_dump($frame);
+                    }
                     $frame->returnVar->copyFrom($frame->scope[$op->arg1]);
                     goto nextframe;
                 case OpCode::TYPE_FUNCDEF:

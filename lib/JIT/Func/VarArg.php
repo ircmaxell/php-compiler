@@ -8,10 +8,10 @@
  */
 
 namespace PHPCompiler\JIT\Func;
-use PHPCompiler\JIT\Func;
+use PHPCompiler\JIT\FuncAbstract;
 use PHPCompiler\JIT\Context;
 
-class VarArg extends Func {
+class VarArg extends FuncAbstract {
 
     private static int $proxyCounter = 0;
 

@@ -15,9 +15,10 @@ function run(string $filename, string $code, array $options) {
         if (substr($debugFile, 0, 1) !== '/') {
             $debugFile = getcwd() . '/' . $debugFile;
         }
+        $runtime->setDebug($debugFile);
     }
     $block = $runtime->parseAndCompile($code, $filename);
-    $runtime->jit($block, $debugFile);
+    $runtime->jit($block);
     
     if (!isset($options['-l'])) {
         $runtime->run($block);

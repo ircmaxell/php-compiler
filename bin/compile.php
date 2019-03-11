@@ -3,7 +3,7 @@
 use PHPCompiler\Runtime;
 
 function run(string $filename, string $code, array $options) {
-    $runtime = new Runtime;
+    $runtime = new Runtime(Runtime::MODE_AOT);
     $block = $runtime->parseAndCompile($code, $filename);
     if (!isset($options['-l'])) {
         if (!isset($options['-o']) || $options['-o'] === true) {

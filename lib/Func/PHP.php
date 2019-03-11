@@ -15,9 +15,9 @@ use PHPCompiler\Block;
 use PHPCompiler\VM\Context;
 use PHPCompiler\VM\Variable;
 
-class PHP extends Func {
+final class PHP extends Func {
 
-    private Block $block;
+    public Block $block;
 
     public function __construct(string $name, Block $block) {
         parent::__construct($name);

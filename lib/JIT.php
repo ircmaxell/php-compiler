@@ -16,6 +16,8 @@ use PHPTypes\Type;
 use PHPCompiler\JIT\Context;
 use PHPCompiler\JIT\Variable;
 
+use PHPCompiler\Func as CoreFunc;
+use PHPCompiler\JIT\Func as JITFunc;
 
 class JIT {
 
@@ -56,7 +58,7 @@ class JIT {
 
     private array $queue = [];
 
-    private Context $context;
+    public Context $context;
 
     public function __construct(Context $context) {
         $this->context = $context;
@@ -68,6 +70,21 @@ class JIT {
         return $return;
     }
 
+    public function compileFunc(CoreFunc $func): void {
+        if ($func instanceof CoreFunc\PHP) {
+            $this->compileBlock($func->block, $func->getName());
+            $this->runQueue();
+            return;
+        } elseif ($func instanceof CoreFunc\JIT) {
+            // No need to do anything, already compiled
+            return;
+        } elseif ($func instanceof CoreFunc\Internal) {
+            $this->context->functions[strtolower($func->getName())] = $func->jit($this);
+            return;
+        }
+        throw new \LogicException("Unknown func type encountered: " . get_class($func));
+    }
+
     private function runQueue(): void {
         while (!empty($this->queue)) {
             $run = array_shift($this->queue);
@@ -76,8 +93,11 @@ class JIT {
     }
 
     private function compileBlock(Block $block, ?string $funcName = null): \gcc_jit_function_ptr {
-        $internalName = "internal_" . (++self::$functionNumber);
-        
+        if (!is_null($funcName)) {
+            $internalName = $funcName;
+        } else {
+            $internalName = "internal_" . (++self::$functionNumber);
+        }
         $args = [];
         $argVars = [];
         if (!is_null($block->func)) {

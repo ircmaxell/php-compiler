@@ -8,10 +8,10 @@
  */
 
 namespace PHPCompiler\JIT\Func;
-use PHPCompiler\JIT\Func;
+use PHPCompiler\JIT\FuncAbstract;
 use PHPCompiler\JIT\Context;
 
-class Trampolined extends Func {
+class Trampolined extends FuncAbstract {
 
     private array $trampolines = [];
 

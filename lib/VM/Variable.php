@@ -12,7 +12,7 @@ namespace PHPCompiler\VM;
 use PHPTypes\Type;
 use PHPCompiler\OpCode;
 
-class Variable {
+final class Variable {
     const TYPE_UNKNOWN = -1;
     const TYPE_NULL = 0;
     const TYPE_INTEGER = 1;

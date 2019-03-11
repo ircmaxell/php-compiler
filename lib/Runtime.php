@@ -9,6 +9,7 @@
 
 namespace PHPCompiler;
 
+use PHPCfg\Func as CfgFunc;
 use PHPCfg\Parser;
 use PHPCfg\Traverser;
 use PHPCfg\LivenessDetector;
@@ -40,6 +41,7 @@ class Runtime {
     private ?JIT $jit = null;
     public array $modules = [];
     public int $mode;
+    public ?string $debugFile = null;
 
     public function __construct(int $mode = self::MODE_NORMAL) {
         $this->mode = $mode;
@@ -77,13 +79,23 @@ class Runtime {
         }
     }
 
+    public function setDebug(?string $debugFile = null): void {
+        $this->debugFile = $debugFile;
+    }
+
     private function loadCoreModules(): void {
+        $this->load(new ext\types\Module);
         $this->load(new ext\standard\Module);
     }
 
     public function loadJit(): JIT {
         if (is_null($this->jit)) {
             $this->jit = new JIT($this->loadJitContext());
+            foreach ($this->modules as $module) {
+                foreach ($module->getFunctions() as $func) {
+                    $this->jit->compileFunc($func);
+                }
+            }
         }
         return $this->jit;
     }
@@ -94,6 +106,9 @@ class Runtime {
                 $this,
                 $this->mode === self::MODE_NORMAL ? JIT\Builtin::LOAD_TYPE_EMBED : JIT\Builtin::LOAD_TYPE_STANDALONE
             );
+            if (!is_null($this->debugFile)) {
+                $this->jitContext->setDebugFile($this->debugFile);
+            }
         }
         return $this->jitContext;
     }
@@ -121,6 +136,12 @@ class Runtime {
         return $block;
     }
 
+    public function compileFunc(string $name, CfgFunc $func): Func {
+        $compiled = $this->compiler->compileFunc($name, $func);
+        $this->assignOpResolver->optimize($compiled->block);
+        return $compiled;
+    }
+
     public function jit(?Block $block) {
         $this->loadJit()->compile($block);
         $this->loadJitContext()->compileInPlace();
@@ -134,6 +155,10 @@ class Runtime {
 
     public function parseAndCompile(string $code, string $filename): ?Block {
         return $this->compile($this->parse($code, $filename));
+    }
+
+    public function parseAndCompileFile(string $filename): ?Block {
+        return $this->compile($this->parse(file_get_contents($filename), $filename));
     }
 
     public function run(?Block $block) {

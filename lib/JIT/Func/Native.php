@@ -8,10 +8,10 @@
  */
 
 namespace PHPCompiler\JIT\Func;
-use PHPCompiler\JIT\Func;
+use PHPCompiler\JIT\FuncAbstract;
 use PHPCompiler\JIT\Context;
 
-class Native extends Func {
+class Native extends FuncAbstract {
 
     public function call(\gcc_jit_rvalue_ptr ...$args): \gcc_jit_rvalue_ptr {
         return \gcc_jit_context_new_call(

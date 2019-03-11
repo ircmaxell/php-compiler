@@ -9,44 +9,27 @@
 
 namespace PHPCompiler\ext\standard;
 
-use PHPCompiler\Func\Internal;
-use PHPCompiler\Frame;
-use PHPCompiler\VM\Variable as VMVariable;
-use PHPCompiler\VM\ClassEntry;
-use PHPTypes\Type;
-
-class var_dump extends Internal {
-
-    public function execute(Frame $frame): void {
-        foreach ($frame->calledArgs as $arg) {
-            $this->var_dump($arg, 1);
-        }
+function var_dump(...$vars): void {
+    for ($i = 0; $i < count($vars); $i++) {
+        var_dump_internal($vars[$i], 1);
     }
+}
 
-    private function var_dump(VMVariable $var, int $level) {
-        if ($level > 1) {
-            echo str_repeat(' ', $level - 1);
-        }
-restart:
-        switch ($var->type) {
-            case VMVariable::TYPE_INTEGER:
-                echo 'int(', $var->toInt(), ")\n";
-                break;
-            case VMVariable::TYPE_FLOAT:
-                echo 'float(', $var->toFloat(), ")\n";
-                break;
-            case VMVariable::TYPE_STRING:
-                echo 'string(', strlen($var->toString()), ') "', $var->toString(), "\")\n";
-                break;
-            case VMVariable::TYPE_BOOLEAN:
-                echo 'bool(', $var->toBool() ? 'true' : 'false', ")\n";
-                break;
-            case VMVariable::TYPE_INDIRECT:
-                $var = $var->resolveIndirect();
-                goto restart;
-            default:
-                throw new \LogicException("var_dump not implemented for type");
-        }
+function var_dump_internal($var, int $level): void {
+    if ($level > 1) {
+        echo str_repeat(' ', $level - 1);
     }
-
+    if (is_int($var)) {
+        echo 'int(', $var, ")\n";
+    } elseif (is_float($var)) {
+        echo 'float(', $var, ")\n";
+    } elseif (is_string($var)) {
+        echo 'string(', \strlen($var), ') "', $var, "\")\n";
+    } elseif (is_bool($var)) {
+        echo 'bool(', $var ? 'true' : 'false', ")\n";
+    } elseif (is_null($var)) {
+        echo "NULL\n";
+    } else {
+        echo "unknown()\n";
+    }
 }

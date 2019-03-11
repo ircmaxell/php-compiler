@@ -417,6 +417,20 @@ class Context {
         return $this->stringConstant[$string];
     }
 
+    private array $boolValues = [];
+
+    public function constantFromBool(bool $value): \gcc_jit_rvalue_ptr {
+        $id = $value ? 1 : 0;
+        if (!isset($this->boolValues[$id])) {
+            $this->boolValues[$id] = \gcc_jit_context_new_rvalue_from_int(
+                $this->context,
+                $this->getTypeFromString('bool'),
+                $id
+            );
+        }
+        return $this->boolValues[$id];
+    }
+
     public function constantStringFromString(string $string): \gcc_jit_rvalue_ptr {
         if (!isset($this->stringConstantMap[$string])) {
             $global = \gcc_jit_context_new_global(

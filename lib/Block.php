@@ -116,7 +116,11 @@ class Block {
             }
         }
 
-        return new Frame(null, $this, $frame, ...$scope);
+        $return = new Frame(null, $this, $frame, ...$scope);
+        if (!is_null($frame) && !is_null($frame->returnVar)) {
+            $return->returnVar = $frame->returnVar;
+        }
+        return $return;
     }
 
 

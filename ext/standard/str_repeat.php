@@ -7,10 +7,12 @@
  * @license MIT See LICENSE at the root of the project for more info
  */
 
-namespace PHPCompiler\JIT;
+namespace PHPCompiler\ext\standard;
 
-interface Func {
-    
-    public function call(\gcc_jit_rvalue_ptr ...$args): \gcc_jit_rvalue_ptr;
-
+function str_repeat(string $input, int $multiplier): string {
+    $result = '';
+    for ($i = 0; $i < $multiplier; $i++) {
+        $result .= $input;
+    }
+    return $result;
 }

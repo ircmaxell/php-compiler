@@ -13,7 +13,7 @@ use PHPCompiler\Block;
 use PHPCfg\Operand;
 use PHPTypes\Type;
 
-class Variable {
+final class Variable {
     const TYPE_NATIVE_LONG = 1;
     const TYPE_NATIVE_BOOL = 2;
     const TYPE_NATIVE_DOUBLE = 3;

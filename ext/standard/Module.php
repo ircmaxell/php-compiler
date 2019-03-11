@@ -2,14 +2,16 @@
 
 namespace PHPCompiler\ext\standard;
 
+use PHPCfg\Func as CfgFunc;
+use PHPCfg\Script;
+use PHPCompiler\Func;
 use PHPCompiler\ModuleAbstract;
 
 class Module extends ModuleAbstract {
 
     public function getFunctions(): array {
         return [
-            new var_dump,
-            new strlen,
+            $this->parseAndCompileFunction('str_repeat', __DIR__ . '/str_repeat.php'),
         ];
     }
 

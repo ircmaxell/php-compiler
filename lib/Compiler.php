@@ -9,7 +9,7 @@
 
 namespace PHPCompiler;
 
-use PHPCfg\Func;
+use PHPCfg\Func as CfgFunc;
 use PHPCfg\Op;
 use PHPCfg\Block as CfgBlock;
 use PHPCfg\Operand;
@@ -29,6 +29,15 @@ class Compiler {
 
         $this->seen = null;
         return $main;
+    }
+
+    public function compileFunc(string $name, CfgFunc $func): Func {
+        $this->seen = new \SplObjectStorage;
+
+        $funcBlock = $this->compileCfgBlock($func->cfg, $func->params);
+        $funcBlock->func = $func;
+        $this->seen = null;
+        return new Func\PHP($name, $funcBlock);
     }
 
     protected function compileCfgBlock(CfgBlock $block, array $params = []): Block {
