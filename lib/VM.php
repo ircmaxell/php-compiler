@@ -26,6 +26,10 @@ class VM {
     }
 
     public function run(Block $block): int {
+        if (!is_null($block->handler)) {
+            $block->handler->execute($block->getFrame($this->context));
+            return self::SUCCESS;
+        }
         
         $this->context->push($block->getFrame($this->context));
 nextframe:

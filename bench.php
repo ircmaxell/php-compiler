@@ -50,15 +50,14 @@ foreach ($results as $name => $resultset) {
 
 function bench(string $file, array $runtimes) {
     echo "Testing each method:\n";
-    $result = runDebug($runtimes['7.4'] . ' ' . __DIR__ . '/bin/jit.php', $file);
+    $result = trim(runDebug($runtimes['7.4'] . ' ' . __DIR__ . '/bin/jit.php', $file));
     run($runtimes['7.4'] . ' ' . __DIR__ . '/bin/compile.php', $file);
-    $tmpResult = runDebug(str_replace('.php', '', $file), '');
+    $tmpResult = trim(runDebug(str_replace('.php', '', $file), ''));
     if ($result !== $tmpResult) {
-        var_dump($result, $tmpResult);
-        die("Failure for bin/compile.php\n");
+        die("Failure for bin/compile.php, found \"$tmpResult\" but expected \"$result\"\n");
     }
     foreach ($runtimes as $name => $binary) {
-        $tmpResult = runDebug($binary, $file);
+        $tmpResult = trim(runDebug($binary, $file));
         if ($result !== $tmpResult) {
             var_dump($result, $tmpResult);
             die("Failure for test $name\n");

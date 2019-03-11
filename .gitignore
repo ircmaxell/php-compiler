@@ -2,3 +2,5 @@ vendor
 test.*
 result.*
 demo
+*.reproduce.c
+*.debug.c
