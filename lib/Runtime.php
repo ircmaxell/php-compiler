@@ -26,8 +26,8 @@ use PHPCompiler\VM\Context as VMContext;
 use PHPCompiler\JIT\Context as JITContext;
 
 class Runtime {
-    const MODE_NORMAL = 1;
-    const MODE_AOT = 2;
+    const MODE_NORMAL   = 0b0001;
+    const MODE_AOT      = 0b0010;
 
     public Compiler $compiler;
     public Parser $parser;
@@ -124,7 +124,8 @@ class Runtime {
     public function parse(string $code, string $filename): Script {
         $script = $this->parser->parse($code, $filename);
         $this->preprocessor->traverse($script);
-        $this->typeReconstructor->resolve(new State($script));
+        $state = new State($script);
+        $this->typeReconstructor->resolve($state);
         $this->postprocessor->traverse($script);
         $this->detector->detect($script);
         return $script;

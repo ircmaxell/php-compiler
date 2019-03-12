@@ -62,6 +62,9 @@ class OpCode {
     const TYPE_BITWISE_OR = 50;
     const TYPE_BITWISE_XOR = 51;
     const TYPE_TYPE_ASSERT = 52;
+    const TYPE_INIT_ARRAY = 53;
+    const TYPE_ADD_ARRAY_ELEMENT = 54;
+    const TYPE_STATICCALL_INIT = 55;
 
     public int $type;
     public ?int $arg1;

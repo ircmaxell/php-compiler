@@ -84,12 +84,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/ircmaxell/php-cfg.git",
-                "reference": "d33766f22f1d8eb06c1e4ce92e16eae3267632b8"
+                "reference": "72df227a488d95c8cf7a253608050737d5f40c3c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/ircmaxell/php-cfg/zipball/d33766f22f1d8eb06c1e4ce92e16eae3267632b8",
-                "reference": "d33766f22f1d8eb06c1e4ce92e16eae3267632b8",
+                "url": "https://api.github.com/repos/ircmaxell/php-cfg/zipball/72df227a488d95c8cf7a253608050737d5f40c3c",
+                "reference": "72df227a488d95c8cf7a253608050737d5f40c3c",
                 "shasum": ""
             },
             "require": {
@@ -118,7 +118,7 @@
                 }
             ],
             "description": "A Control Flow Graph implementation for PHP",
-            "time": "2019-03-06 18:46:21"
+            "time": "2019-03-12 17:07:49"
         },
         {
             "name": "ircmaxell/php-optimizer",
@@ -2258,7 +2258,7 @@
             ],
             "description": "Symfony Debug Component",
             "homepage": "https://symfony.com",
-            "time": "2019-03-10T17:07:42+00:00"
+            "time": "2019-03-10 17:07:42"
         },
         {
             "name": "symfony/event-dispatcher",

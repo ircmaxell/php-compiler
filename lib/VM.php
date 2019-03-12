@@ -58,9 +58,18 @@ restart:
                 case OpCode::TYPE_ARRAY_DIM_FETCH:
                     $arg1 = $frame->scope[$op->arg1];
                     $arg2 = $frame->scope[$op->arg2];
+                    if (is_null($op->arg3)) {
+                        if ($arg2->type !== Variable::TYPE_ARRAY) {
+                            throw new \LogicException('[] is only supported for arrays');
+                        }
+                        $arg1->indirect($arg2->toArray()->append(new Variable));
+                        break;
+                    }
                     $arg3 = $frame->scope[$op->arg3];
                     if ($arg2->type === Variable::TYPE_STRING) {
                         $arg1->string($arg2->toString()[$arg3->toInt()]);
+                    } elseif ($arg2->type === Variable::TYPE_ARRAY) {
+                        $arg1->indirect($arg2->toArray()->findVariable($arg3, false));
                     } else {
                         throw new \LogicException('Illegal offset');
                     }
@@ -244,6 +253,27 @@ restart:
                         throw new \LogicException("Unsupported property fetch on non-object");
                     }
                     $result->indirect($var->toObject()->getProperty($name));
+                    break;
+                case OpCode::TYPE_INIT_ARRAY:
+                    $result = $frame->scope[$op->arg1];
+                    $result->newArray();
+                    if (is_null($op->arg2)) {
+                        break;
+                    }
+                    // Fall through intentional
+                case OpCode::TYPE_ADD_ARRAY_ELEMENT:
+                    $result = $frame->scope[$op->arg1];
+                    $ht = $result->toArray();
+                    if (is_null($op->arg3)) {
+                        $ht->append($frame->scope[$op->arg2]);
+                        break;
+                    }
+                    $key = $frame->scope[$op->arg3]->resolveIndirect();
+                    if ($key->isInt()) {
+                        $ht->addIndex($key->toInt(), $frame->scope[$op->arg2]);
+                    } else {
+                        $ht->add($key->toString(), $frame->scope[$op->arg2]);
+                    }
                     break;
                 default:
                     throw new \LogicException("VM OpCode Not Implemented: " . $op->getType());

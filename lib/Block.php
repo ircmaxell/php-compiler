@@ -40,6 +40,8 @@ class Block {
 
     public \SplObjectStorage $args;
 
+    public ?Handler $handler = null;
+
     public function __construct(?CfgBlock $block) {
         $this->orig = $block;
         $this->scope = new \SplObjectStorage;

@@ -16,6 +16,7 @@ use PHPCfg\Operand;
 use PHPCfg\Script;
 use PHPTypes\Type;
 use PHPCompiler\VM\Variable;
+use PHPCompiler\NativeType\NativeArray;
 
 class Compiler {
 
@@ -126,12 +127,12 @@ class Compiler {
     }
 
     protected function compileTypeConstrainedVariable(Block $block, Type $type): int {
-        $var = new Variable(Variable::TYPE_UNKNOWN);
+        $var = new Variable(Variable::TYPE_UNDEFINED);
         $operand = new Operand\Temporary;
         $operand->type = $type;
         $return = $block->registerConstant($operand, $var);
         $mappedType = Variable::mapFromType($type);
-        if ($mappedType === Variable::TYPE_UNKNOWN) {
+        if ($mappedType === Variable::TYPE_UNDEFINED) {
             // Mixed
             return $return;
         } elseif ($mappedType === Variable::TYPE_OBJECT) {
@@ -422,6 +423,31 @@ class Compiler {
                     );
                 }
                 return $return;
+            case Op\Expr\StaticCall::class:
+                $return = [
+                    new OpCode(
+                        OpCode::TYPE_STATICCALL_INIT,
+                        $this->compileOperand($expr->class, $block, true),
+                        $this->compileOperand($expr->name, $block, true)
+                    )
+                ];
+                foreach ($expr->args as $arg) {
+                    $return[] = new OpCode(
+                        OpCode::TYPE_ARG_SEND,
+                        $this->compileOperand($arg, $block, true)
+                    );
+                }
+                if (!empty($expr->result->usages)) {
+                    $return[] = new OpCode(
+                        OpCode::TYPE_FUNCCALL_EXEC_RETURN,
+                        $this->compileOperand($expr->result, $block, false)
+                    );
+                } else {
+                    $return[] = new OpCode(
+                        OpCode::TYPE_FUNCCALL_EXEC_NORETURN,
+                    );
+                }
+                return $return;
             case Op\Expr\New_::class:
                 $return = [
                     new OpCode(
@@ -447,12 +473,37 @@ class Compiler {
                     $this->compileOperand($expr->var, $block, true),
                     $this->compileOperand($expr->name, $block, true)
                 )];
+            case Op\Expr\Array_::class:
+                $result = $this->compileOperand($expr->result, $block, false);
+                if (empty($expr->values)) {
+                    return [new OpCode(
+                        OpCode::TYPE_INIT_ARRAY,
+                        $result
+                    )];
+                }
+                $return = [new OpCode(
+                    OpCode::TYPE_INIT_ARRAY,
+                    $result,
+                    $this->compileOperand($expr->values[0], $block, true),
+                    $this->compileOperand($expr->keys[0], $block, true)
+                )];
+                for ($i = 1, $n = count($expr->values); $i < $n; $i++) {
+                    $return[] = new OpCode(
+                        OpCode::TYPE_ADD_ARRAY_ELEMENT,
+                        $result,
+                        $this->compileOperand($expr->values[$i], $block, true),
+                        $this->compileOperand($expr->keys[$i], $block, true)
+                    );
+                }
+                return $return;
         }
         throw new \LogicException("Unsupported expression: " . $expr->getType());
     }
 
-    protected function compileOperand(Operand $operand, Block $block, bool $isRead): int {
-        if ($operand instanceof Operand\Literal) {
+    protected function compileOperand(Operand $operand, Block $block, bool $isRead): ?int {
+        if ($operand instanceof Operand\NullOperand) {
+            return null;
+        } elseif ($operand instanceof Operand\Literal) {
             assert($isRead === true);
             $return = new Variable(Variable::mapFromType($operand->type));
             switch (Variable::mapFromType($operand->type)) {

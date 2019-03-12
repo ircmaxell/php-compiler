@@ -9,6 +9,9 @@
 
 namespace PHPCompiler;
 
+use PHPCfg\Operand;
+
+
 class Printer {
 
     private \SplObjectStorage $seen;
@@ -28,9 +31,9 @@ class Printer {
         $append = '';
         foreach ($block->opCodes as $op) {
             $return .= '  ' . $op->getType() . '(';
-            $return .= is_null($op->arg1) ? 'null' : $op->arg1;
-            $return .= ', ' . (is_null($op->arg2) ? 'null' : $op->arg2);
-            $return .= ', ' . (is_null($op->arg3) ? 'null' : $op->arg3);
+            $return .= $this->renderArg($op->arg1, $block);
+            $return .= ', ' . $this->renderArg($op->arg2, $block);
+            $return .= ', ' . $this->renderArg($op->arg3, $block);
             $return .= ')';
             if (!is_null($op->block1)) {
                 $append .= $this->printBlock($op->block1);
@@ -43,6 +46,17 @@ class Printer {
             $return .= "\n";
         }
         return $return . "\n" . $append;
+    }
+
+    private function renderArg(?int $arg, Block $block): string {
+        if (is_null($arg)) {
+            return 'null';
+        }
+        $operand = $block->getOperand($arg);
+        if ($operand instanceof Operand\Literal) {
+            return 'LITERAL(' . var_export($operand->value, true) . ')';
+        }
+        return '$' . $arg;
     }
     
 

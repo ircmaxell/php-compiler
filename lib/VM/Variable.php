@@ -13,14 +13,15 @@ use PHPTypes\Type;
 use PHPCompiler\OpCode;
 
 final class Variable {
-    const TYPE_UNKNOWN = -1;
+    const TYPE_UNDEFINED = -1;
     const TYPE_NULL = 0;
     const TYPE_INTEGER = 1;
     const TYPE_FLOAT = 2;
     const TYPE_BOOLEAN = 3;
     const TYPE_STRING = 4;
     const TYPE_OBJECT = 5;
-    const TYPE_INDIRECT = 6;
+    const TYPE_ARRAY = 6;
+    const TYPE_INDIRECT = 7;
 
 
     const NUMERIC = self::TYPE_INTEGER | self::TYPE_FLOAT;
@@ -33,6 +34,10 @@ final class Variable {
     private bool $bool;
     private ObjectEntry $object;
     private Variable $indirect;
+    private HashTable $array;
+
+
+    public int $next = -1;
 
     public ?int $typeConstraint = null;
     public ?string $classConstraint = null; 
@@ -55,8 +60,14 @@ final class Variable {
                 return self::TYPE_OBJECT;
             case Type::TYPE_STRING:
                 return self::TYPE_STRING;
+            case Type::TYPE_ARRAY:
+                return self::TYPE_ARRAY;
         }
         return self::TYPE_UNKNOWN;
+    }
+
+    public function isUndefined(): bool {
+        return $this->type === self::TYPE_UNDEFINED;
     }
 
     public function resolveIndirect(): self {
@@ -65,6 +76,29 @@ final class Variable {
             $var = $var->indirect;
         }
         return $var;
+    }
+
+    public function newArray(): HashTable {
+        $this->array(new HashTable);
+        return $this->array;
+    }
+
+    public function array(HashTable $ht): void {
+        $this->reset();
+        $this->type = self::TYPE_ARRAY;
+        $this->array = $ht;
+    }
+
+    public function toArray(): HashTable {
+        switch ($this->type) {
+            case self::TYPE_NULL:
+                return new HashTable;
+            case self::TYPE_ARRAY:
+                return $this->array;
+        }
+        $ht = new HashTable;
+        $ht->append($this);
+        return $ht;
     }
 
     public function int(int $value): void {
@@ -137,6 +171,12 @@ final class Variable {
         throw new \LogicException("Not implemented numeric conversion: $this->type");
     }
 
+
+    public function null(): void {
+        $this->reset();
+        $this->type = self::TYPE_NULL;
+    }
+    
     public function bool(bool $value): void {
         $this->reset();
         $this->type = self::TYPE_BOOLEAN;
@@ -178,6 +218,9 @@ final class Variable {
                 return $this->bool ? '1' : '';
             case self::TYPE_INDIRECT:
                 return $this->indirect->toString();
+            case self::TYPE_ARRAY:
+                // todo: raise notice
+                return 'Array';
         }
     }
 
@@ -252,6 +295,9 @@ final class Variable {
             $var = $var->indirect;
         }
         switch ($var->type) {
+            case self::TYPE_NULL:
+                $this->null();
+                break;
             case self::TYPE_STRING:
                 $this->string($var->string);
                 break;
@@ -266,6 +312,9 @@ final class Variable {
                 break;
             case self::TYPE_OBJECT:
                 $this->object($var->object);
+                break;
+            case self::TYPE_ARRAY:
+                $this->array($var->array);
                 break;
             default:
                 var_dump($var);

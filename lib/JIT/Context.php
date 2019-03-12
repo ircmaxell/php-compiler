@@ -46,6 +46,8 @@ class Context {
     private array $exports = [];
     public Runtime $runtime;
 
+    public int $mode;
+
     public function __construct(Runtime $runtime, int $loadType) {
         $this->runtime = $runtime;
         $this->scope = new Scope;

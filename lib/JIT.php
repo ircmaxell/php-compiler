@@ -18,6 +18,7 @@ use PHPCompiler\JIT\Variable;
 
 use PHPCompiler\Func as CoreFunc;
 use PHPCompiler\JIT\Func as JITFunc;
+use PHPCompiler\NativeType\NativeArray as NativeArray;
 
 class JIT {
 

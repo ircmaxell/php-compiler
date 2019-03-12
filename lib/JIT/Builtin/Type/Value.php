@@ -32,11 +32,7 @@ class Value extends Type {
             '__value__',
             \gcc_jit_struct_as_type($this->struct)
         );
-        $this->pointer = \gcc_jit_type_get_pointer($this->context->getTypeFromString('__value__'));
-        $this->context->registerType(
-            '__value__*',
-            $this->pointer
-        );
+        $this->pointer = $this->context->getTypeFromString('__value__*');
     }
 
     public function implement(): void {

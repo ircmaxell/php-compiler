@@ -22,6 +22,7 @@ class Context {
     public array $constants = [];
 
     public Runtime $runtime;
+    
 
     public function __construct(Runtime $runtime) {
         $this->runtime = $runtime;
