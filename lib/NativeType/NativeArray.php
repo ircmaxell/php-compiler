@@ -40,7 +40,7 @@ final class NativeArray {
     }
 
     public function grow(): void {
-        $this->powerOf2 = 1 << $this->powerOf2;
+        $this->powerOf2 += 1;
         $size = 1 << $this->powerOf2;
         $this->mask = $size - 1;
         $this->data->setSize($size);
