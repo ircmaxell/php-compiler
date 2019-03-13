@@ -23,7 +23,7 @@ final class HashTable {
     const FLAG_HAS_EMPTY_IND       = 0b0100000;
     const FLAG_ALLOW_COW_VIOLATION = 0b1000000;
 
-    const MIN_SIZE = 8;
+    const MIN_SIZE = 3; // 2^3 or 8
     const INVALID_INDEX = -1;
 
     const UPDATE          = 0b000001;
@@ -32,28 +32,26 @@ final class HashTable {
     const ADD_NEW         = 0b001000;
     const ADD_NEXT        = 0b010000;
 
-    public Refcount $refcount;
-    public int $flags = 0;
-    public int $tableMask = 0;
-    public NativeArray $indexes;
-    public NativeArray $buckets;
-    public int $numUsed = 0;
-    public int $numElements = 0;
-    public int $tableSize = self::MIN_SIZE;
-    public int $internalPointer = 0;
-    public int $nextFreeElement = 0;
+    private Refcount $refcount;
+    private int $flags = 0;
+    private NativeArray $indexes;
+    private NativeArray $buckets;
+    private int $numUsed = 0;
+    private int $numElements = 0;
+    private int $internalPointer = 0;
+    private int $nextFreeElement = 0;
 
 
     public function __construct() {
         $this->refcount = new Refcount;
         $this->flags = self::FLAG_UNINITIALIZED;
-        $this->indexes = NativeArray::allocate($this->tableSize);
-        $this->buckets = NativeArray::allocate($this->tableSize);
+        $this->indexes = NativeArray::allocate(self::MIN_SIZE);
+        $this->buckets = NativeArray::allocate(self::MIN_SIZE);
     }
 
     public function iterate(bool $resolveIndirect = false): \Traversable {
         for ($i = 0; $i < $this->numUsed; $i++) {
-            $bucket = $this->buckets[$i];
+            $bucket = $this->buckets->read($i);
             if ($bucket->value->isUndefined()) {
                 continue;
             }
@@ -179,12 +177,11 @@ final class HashTable {
         $this->resizeIfFull();
         $id = $this->numUsed++;
         $this->numElements++;
-        $bucket = $this->buckets[$id];
+        $bucket = $this->buckets->read($id);
         $bucket->key = $key;
         $bucket->hash = $hash;
-        $nIndex = $hash & $this->tableMask;
-        $bucket->value->next = $this->indexes[$nIndex];
-        $this->indexes[$nIndex] = $id;
+        $bucket->value->next = $this->indexes->read($hash);
+        $this->indexes->write($hash, $id);
         $bucket->value->copyFrom($data);
         if (is_null($key) && $hash >= $this->nextFreeElement) {
             $this->nextFreeElement = $hash + 1;
@@ -193,13 +190,12 @@ final class HashTable {
     }
 
     private function findBucket(int $hash, ?string $key): ?HashTableBucket {
-        $nIndex = $hash & $this->tableMask;
-        $idx = $this->indexes[$nIndex];
+        $idx = $this->indexes->read($hash);
         do {
             if ($idx === self::INVALID_INDEX) {
                 return null;
             }
-            $bucket = $this->buckets[$idx];
+            $bucket = $this->buckets->read($idx);
             if ($bucket->key === $key) {
                 return $bucket;
             }
@@ -240,13 +236,12 @@ final class HashTable {
     }
 
     private function initMixed(): void {
-        $this->tableMask = $this->computeTableMask();
         $this->flags = $this->flags & ~self::FLAG_UNINITIALIZED;
         $this->rehash();
     }
 
     private function resizeIfFull(): void {
-        if ($this->numUsed >= $this->tableSize) {
+        if ($this->numUsed >= $this->indexes->size()) {
             $this->resize();
         }
     }
@@ -256,15 +251,14 @@ final class HashTable {
             $this->rehash();
             return;
         }
-        $newSize = $this->tableSize + $this->tableSize;
-        $this->indexes = NativeArray::reallocate($this->indexes, $newSize);
-        $this->buckets = NativeArray::reallocate($this->buckets, $newSize);
-        for ($i = $this->tableSize; $i < $newSize; $i++) {
-            $this->indexes[$i] = self::INVALID_INDEX;
-            $this->buckets[$i] = new HashTableBucket(new Variable(Variable::TYPE_UNDEFINED), 0, '');
+        $oldSize = $this->indexes->size();
+        $this->indexes->grow(); // increase by factor of 2
+        $this->buckets->grow();
+        $newSize = $this->indexes->size();
+        for ($i = $oldSize; $i < $newSize; $i++) {
+            $this->indexes->write($i, self::INVALID_INDEX);
+            $this->buckets->write($i, new HashTableBucket(new Variable(Variable::TYPE_UNDEFINED), 0, null));
         }
-        $this->tableSize = $newSize;
-        $this->tableMask = $this->computeTableMask();
         $this->rehash();
     }
 
@@ -272,9 +266,9 @@ final class HashTable {
         if ($this->numElements === 0) {
             if (!($this->flags & self::FLAG_UNINITIALIZED)) {
                 $this->numUsed = 0;
-                for ($i = 0; $i < $this->tableSize; $i++) {
-                    $this->indexes[$i] = self::INVALID_INDEX;
-                    $this->buckets[$i] = new HashTableBucket(new Variable(Variable::TYPE_UNDEFINED), 0, '');
+                for ($i = 0, $n = $this->indexes->size(); $i < $n; $i++) {
+                    $this->indexes->write($i, self::INVALID_INDEX);
+                    $this->buckets->write($i, new HashTableBucket(new Variable(Variable::TYPE_UNDEFINED), 0, null));
                 }
             }
             return;
@@ -283,9 +277,10 @@ final class HashTable {
         $bucketIndex = 0;
         if ($this->isWithoutHoles()) {
             do {
-                $index = $this->buckets[$bucketIndex]->hash & $this->tableMask;
-                $this->buckets[$bucketIndex]->value->next = $index;
-                $this->indexes[$index] = $bucketIndex;
+                $bucket = $this->buckets->read($bucketIndex);
+                $index = $bucket->hash;
+                $bucket->value->next = $index;
+                $this->indexes->set($index, $bucketIndex);
             } while (++$bucketIndex < $this->numUsed);
             return;
         }
@@ -293,17 +288,13 @@ final class HashTable {
         throw new \LogicException('Need to implement rehash');
     }
 
-    private function computeTableMask(): int {
-        return ($this->tableSize - 1);
-    }
-
     private function isWithoutHoles(): bool {
         return $this->numUsed === $this->numElements;
     }
 
     private function reset() {
-        for ($i = 0; $i < $this->tableSize; $i++) {
-            $this->indexes[$i] = self::INVALID_INDEX;
+        for ($i = 0, $n = $this->indexes->size(); $i < $n; $i++) {
+            $this->indexes->write($i, self::INVALID_INDEX);
         }
     }
 

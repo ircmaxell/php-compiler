@@ -11,46 +11,40 @@ namespace PHPCompiler\NativeType;
 
 use PHPCompiler\VM\Variable;
 
-class NativeArray implements \ArrayAccess {
+final class NativeArray {
     private \SplFixedArray $data;
+    private int $powerOf2;
+    private int $mask;
 
-    private function __construct(int $size) {
+    private function __construct(int $powerOf2) {
+        $this->powerOf2 = $powerOf2;
+        $size = 1 << $this->powerOf2;
+        $this->mask = $size - 1;
         $this->data = new \SplFixedArray($size);
-        for ($i = 0; $i < $size; $i++) {
-            $this->data[$i] = 0;
-        }
     }
 
-    public static function allocate(int $size) {
-        return new self($size);
+    public static function allocate(int $powerOf2) {
+        return new self($powerOf2);
     }
 
-    public function offsetGet($index) {
-        if (!is_int($index)) {
-            throw new \LogicException("Only integer indexes are supported by " . __CLASS__);
-        }
-        return $this->data->offsetGet($index);
+    public function read(int $index) {
+        return $this->data[$index & $this->mask];
     }
 
-    public function offsetSet($index, $value) {
-        if (!is_int($index)) {
-            throw new \LogicException("Only integer indexes are supported by " . __CLASS__);
-        }
-        $this->data->offsetSet($index, $value);
+    public function write(int $index, $value): void {
+        $this->data[$index & $this->mask] = $value;
     }
 
-    public function offsetExists($offset) {
-        throw new \LogicException("Unexpected call to offset exists");
+    public function size(): int {
+        return 1 << $this->powerOf2;
     }
 
-    public function offsetUnset($offset) {
-        throw new \LogicException("Unexpected call to offset unset");
+    public function grow(): void {
+        $this->powerOf2 = 1 << $this->powerOf2;
+        $size = 1 << $this->powerOf2;
+        $this->mask = $size - 1;
+        $this->data->setSize($size);
     }
-
-    public static function reallocate(self $self, int $newSize): self {
-        $orig = $self->data->count();
-        $self->data->setSize($newSize);
-        return $self;
-    }
+    
 
 }
