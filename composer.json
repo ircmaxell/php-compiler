@@ -9,21 +9,23 @@
         }
     ],
     "require": {
-        "php": ">=7.0",
+        "ext-ffi": "*",
+        "php": ">=7.4",
         "ircmaxell/php-cfg": "^1.0",
         "ircmaxell/php-types": "^1.0",
         "ircmaxell/php-optimizer": "dev-master",
         "ircmaxell/libgccjit": "dev-master"
     },
     "require-dev": {
-        "phpunit/phpunit": "^6.0",
+        "phpunit/phpunit": "^8.0",
         "friendsofphp/php-cs-fixer": "*"
     },
     "minimum-stability": "dev",
     "autoload": {
         "psr-4": {
             "PHPCompiler\\": "lib/",
-            "PHPCompiler\\ext\\": "ext/"
+            "PHPCompiler\\ext\\": "ext/",
+            "php\\": "php/"
         }
     }
 

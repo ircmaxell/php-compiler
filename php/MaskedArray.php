@@ -7,20 +7,18 @@
  * @license MIT See LICENSE at the root of the project for more info
  */
 
-namespace PHPCompiler\NativeType;
+namespace php;
+use SplFixedArray;
 
-use PHPCompiler\VM\Variable;
-
-final class NativeArray {
-    private \SplFixedArray $data;
-    private int $powerOf2;
+final class MaskedArray {
+    private SplFixedArray $data;
+    private int $size;
     private int $mask;
 
     private function __construct(int $powerOf2) {
-        $this->powerOf2 = $powerOf2;
-        $size = 1 << $this->powerOf2;
-        $this->mask = $size - 1;
-        $this->data = new \SplFixedArray($size);
+        $this->size = 1 << $this->powerOf2;
+        $this->mask = $this->size - 1;
+        $this->data = new SplFixedArray($this->size);
     }
 
     public static function allocate(int $powerOf2) {
@@ -36,14 +34,13 @@ final class NativeArray {
     }
 
     public function size(): int {
-        return 1 << $this->powerOf2;
+        return $this->size;
     }
 
     public function grow(): void {
-        $this->powerOf2 += 1;
-        $size = 1 << $this->powerOf2;
-        $this->mask = $size - 1;
-        $this->data->setSize($size);
+        $this->size *= 2;
+        $this->mask = $this->size - 1;
+        $this->data->setSize($this->size);
     }
     
 

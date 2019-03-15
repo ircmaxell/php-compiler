@@ -9,7 +9,7 @@
 
 namespace PHPCompiler\VM;
 
-use PHPCompiler\NativeType\NativeArray;
+use php\MaskedArray;
 
 final class HashTable {
     const OKAY                     = 0b0000000;
@@ -34,8 +34,8 @@ final class HashTable {
 
     private Refcount $refcount;
     private int $flags = 0;
-    private NativeArray $indexes;
-    private NativeArray $buckets;
+    private MaskedArray $indexes;
+    private MaskedArray $buckets;
     private int $numUsed = 0;
     private int $numElements = 0;
     private int $internalPointer = 0;
@@ -45,8 +45,8 @@ final class HashTable {
     public function __construct() {
         $this->refcount = new Refcount;
         $this->flags = self::FLAG_UNINITIALIZED;
-        $this->indexes = NativeArray::allocate(self::MIN_SIZE);
-        $this->buckets = NativeArray::allocate(self::MIN_SIZE);
+        $this->indexes = MaskedArray::allocate(self::MIN_SIZE);
+        $this->buckets = MaskedArray::allocate(self::MIN_SIZE);
     }
 
     public function iterate(bool $resolveIndirect = false): \Traversable {
@@ -280,7 +280,7 @@ final class HashTable {
                 $bucket = $this->buckets->read($bucketIndex);
                 $index = $bucket->hash;
                 $bucket->value->next = $index;
-                $this->indexes->set($index, $bucketIndex);
+                $this->indexes->write($index, $bucketIndex);
             } while (++$bucketIndex < $this->numUsed);
             return;
         }
