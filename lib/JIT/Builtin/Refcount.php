@@ -12,12 +12,13 @@ namespace PHPCompiler\JIT\Builtin;
 use PHPCompiler\JIT\Builtin;
 
 class Refcount extends Builtin {
-    const TYPE_INFO_NONREFCOUNTED = 0b0000000000;
-    const TYPE_INFO_REFCOUNTED    = 0b0000000001;
+    const TYPE_INFO_NONREFCOUNTED     = 0b0000000000;
+    const TYPE_INFO_REFCOUNTED        = 0b0000000001;
 
-    const TYPE_INFO_TYPEMASK      = 0b1111111100;
-    const TYPE_INFO_TYPE_STRING   = 0b0000000100;
-    const TYPE_INFO_TYPE_OBJECT   = 0b0000001000;
+    const TYPE_INFO_TYPEMASK          = 0b1111111100;
+    const TYPE_INFO_TYPE_STRING       = 0b0000000100;
+    const TYPE_INFO_TYPE_OBJECT       = 0b0000001000;
+    const TYPE_INFO_TYPE_MASKED_ARRAY = 0b0000001100;
 
     private \gcc_jit_struct_ptr $struct;
     private \gcc_jit_struct_ptr $virtualStruct;

@@ -157,18 +157,18 @@ So, is this thing any fast? Well, let's look at the internal benchmarks. You can
 
 | Test Name          |            7.3 (s)| 7.3.NO.OPCACHE (s)|            7.4 (s)| 7.4.NO.OPCACHE (s)|          8.JIT (s)|        8.NOJIT (s)| bin/jit.php (s) | bin/compile.php (s) | compiled time (s) |
 |--------------------|-------------------|-------------------|-------------------|-------------------|-------------------|-------------------|-----------------|---------------------|-------------------|
-|          Ack(3,10) |            1.1761 |            1.8715 |            1.1850 |            1.9010 |            0.6605 |            1.1573 |          0.4914 |              0.2830 |            0.2128 |
-|           Ack(3,8) |            0.0805 |            0.0991 |            0.0824 |            0.1096 |            0.0459 |            0.0791 |          0.2940 |              0.2817 |            0.0146 |
-|           Ack(3,9) |            0.3018 |            0.3616 |            0.3009 |            0.3709 |            0.1683 |            0.2931 |          0.3342 |              0.2818 |            0.0546 |
-|           fibo(30) |            0.0691 |            0.0837 |            0.0748 |            0.0890 |            0.0437 |            0.0684 |          0.2906 |              0.2808 |            0.0108 |
-|         mandelbrot |            0.0374 |            0.1298 |            0.0393 |            0.1493 |            0.0213 |            0.0374 |          0.3071 |              0.2969 |            0.0142 |
-|             simple |            0.0490 |            0.0729 |            0.0533 |            0.0758 |            0.0215 |            0.0581 |          0.3021 |              0.2864 |            0.0119 |
+|          Ack(3,10) |            1.1837 |            1.9063 |            1.1804 |            1.9137 |            0.6818 |            1.1722 |          0.5062 |              0.2977 |            0.2126 |
+|           Ack(3,8) |            0.0856 |            0.1034 |            0.0917 |            0.1166 |            0.0532 |            0.0855 |          0.3093 |              0.2978 |            0.0151 |
+|           Ack(3,9) |            0.3114 |            0.3700 |            0.3030 |            0.3774 |            0.1767 |            0.3001 |          0.3483 |              0.2969 |            0.0546 |
+|           fibo(30) |            0.0744 |            0.0935 |            0.0763 |            0.0972 |            0.0434 |            0.0751 |          0.3054 |              0.2960 |            0.0106 |
+|         mandelbrot |            0.0441 |            0.1207 |            0.0463 |            0.1176 |            0.0312 |            0.0449 |          0.3209 |              0.3098 |            0.0141 |
+|             simple |            0.0552 |            0.0790 |            0.0654 |            0.0867 |            0.0368 |            0.0682 |          0.3114 |              0.3012 |            0.0118 |
 
 
 To run the benchmarks yourself, you need to pass a series of ENV vars for each PHP version you want to test. For example, the above chart is generated with::
 
 ```console
-me@local:~$ PHP_7_3=../../PHP/php-7.3 PHP_7_4=../../PHP/php-7.4 PHP_8_JIT=../../PHP/php-8-jit PHP_8_NOJIT=../../PHP/php-8-nojit PHP_7_3_NO_OPCACHE="../../PHP/php-7.3 -dopcache.enable=0" PHP_7_4_NO_OPCACHE="../../PHP/php-7.4 -dopcache.enable=0" php bench.php 
+me@local:~$  PHP_7_3=php-7.3 PHP_7_4=php-7.4 PHP_8_JIT=php-8-jit PHP_8_NOJIT=php-8-nojit PHP_7_3_NO_OPCACHE="php-7.3 -dopcache.enable=0" PHP_7_4_NO_OPCACHE="php-7.4 -dopcache.enable=0" php bench.php
 ```
 
 Without opcache doing optimizations, the `bin/jit.php` is actually able to hang up with ack(3,9) and mandelbrot for 7.3 and 7.4. It's even able to hang with PHP 8's experimental JIT compiler for ack(3,9). 

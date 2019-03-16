@@ -129,7 +129,7 @@ class MaskedArray extends Type {
         $this->context->refcount->init(
             $block, 
             $local->asRValue(),
-            Refcount::TYPE_INFO_REFCOUNTED | Refcount::TYPE_INFO_TYPE_STRING
+            Refcount::TYPE_INFO_REFCOUNTED | Refcount::TYPE_INFO_TYPE_MASKED_ARRAY
         );
         \gcc_jit_block_end_with_return($block,  null, $local->asRValue());
     }
@@ -206,12 +206,17 @@ class MaskedArray extends Type {
         );
     }
 
-    public function read(\gcc_jit_rvalue_ptr $ptr, \gcc_jit_rvalue_ptr $offset): \gcc_jit_rvalue_ptr {
+    public function read(\gcc_jit_rvalue_ptr $ptr, \gcc_jit_rvalue_ptr $offset, string $type): \gcc_jit_rvalue_ptr {
         $data = $this->readField('data', $ptr);
         return \gcc_jit_context_new_array_access(
             $this->context->context,
             $this->context->location(),
-            $data,
+            \gcc_jit_context_new_cast(
+                $this->context->context,
+                $this->context->location(),
+                $data,
+                $this->context->getTypeFromString($type . '*')
+            ),
             $this->context->helper->binaryOp(
                 \GCC_JIT_BINARY_OP_BITWISE_AND,
                 'size_t',
@@ -221,12 +226,17 @@ class MaskedArray extends Type {
         )->asRValue();
     }
 
-    public function write(\gcc_jit_block_ptr $block, \gcc_jit_rvalue_ptr $ptr, \gcc_jit_rvalue_ptr $offset, \gcc_jit_rvalue_ptr $value) {
+    public function write(\gcc_jit_block_ptr $block, \gcc_jit_rvalue_ptr $ptr, \gcc_jit_rvalue_ptr $offset, \gcc_jit_rvalue_ptr $value, string $type) {
         $data = $this->readField('data', $ptr);
         $lvalue = \gcc_jit_context_new_array_access(
             $this->context->context,
             $this->context->location(),
-            $data,
+            \gcc_jit_context_new_cast(
+                $this->context->context,
+                $this->context->location(),
+                $data,
+                $this->context->getTypeFromString($type . '*')
+            ),
             $this->context->helper->binaryOp(
                 \GCC_JIT_BINARY_OP_BITWISE_AND,
                 'size_t',

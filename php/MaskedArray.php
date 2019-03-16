@@ -16,7 +16,7 @@ final class MaskedArray {
     private int $mask;
 
     private function __construct(int $powerOf2) {
-        $this->size = 1 << $this->powerOf2;
+        $this->size = 1 << $powerOf2;
         $this->mask = $this->size - 1;
         $this->data = new SplFixedArray($this->size);
     }

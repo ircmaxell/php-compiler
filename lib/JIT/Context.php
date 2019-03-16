@@ -47,6 +47,7 @@ class Context {
     public Runtime $runtime;
 
     public int $mode;
+    public Analyzer $analyzer;
 
     public function __construct(Runtime $runtime, int $loadType) {
         $this->runtime = $runtime;
@@ -55,6 +56,7 @@ class Context {
         $this->context = \gcc_jit_context_acquire();
         $this->helper = new Helper($this);
         $this->location = new Location("Unknown", 1, 1);
+        $this->analyzer = new Analyzer;
         
         $this->refcount = new Builtin\Refcount($this, $loadType);
         $this->memory = Builtin\MemoryManager::load($this, $loadType);
@@ -468,6 +470,11 @@ class Context {
         assert(!$this->scope->variables->contains($op));
         $this->scope->variables[$op] = Variable::fromOp($this, $func, $gccBlock, $block, $op);
         $this->scope->variables[$op]->initialize($gccBlock);
+    }
+
+    public function setVariableOp(Operand $op, Variable $var) {
+        assert(!$this->scope->variables->contains($op));
+        $this->scope->variables[$op] = $var;
     }
 
     public function hasVariableOp(Operand $op): bool {

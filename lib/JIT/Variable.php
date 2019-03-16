@@ -21,6 +21,7 @@ final class Variable {
     const TYPE_STRING = 4 | self::IS_REFCOUNTED;
     const TYPE_OBJECT = 5 | self::IS_REFCOUNTED;
     const TYPE_VALUE = 6;
+    const TYPE_HASHTABLE = 7 | self::IS_REFCOUNTED;
 
     const TYPE_MAP = [
         Type::TYPE_DOUBLE => self::TYPE_NATIVE_DOUBLE,
@@ -28,6 +29,7 @@ final class Variable {
         Type::TYPE_BOOLEAN => self::TYPE_NATIVE_BOOL,
         Type::TYPE_STRING => self::TYPE_STRING,
         Type::TYPE_OBJECT => self::TYPE_OBJECT,
+        Type::TYPE_ARRAY => self::TYPE_HASHTABLE,
     ];
 
     const NATIVE_TYPE_MAP = [
@@ -36,11 +38,15 @@ final class Variable {
         self::TYPE_NATIVE_DOUBLE => 'double',
         self::TYPE_STRING => '__string__*',
         self::TYPE_OBJECT => '__object__*',
-        self::TYPE_VALUE => '__value__'
+        self::TYPE_VALUE => '__value__',
+        self::TYPE_HASHTABLE => '__hashtable__*',
     ];
 
-    const IS_REFCOUNTED = 1 << 7;
+    const IS_NATIVE_ARRAY = 1 << 6;
+    const IS_REFCOUNTED   = 1 << 7;
+
     public int $type;
+    public ?int $subType = null;
 
     const KIND_VARIABLE = 1;
     const KIND_VALUE = 2;
@@ -51,6 +57,7 @@ final class Variable {
     private Context $context;
 
     private static int $lvalueCounter = 0;
+    public int $nextFreeElement = 0;
 
     public function __construct(
         Context $context, 
@@ -93,6 +100,9 @@ final class Variable {
         if ($type->type === Type::TYPE_OBJECT) {
             return self::TYPE_OBJECT;
         }
+        if ($type->type === Type::TYPE_ARRAY) {
+            return self::TYPE_HASHTABLE;
+        }
         return self::TYPE_VALUE;
     }
 
@@ -107,10 +117,22 @@ final class Variable {
         Operand $op
     ): Variable {
         $type = self::getTypeFromType($op->type);
+        $stringType = self::getStringType($type);
+        if ($type === self::TYPE_HASHTABLE) {
+            // see if it can be converted into a native array
+            if (!$context->analyzer->canEscape($op)) {
+                $size = $context->analyzer->computeStaticArraySize($op);
+                if (!is_null($size) && !$context->analyzer->hasDynamicArrayAppend($op, $size)) {
+                    $origType = self::getTypeFromType($op->type->subTypes[0]);
+                    $type = self::IS_NATIVE_ARRAY | $origType;
+                    $stringType = self::getStringType($origType) . '[' . $size . ']';
+                }
+            }
+        }
         $lval = \gcc_jit_function_new_local(
             $func,
             $context->location(),
-            $context->getTypeFromString(self::getStringType($type)),
+            $context->getTypeFromString($stringType),
             "lvalue_" . (++self::$lvalueCounter)
         );
         return new Variable(
@@ -169,6 +191,16 @@ final class Variable {
         );
     }
 
+    public static function fromConstantInt(Context $context, int $value): Variable {
+        return new Variable(
+            $context,
+            self::TYPE_NATIVE_LONG,
+            self::KIND_VALUE,
+            $context->constantFromInteger($value),
+            null
+        );
+    }
+
     public function castTo(int $type): self {
         switch ($type) {
             case self::TYPE_NATIVE_LONG:
@@ -204,6 +236,13 @@ final class Variable {
         }
         if ($this->type === self::TYPE_VALUE) {
             // TODO: free owned resources
+            return;
+        }
+        if ($this->type & self::IS_NATIVE_ARRAY) {
+            // free each
+            for ($i = 0; $i < $this->nextFreeElement; $i++) {
+                $this->dimFetch(self::fromConstantInt($this->context, $i))->free($block);
+            }
             return;
         }
         if ($this->type & self::IS_REFCOUNTED) {
@@ -245,9 +284,27 @@ final class Variable {
                 return new Variable(
                     $this->context,
                     self::TYPE_STRING,
-                    self::KIND_VARIABLE,
+                    self::KIND_VALUE,
                     $ptr,
                     null
+                );
+            default:
+                if (!$this->type & self::IS_NATIVE_ARRAY) {
+                    throw new \LogicException("Unsupported dim fetch on " . self::getStringType($this->type));
+                }
+                $offset = $dim->castTo(self::TYPE_NATIVE_LONG);
+                $ptr = \gcc_jit_context_new_array_access(
+                    $this->context->context,
+                    $this->context->location(),
+                    $this->rvalue,
+                    $offset->rvalue
+                );
+                return new Variable(
+                    $this->context,
+                    $this->type & (~self::IS_NATIVE_ARRAY),
+                    self::KIND_VARIABLE,
+                    $ptr->asRValue(),
+                    $ptr
                 );
         }
     }

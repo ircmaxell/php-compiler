@@ -13,6 +13,7 @@ use PHPCfg\Operand;
 use PHPCfg\Op;
 use PHPCfg\Block as CfgBlock;
 use PHPTypes\Type;
+use PHPCompiler\JIT\Analyzer;
 use PHPCompiler\JIT\Context;
 use PHPCompiler\JIT\Variable;
 
@@ -207,14 +208,35 @@ class JIT {
                 case OpCode::TYPE_ARRAY_DIM_FETCH:
                     $value = $this->context->getVariableFromOp($block->getOperand($op->arg2));
                     $dim = $this->context->getVariableFromOp($block->getOperand($op->arg3));
-                    if ($value->type === Variable::TYPE_STRING) {
-                        $this->context->helper->assignOperand(
-                            $gccBlock, 
-                            $block->getOperand($op->arg1),
-                            $value->dimFetch($dim)
+                    $this->context->helper->assignOperand(
+                        $gccBlock, 
+                        $block->getOperand($op->arg1),
+                        $value->dimFetch($dim)
+                    );
+                    break;
+                case OpCode::TYPE_INIT_ARRAY:
+                case OpCode::TYPE_ADD_ARRAY_ELEMENT:
+                    $result = $this->context->getVariableFromOp($block->getOperand($op->arg1));
+                    if ($result->type & Variable::IS_NATIVE_ARRAY) {
+                        if (is_null($op->arg3)) {
+                            $idx = $result->nextFreeElement;
+                        } else {
+                            // this is safe, since we only compile to native array if it's checked to be good
+                            $idx = $block->getOperand($op->arg3)->value;
+                        }
+                        $this->context->helper->assign(
+                            $gccBlock,
+                            \gcc_jit_context_new_array_access(
+                                $this->context->context,
+                                $this->context->location(),
+                                $result->rvalue,
+                                $this->context->constantFromInteger($idx, 'size_t')
+                            ),
+                            $this->context->getVariableFromOp($block->getOperand($op->arg2))->rvalue
                         );
+                        $result->nextFreeElement = max($result->nextFreeElement, $idx + 1);
                     } else {
-                        throw new \LogicException("Illegal dim fetch");
+                        throw new \LogicException('Hash tables not implemented yet');
                     }
                     break;
                 case OpCode::TYPE_CONCAT:
