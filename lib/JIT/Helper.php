@@ -411,6 +411,9 @@ class Helper {
             if ($value->type === Variable::TYPE_STRING) {
                 $this->context->refcount->delref($block, $result->rvalue);
                 $this->context->refcount->addref($block, $value->rvalue);
+            } elseif ($value->type & Variable::IS_NATIVE_ARRAY) {
+                // copy over the nextfreelement
+                $result->nextFreeElement = $value->nextFreeElement;
             }
             $this->assign(
                 $block,

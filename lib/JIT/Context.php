@@ -33,6 +33,7 @@ class Context {
     public Builtin\Output $output;
     public Builtin\Type $type;
     public Builtin\Refcount $refcount;
+    public Builtin\ErrorHandler $error;
     public Helper $helper;
     public int $loadType;
     private static int $stringConstantCounter = 0;
@@ -58,12 +59,14 @@ class Context {
         $this->location = new Location("Unknown", 1, 1);
         $this->analyzer = new Analyzer;
         
+
         $this->refcount = new Builtin\Refcount($this, $loadType);
         $this->memory = Builtin\MemoryManager::load($this, $loadType);
         $this->output = new Builtin\Output($this, $loadType);
         $this->type = new Builtin\Type($this, $loadType);
         $this->internal = new Builtin\Internal($this, $loadType);
         $this->vararg = new Builtin\VarArg($this, $loadType);
+        $this->error = new Builtin\ErrorHandler($this, $loadType);
 
         $this->defineBuiltins($loadType);
     }
@@ -143,11 +146,6 @@ class Context {
         );
 
         $this->initBlock = \gcc_jit_function_new_block($this->initFunc, 'initblock');
-        foreach ($this->builtins as $builtin) {
-            $this->location = new Location(get_class($builtin) . '::initialize', 1, 1, $this->location);
-            $builtin->initialize();
-            $this->location = $this->location->prev;
-        }
         $this->shutdownFunc = \gcc_jit_context_new_function(
             $this->context,
             null,
@@ -159,6 +157,12 @@ class Context {
             0
         );
         $this->shutdownBlock = \gcc_jit_function_new_block($this->shutdownFunc, 'shutdownblock');
+        foreach ($this->builtins as $builtin) {
+            $this->location = new Location(get_class($builtin) . '::initialize', 1, 1, $this->location);
+            $builtin->initialize();
+            $this->location = $this->location->prev;
+        }
+        
         
     }
 

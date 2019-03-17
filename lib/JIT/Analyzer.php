@@ -16,6 +16,23 @@ use PHPTypes\Type;
 
 class Analyzer {
 
+    public function needsBoundsCheck(Variable $var, Operand $dimOp): bool {
+        if ($dimOp instanceof Operand\Literal) {
+            return false;
+        }
+        if (count($dimOp->ops) !== 1) {
+            return true;
+        }
+        if ($dimOp->ops[0] instanceof Op\Expr\BinaryOp\Mod) {
+            // validate that the right side is <= var->nextFreeElement
+            if ($dimOp->ops[0]->right instanceof Operand\Literal && $dimOp->ops[0]->right->type->type === Type::TYPE_LONG) {
+                $result = $dimOp->ops[0]->right->value > $var->nextFreeElement;
+                return $result;
+            }
+        }
+        return true;
+    }
+
     public function canEscape(Operand $operand, ?SplObjectStorage $seen = null): bool {
         if (is_null($seen)) {
             $seen = new SplObjectStorage;
@@ -28,7 +45,7 @@ class Analyzer {
                 if ($this->canEscape($usage->var, $seen) || $this->canEscape($usage->result, $seen)) {
                     return true;
                 }
-            } elseif ($usage instanceof Op\Expr\ArrayDimFetch) {
+            } elseif ($usage instanceof Op\Expr\ArrayDimFetch || $usage instanceof Op\Phi) {
                 continue;
             } else {
                 throw new \LogicException("Not implemented escape operand " . get_class($usage));
@@ -64,6 +81,8 @@ class Analyzer {
                 } else {
                     return true;
                 }
+            } elseif ($usage instanceof Op\Phi) {
+                // unsure what to do here skip for now
             } else {
                 throw new \LogicException("Not implemented dynamic append operand " . get_class($usage));
             }

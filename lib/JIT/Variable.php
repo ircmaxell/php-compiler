@@ -46,7 +46,6 @@ final class Variable {
     const IS_REFCOUNTED   = 1 << 7;
 
     public int $type;
-    public ?int $subType = null;
 
     const KIND_VARIABLE = 1;
     const KIND_VALUE = 2;

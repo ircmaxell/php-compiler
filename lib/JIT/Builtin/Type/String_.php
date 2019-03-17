@@ -232,7 +232,7 @@ class String_ extends Type {
                 $this->context->location(),
                 \GCC_JIT_COMPARISON_EQ,
                 $ptr->asRValue(),
-                \gcc_jit_context_null($this->context->context, $this->context->getTypeFromString('__string__*'))
+                $this->nullPointer()
             ),
             $isnull,
             $notnull
@@ -241,6 +241,10 @@ class String_ extends Type {
 
         \gcc_jit_block_end_with_jump($isnull,  null,$notnull);
         \gcc_jit_block_end_with_return($notnull,  null, $local->asRValue());
+    }
+
+    public function nullPointer(): \gcc_jit_rvalue_ptr {
+        return \gcc_jit_context_null($this->context->context, $this->context->getTypeFromString('__string__*'));
     }
 
     private function implementSeparate(): void {

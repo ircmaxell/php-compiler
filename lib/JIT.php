@@ -187,7 +187,7 @@ class JIT {
             return $this->context->scope->blockStorage[$block];
         }
         self::$blockNumber++;
-        $gccBlock = \gcc_jit_function_new_block($func, 'block_' . self::$blockNumber);
+        $origGccBlock = $gccBlock = \gcc_jit_function_new_block($func, 'block_' . self::$blockNumber);
         $this->context->scope->blockStorage[$block] = $gccBlock;
         // Handle hoisted variables
         foreach ($block->orig->hoistedOperands as $operand) {
@@ -207,7 +207,20 @@ class JIT {
                     break;  
                 case OpCode::TYPE_ARRAY_DIM_FETCH:
                     $value = $this->context->getVariableFromOp($block->getOperand($op->arg2));
-                    $dim = $this->context->getVariableFromOp($block->getOperand($op->arg3));
+                    $dimOp = $block->getOperand($op->arg3);
+                    $dim = $this->context->getVariableFromOp($dimOp);
+                    if ($value->type & Variable::IS_NATIVE_ARRAY && $this->context->analyzer->needsBoundsCheck($value, $dimOp)) {
+                        // compile bounds check
+                        $this->context->helper->eval(
+                            $gccBlock,
+                            $this->context->helper->call(
+                                '__nativearray__boundscheck',
+                                $dim->rvalue,
+                                $this->context->constantFromInteger($value->nextFreeElement)
+                            )
+                        );
+                    }
+                    $gccBlock = $this->context->error->returnOnError($func, $gccBlock, $block);
                     $this->context->helper->assignOperand(
                         $gccBlock, 
                         $block->getOperand($op->arg1),
@@ -396,7 +409,7 @@ class JIT {
                         count($cases),
                         \gcc_jit_case_ptr_ptr::fromArray(...$cases)
                     );
-                    return $gccBlock;
+                    return $origGccBlock;
                 case OpCode::TYPE_JUMP:
                     $newBlock = $this->compileBlockInternal($func, $op->block1, ...$args);
                     $this->context->freeDeadVariables($func, $gccBlock, $block);
@@ -405,7 +418,7 @@ class JIT {
                         $this->context->location(),
                         $newBlock
                     );
-                    return $gccBlock;
+                    return $origGccBlock;
                 case OpCode::TYPE_JUMPIF:
                     $if = $this->compileBlockInternal($func, $op->block1, ...$args);
                     $else = $this->compileBlockInternal($func, $op->block2, ...$args);
@@ -421,7 +434,7 @@ class JIT {
                         $if,
                         $else
                     );
-                    return $gccBlock;
+                    return $origGccBlock;
                 case OpCode::TYPE_RETURN_VOID:
                     $this->context->freeDeadVariables($func, $gccBlock, $block);
                     goto void_return;
@@ -435,7 +448,7 @@ class JIT {
                         $this->context->location(),
                         $return->rvalue
                     );
-                    return $gccBlock;
+                    return $origGccBlock;
                 case OpCode::TYPE_FUNCDEF:
                     $nameOp = $block->getOperand($op->arg1);
                     assert($nameOp instanceof Operand\Literal);
@@ -504,7 +517,7 @@ class JIT {
         }
 void_return:
         \gcc_jit_block_end_with_void_return($gccBlock, null);
-        return $gccBlock;
+        return $origGccBlock;
     }
 
     private function compileClass(?Block $block, int $classId) {

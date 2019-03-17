@@ -22,11 +22,13 @@ class Type extends Builtin {
         $this->value = new Type\Value($this->context, $this->loadType);
         $this->hashtable = new Type\HashTable($this->context, $this->loadType);
         $this->maskedarray = new Type\MaskedArray($this->context, $this->loadType);
+        $this->nativearray = new Type\NativeArray($this->context, $this->loadType);
         $this->string->register();
         $this->object->register();
         $this->value->register();
         $this->hashtable->register();
         $this->maskedarray->register();
+        $this->nativearray->register();
     }
 
     protected function readField(string $name, \gcc_jit_rvalue_ptr $struct): \gcc_jit_rvalue_ptr {
