@@ -216,10 +216,6 @@ class String_ extends Type {
         \gcc_jit_block_end_with_return($notnull,  null, $local->asRValue());
     }
 
-    public function nullPointer(): \gcc_jit_rvalue_ptr {
-        return \gcc_jit_context_null($this->context->context, $this->context->getTypeFromString('__string__*'));
-    }
-
     private function implementSeparate(): void {
         $func = $this->context->lookupFunction('__string__separate');
         $virtual = $func->params[0]->asRValue();
@@ -252,58 +248,6 @@ class String_ extends Type {
     }
 
     public function initialize(): void {
-    }
-
-    public function readSize(\gcc_jit_rvalue_ptr $struct): \gcc_jit_rvalue_ptr {
-        return gcc_jit_rvalue_access_field(
-            $struct,
-            null,
-            $this->fields['size']
-        );
-    }
-
-    public function readValue(\gcc_jit_rvalue_ptr $struct): \gcc_jit_rvalue_ptr {
-        return $this->context->helper->cast(gcc_jit_rvalue_access_field(
-            $struct,
-            null,
-            $this->fields['value']
-        ), 'char*');
-    }
-
-    public function writeSize(\gcc_jit_rvalue_ptr $pointer): \gcc_jit_lvalue_ptr {
-        return gcc_jit_rvalue_dereference_field(
-            $pointer,
-            null,
-            $this->fields['size']
-        );
-    }
-
-
-    public function writeValue(\gcc_jit_rvalue_ptr $pointer): \gcc_jit_lvalue_ptr {
-        return gcc_jit_rvalue_dereference_field(
-            $pointer,
-            null,
-            $this->fields['value']
-        );
-    }
-
-    public function sizePtr(\gcc_jit_rvalue_ptr $ptr): \gcc_jit_lvalue_ptr {
-        return \gcc_jit_rvalue_dereference_field($ptr, null, $this->fields['size']);
-    }
-
-    public function valuePtr(\gcc_jit_rvalue_ptr $ptr): \gcc_jit_rvalue_ptr {
-        return $this->context->helper->cast(
-            \gcc_jit_lvalue_get_address(
-                \gcc_jit_context_new_array_access(
-                    $this->context->context,
-                    $this->context->location(),
-                    \gcc_jit_rvalue_dereference_field($ptr, null, $this->fields['value'])->asRValue(),
-                    $this->context->constantFromInteger(0, 'size_t')
-                ),
-                $this->context->location()
-            ),
-            'char*'
-        );
     }
 
     private static $constId = 0;
@@ -364,34 +308,10 @@ class String_ extends Type {
         throw new \LogicException("Unknown if it's a string due to type comparisons...");
     }
 
-    public function toSizeRValue(\gcc_jit_rvalue_ptr $value): \gcc_jit_rvalue_ptr {
-        $type = gcc_jit_rvalue_get_type($value);
-        if ($type->equals($this->pointer)) {
-            return $this->sizePtr($value)->asRValue();
-        } elseif ($type->equals($this->context->getTypeFromString('char*')) || $type->equals($this->context->getTypeFromString('const char*'))) {
-            return $this->context->helper->call(
-                'strlen',
-                $value
-            );
-        } else {
-            throw new \LogicException("Not implemented support for string type " . $this->context->getStringFromType($type));
-        }
-    }
-
-    public function toValueRValue(\gcc_jit_rvalue_ptr $value): \gcc_jit_rvalue_ptr {
-        $type = gcc_jit_rvalue_get_type($value);
-        if ($type->equals($this->pointer)) {
-            return $this->valuePtr($value);
-        } elseif ($type->equals($this->context->getTypeFromString('char*')) || $type->equals($this->context->getTypeFromString('const char*'))) {
-            return $value;
-        } else {
-            throw new \LogicException("Not implemented support for string type " . $this->context->getStringFromType($type));
-        }
-    }
-
     public function size(Variable $var): \gcc_jit_rvalue_ptr {
         switch ($var->type) {
             case Variable::TYPE_STRING:
+
                 // pointer call
                 return $this->sizePtr($var->rvalue)->asRValue();
             case Variable::TYPE_NATIVE_LONG:

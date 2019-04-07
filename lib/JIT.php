@@ -235,7 +235,6 @@ class JIT {
                 case OpCode::TYPE_PRINT:
                     $argOffset = $op->type === OpCode::TYPE_ECHO ? $op->arg1 : $op->arg2;
                     $arg = $this->context->getVariableFromOp($block->getOperand($argOffset));
-                    $charType = $this->context->context->int8Type()->pointerType(0);
                     $argValue = $arg->value;
                     switch ($arg->type) {                            
                         case Variable::TYPE_STRING:            
