@@ -1,5 +1,9 @@
 <?php
 
+# This file is generated, changes you make will be lost.
+# Make your changes in /home/ircmaxell/Workspace/PHP-Compiler/PHP-Compiler/lib/JIT/Builtin/Type/String_.pre instead.
+
+// First, expand statements
 /*
  * This file is part of PHP-Compiler, a PHP CFG Compiler for PHP code
  *
@@ -13,191 +17,160 @@ use PHPCompiler\JIT\Builtin\Type;
 use PHPCompiler\JIT\Builtin\Refcount;
 use PHPCompiler\JIT\Variable;
 
+use PHPLLVM;
+
 class String_ extends Type {
-    private \gcc_jit_struct_ptr $struct;
-    public \gcc_jit_type_ptr $pointer;
-    private \gcc_jit_lvalue_ptr $size;
-    private \gcc_jit_lvalue_ptr $strCharConsts;
-    protected array $fields;
+    private PHPLLVM\Type $struct;
+    public PHPLLVM\Type $pointer;
 
     public function register(): void {
-        $this->struct = \gcc_jit_context_new_opaque_struct(
-            $this->context->context,
-            null,
-            '__string__'
-        );
-        $this->context->registerType(
-            '__string__',
-            \gcc_jit_struct_as_type($this->struct)
-        );
-        $this->pointer = \gcc_jit_type_get_pointer($this->context->getTypeFromString('__string__'));
-        $this->context->registerType(
-            '__string__*',
-            $this->pointer
-        );
-        $this->context->registerFunction(
-            '__string__alloc',
-            $this->context->helper->createNativeFunction(
-                \GCC_JIT_FUNCTION_ALWAYS_INLINE,
-                '__string__alloc',
-                '__string__*',
-                false,
-                'size_t'
-            )
-        );
-        $this->context->registerFunction(
-            '__string__init',
-            $this->context->helper->createNativeFunction(
-                \GCC_JIT_FUNCTION_ALWAYS_INLINE,
-                '__string__init',
-                '__string__*',
-                false,
-                'const char*',
-                'size_t'
-            )
-        );
-        $this->context->registerFunction(
-            '__string__realloc',
-            $this->context->helper->createNativeFunction(
-                \GCC_JIT_FUNCTION_ALWAYS_INLINE,
-                '__string__realloc',
-                '__string__*',
-                false,
-                '__string__*',
-                'size_t'
-            )
-        );
-        $this->context->registerFunction(
-            '__string__separate',
-            $this->context->helper->createNativeFunction(
-                \GCC_JIT_FUNCTION_ALWAYS_INLINE,
-                '__string__separate',
-                'void',
-                false,
-                '__ref__virtual**'
-            )
-        );
-        // $this->context->registerFunction(
-        //     'strlen',
-        //     $this->context->helper->createFunction(
-        //         \GCC_JIT_FUNCTION_IMPORTED,
-        //         'strlen',
-        //         'size_t',
-        //         false,
-        //         'const char*'
-        //     )
-        // );
-        $this->context->registerFunction(
-            '__string__strlen',
-            $this->context->helper->createNativeFunction(
-                \GCC_JIT_FUNCTION_ALWAYS_INLINE,
-                '__string__strlen',
-                'long long',
-                false,
-                '__string__*'
-            )
-        );
+        
+
+        
+
+        $struct___cfcd208495d565ef66e7dff9f98764da = $this->context->context->namedStructType('__string__');
+            $struct___cfcd208495d565ef66e7dff9f98764da->setBody(
+                false ,  // packed
+                $this->context->getTypeFromString('__ref__')
+                , $this->context->getTypeFromString('int64')
+                , $this->context->getTypeFromString('char*')
+                
+            );
+            $this->context->registerType('__string__', $struct___cfcd208495d565ef66e7dff9f98764da);
+            $this->context->registerType('__string__' . '*', $struct___cfcd208495d565ef66e7dff9f98764da->pointerType(0));
+            $this->context->registerType('__string__' . '**', $struct___cfcd208495d565ef66e7dff9f98764da->pointerType(0)->pointerType(0));
+            $this->context->structFieldMap['__string__'] = [
+                'ref' => 0
+                , 'length' => 1
+                , 'value' => 2
+                
+            ];
+        
+    $fntype___cfcd208495d565ef66e7dff9f98764da = $this->context->context->functionType(
+                $this->context->getTypeFromString('int64'),
+                false , 
+                $this->context->getTypeFromString('__string__*')
+                
+            );
+            $fn___cfcd208495d565ef66e7dff9f98764da = $this->context->module->addFunction('__string__strlen', $fntype___cfcd208495d565ef66e7dff9f98764da);
+            $fn___cfcd208495d565ef66e7dff9f98764da->addAttributeAtIndex(PHPLLVM\Attribute::INDEX_FUNCTION, $this->context->attributes['alwaysinline']);
+            
+            
+            
+            $this->context->registerFunction('__string__strlen', $fn___cfcd208495d565ef66e7dff9f98764da);
+        
+
+        
+
+        
+    $fntype___cfcd208495d565ef66e7dff9f98764da = $this->context->context->functionType(
+                $this->context->getTypeFromString('__string__*'),
+                false , 
+                $this->context->getTypeFromString('int64')
+                
+            );
+            $fn___cfcd208495d565ef66e7dff9f98764da = $this->context->module->addFunction('__string__alloc', $fntype___cfcd208495d565ef66e7dff9f98764da);
+            $fn___cfcd208495d565ef66e7dff9f98764da->addAttributeAtIndex(PHPLLVM\Attribute::INDEX_FUNCTION, $this->context->attributes['alwaysinline']);
+            
+            
+            
+            $this->context->registerFunction('__string__alloc', $fn___cfcd208495d565ef66e7dff9f98764da);
+        
+
+        
+
+        
+    $fntype___cfcd208495d565ef66e7dff9f98764da = $this->context->context->functionType(
+                $this->context->getTypeFromString('__string__*'),
+                false , 
+                $this->context->getTypeFromString('int64')
+                , $this->context->getTypeFromString('char*')
+                
+            );
+            $fn___cfcd208495d565ef66e7dff9f98764da = $this->context->module->addFunction('__string__init', $fntype___cfcd208495d565ef66e7dff9f98764da);
+            $fn___cfcd208495d565ef66e7dff9f98764da->addAttributeAtIndex(PHPLLVM\Attribute::INDEX_FUNCTION, $this->context->attributes['alwaysinline']);
+            
+            
+            $fn___cfcd208495d565ef66e7dff9f98764da->addAttributeAtIndex(1 + 1, $this->context->attributes['readonly'], 0);
+                    $fn___cfcd208495d565ef66e7dff9f98764da->addAttributeAtIndex(1 + 1, $this->context->attributes['nocapture'], 0);
+                
+            
+            $this->context->registerFunction('__string__init', $fn___cfcd208495d565ef66e7dff9f98764da);
+        
+
+        
+
+        
+    
     }
 
     public function implement(): void {
-        $this->size = \gcc_jit_context_new_global(
-            $this->context->context,
-            null,
-            \GCC_JIT_GLOBAL_INTERNAL,
-            $this->context->getTypeFromString('size_t'),
-            '__string__size'
-        );
-        $this->fields = [
-            'refcount' => $this->context->refcount->asField('refcount'),
-            'size' => $this->context->helper->createField('size', 'size_t'),
-            'value' => $this->context->helper->createField('value', 'char[1]'),
-        ];
-        \gcc_jit_struct_set_fields(
-            $this->struct,
-            null,
-            count($this->fields),
-            \gcc_jit_field_ptr_ptr::fromArray(...array_values($this->fields))
-        );
-        $this->strCharConsts = \gcc_jit_context_new_global(
-            $this->context->context,
-            null,
-            \GCC_JIT_GLOBAL_INTERNAL,
-            \gcc_jit_context_new_array_type(
-                $this->context->context,
-                $this->context->location(),
-                $this->context->getTypeFromString('__string__'),
-                256
-            ),
-            '__string__single_char_consts'
-        );
 
         $this->implementAlloc();
         $this->implementInit();
-        $this->implementRealloc();
-        $this->implementSeparate();
+        // $this->implementRealloc();
+        // $this->implementSeparate();
         $this->implementStrlen();
     }
 
     private function implementStrlen(): void {
-        $strlen = $this->context->lookupFunction('__string__strlen');
-        $block = \gcc_jit_function_new_block($strlen->func, 'main');
-        \gcc_jit_block_end_with_return(
-            $block,
-            null,
-            $this->context->helper->cast(
-                $this->sizePtr($strlen->params[0]->asRValue())->asRValue(),
-                'long long'
-            )
-        );
+        $fn___c4ca4238a0b923820dcc509a6f75849b = $this->context->lookupFunction('__string__strlen');
+    $block___c4ca4238a0b923820dcc509a6f75849b = $fn___c4ca4238a0b923820dcc509a6f75849b->appendBasicBlock('main');
+    $this->context->builder->positionAtEnd($block___c4ca4238a0b923820dcc509a6f75849b);
+    $string = $fn___c4ca4238a0b923820dcc509a6f75849b->getParam(0);
+    
+    $offset___c81e728d9d4c2f636f067f89cc14862c = $this->context->structFieldMap[$string->typeOf()->getElementType()->getName()]['length'];
+            $size = $this->context->builder->load(
+                $this->context->builder->structGep($string, $offset___c81e728d9d4c2f636f067f89cc14862c)
+            );
+    $this->context->builder->returnValue($size);
+    
     }
 
     private function implementAlloc(): void {
-        $alloc = $this->context->lookupFunction('__string__alloc');
-        $block = \gcc_jit_function_new_block($alloc->func, 'main');
-        $allocSize = $this->context->helper->binaryOp(
-            GCC_JIT_BINARY_OP_PLUS,
-            'size_t',
-            $this->size->asRValue(),
-            $alloc->params[0]->asRValue()
-        );
-        $local = \gcc_jit_function_new_local($alloc->func, null, $this->pointer, 'result');
-        $this->context->helper->assign(
-            $block, 
-            $local,
-            $this->context->memory->malloc($allocSize, $this->pointer) 
-        );
-        $this->context->helper->assign(
-            $block,
-            $this->writeSize($local->asRValue()),
-            $alloc->params[0]->asRValue()
-        );
-        $this->context->refcount->init(
-            $block, 
-            $local->asRValue(),
-            Refcount::TYPE_INFO_REFCOUNTED | Refcount::TYPE_INFO_TYPE_STRING
-        );
-        \gcc_jit_block_end_with_return($block,  null, $local->asRValue());
+        $fn___eccbc87e4b5ce2fe28308fd9f2a7baf3 = $this->context->lookupFunction('__string__alloc');
+    $block___eccbc87e4b5ce2fe28308fd9f2a7baf3 = $fn___eccbc87e4b5ce2fe28308fd9f2a7baf3->appendBasicBlock('main');
+    $this->context->builder->positionAtEnd($block___eccbc87e4b5ce2fe28308fd9f2a7baf3);
+    $size = $fn___eccbc87e4b5ce2fe28308fd9f2a7baf3->getParam(0);
+    
+    $type___a87ff679a2f3e71d9181a67b7542122c = $this->context->getTypeFromString('__string__');
+            $struct = $this->context->builder->pointerCast($this->context->builder->malloc($type___a87ff679a2f3e71d9181a67b7542122c), $type___a87ff679a2f3e71d9181a67b7542122c->pointerType(0));
+    $offset___a87ff679a2f3e71d9181a67b7542122c = $this->context->structFieldMap[$struct->typeOf()->getElementType()->getName()]['length'];
+            $this->context->builder->store(
+                $size,
+                $this->context->builder->structGep($struct, $offset___a87ff679a2f3e71d9181a67b7542122c)
+            );
+    $ref = $this->context->builder->pointerCast($struct, $this->context->getTypeFromString('__ref__virtual*'));
+    $typeinfo = $this->context->getTypeFromString('int32')->constInt(Refcount::TYPE_INFO_TYPE_STRING|Refcount::TYPE_INFO_REFCOUNTED, false);
+    $this->context->builder->call(
+                $this->context->lookupFunction('__ref__init') , 
+                $typeinfo
+                , $ref
+                
+            );
+    $this->context->builder->returnValue($struct);
+    
     }
 
     private function implementInit(): void {
-        $init = $this->context->lookupFunction('__string__init');
-        $block = \gcc_jit_function_new_block($init->func, 'main');
-        $local = \gcc_jit_function_new_local($init->func, null, $this->pointer, 'result');
-        $this->context->helper->assign(
-            $block,
-            $local,
-            $this->context->helper->call(
-                '__string__alloc',
-                $init->params[1]->asRValue()
-            )
-        );
-        $this->context->memory->memcpy(
-            $block,
-            $this->valuePtr($local->asRValue()),
-            $init->params[0]->asRValue(),
-            $init->params[1]->asRValue()
-        );
-        \gcc_jit_block_end_with_return($block,  null, $local->asRValue());
+        $fn___e4da3b7fbbce2345d7772b0674a318d5 = $this->context->lookupFunction('__string__init');
+    $block___e4da3b7fbbce2345d7772b0674a318d5 = $fn___e4da3b7fbbce2345d7772b0674a318d5->appendBasicBlock('main');
+    $this->context->builder->positionAtEnd($block___e4da3b7fbbce2345d7772b0674a318d5);
+    $size = $fn___e4da3b7fbbce2345d7772b0674a318d5->getParam(0);
+    $value = $fn___e4da3b7fbbce2345d7772b0674a318d5->getParam(1);
+    
+    $result = $this->context->builder->call(
+                $this->context->lookupFunction('__string__alloc') , 
+                $size
+                
+            );
+    $offset___1679091c5a880faf6fb5e6087eb1b2dc = $this->context->structFieldMap[$result->typeOf()->getElementType()->getName()]['value'];
+            $char = $this->context->builder->load(
+                $this->context->builder->structGep($result, $offset___1679091c5a880faf6fb5e6087eb1b2dc)
+            );
+    
+    $this->context->builder->returnValue($result);
+    
     }
 
     private function implementRealloc(): void {
@@ -279,43 +252,6 @@ class String_ extends Type {
     }
 
     public function initialize(): void {
-        \gcc_jit_block_add_assignment(
-            $this->context->initBlock,
-            null,
-            $this->size,
-            $this->sizeof($this->context->getTypeFromString('__string__'))
-        );
-        for ($i = 0; $i < 256; $i++) {
-            $ptr = \gcc_jit_lvalue_get_address(
-                gcc_jit_context_new_array_access(
-                    $this->context->context,
-                    $this->context->location(),
-                    $this->strCharConsts->asRValue(),
-                    $this->context->constantFromInteger($i, 'size_t')
-                ),
-                $this->context->location()
-            );
-            $this->context->refcount->init(
-                $this->context->initBlock, 
-                $ptr,
-                Refcount::TYPE_INFO_NONREFCOUNTED | Refcount::TYPE_INFO_TYPE_STRING
-            );
-            $this->context->helper->assign(
-                $this->context->initBlock,
-                $this->writeSize($ptr),
-                $this->context->constantFromInteger(1, 'size_t')
-            );
-            $this->context->helper->assign(
-                $this->context->initBlock,
-                \gcc_jit_context_new_array_access(
-                    $this->context->context,
-                    $this->context->location(),
-                    $this->writeValue($ptr)->asRValue(),
-                    $this->context->constantFromInteger(0, 'size_t')
-                ),
-                $this->context->constantFromInteger($i, 'char')
-            );
-        }
     }
 
     public function readSize(\gcc_jit_rvalue_ptr $struct): \gcc_jit_rvalue_ptr {
@@ -392,24 +328,19 @@ class String_ extends Type {
     }
 
     public function init(
-        \gcc_jit_block_ptr $block,
-        \gcc_jit_lvalue_ptr $dest,
-        \gcc_jit_rvalue_ptr $value,
-        \gcc_jit_rvalue_ptr $length,
+        PHPLLVM\Value $dest,
+        PHPLLVM\Value $value,
+        PHPLLVM\Value $length,
         bool $isConstant = false
     ): void {
-        $this->context->helper->assign(
-            $block,
-            $dest,
-            $this->context->helper->call(
-                '__string__init',
-                $value,
-                $length
-            )
-        );
+        $this->context->builder->store($dest, $this->context->builder->call(
+            $this->context->lookupFunction('__string__init'),
+            $value,
+            $length
+        ));
         if ($isConstant) {
             // disable refcount
-            $this->context->refcount->disableRefcount($block, $dest->asRValue());
+            $this->context->refcount->disableRefcount($dest);
         }
     }
 
@@ -429,8 +360,8 @@ class String_ extends Type {
         );
     }
 
-    public function isString(\gcc_jit_rvalue_ptr $value): bool {
-        return gcc_jit_rvalue_get_type($value)->equals($this->pointer);
+    public function isString(PHPLLVM\Value $value): bool {
+        throw new \LogicException("Unknown if it's a string due to type comparisons...");
     }
 
     public function toSizeRValue(\gcc_jit_rvalue_ptr $value): \gcc_jit_rvalue_ptr {

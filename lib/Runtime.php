@@ -90,7 +90,9 @@ class Runtime {
 
     public function loadJit(): JIT {
         if (is_null($this->jit)) {
-            $this->jit = new JIT($this->loadJitContext());
+            $this->jit = new JIT(
+                $this->loadJitContext()
+            );
             foreach ($this->modules as $module) {
                 foreach ($module->getFunctions() as $func) {
                     $this->jit->compileFunc($func);

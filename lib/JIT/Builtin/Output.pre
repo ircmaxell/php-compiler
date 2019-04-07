@@ -10,20 +10,15 @@
 namespace PHPCompiler\JIT\Builtin;
 
 use PHPCompiler\JIT\Builtin;
-use PHPCompiler\Block;
-use PHPCfg\Op;
 
-class ErrorHandler extends Builtin {
-    const E_NORMAL = 0;
-    const E_ERROR = 1;
-    const E_RECOVERABLE_ERROR = 2;
+class Output extends Builtin {
 
     public function register(): void {
-
-    }
-
-    public function initialize(): void {
-
+        declare {
+            function printf(const char*, ...): int32;
+            function sprintf(char*, const char*, ...): int32;
+            function snprintf(char*, size_t, const char*, ...): int32;
+        }
     }
 
 }

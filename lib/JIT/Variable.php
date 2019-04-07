@@ -14,6 +14,8 @@ use PHPCfg\Operand;
 use PHPTypes\Type;
 use PHPCompiler\VM\Variable as VMVariable;
 
+use PHPLLVM;
+
 final class Variable {
     const TYPE_NATIVE_LONG = 1;
     const TYPE_NATIVE_BOOL = 2;
@@ -51,8 +53,7 @@ final class Variable {
     const KIND_VALUE = 2;
     public int $kind;
 
-    public \gcc_jit_rvalue_ptr $rvalue;
-    public ?\gcc_jit_lvalue_ptr $lvalue = null;
+    public PHPLLVM\Value $value;
     private Context $context;
 
     private static int $lvalueCounter = 0;
@@ -62,14 +63,12 @@ final class Variable {
         Context $context, 
         int $type, 
         int $kind, 
-        \gcc_jit_rvalue_ptr $rvalue, 
-        ?\gcc_jit_lvalue_ptr $lvalue
+        PHPLLVM\Value $value
     ) {
         $this->context = $context;
         $this->type = $type;
         $this->kind = $kind;
-        $this->rvalue = $rvalue;
-        $this->lvalue = $lvalue;
+        $this->value = $value;
     }
 
     public static function fromVMVariable(int $type): int {
@@ -110,8 +109,8 @@ final class Variable {
      */
     public static function fromOp(
         Context $context,
-        \gcc_jit_function_ptr $func,
-        \gcc_jit_block_ptr $gccBlock,
+        PHPLLVM\Value\Function_ $func,
+        PHPLLVM\BasicBlock $basicBlock,
         Block $block,
         Operand $op
     ): Variable {
@@ -128,38 +127,28 @@ final class Variable {
                 }
             }
         }
-        $lval = \gcc_jit_function_new_local(
-            $func,
-            $context->location(),
-            $context->getTypeFromString($stringType),
-            "lvalue_" . (++self::$lvalueCounter)
-        );
         return new Variable(
             $context,
             $type,
             self::KIND_VARIABLE,
-            \gcc_jit_lvalue_as_rvalue($lval),
-            $lval
+            $context->builder->alloca($context->getTypeFromString($stringType))
         );
     }
 
     /**
      * Returns a readable variable (rvalue)
      */
-    public static function fromRValueOp(
+    public static function fromValueOp(
         Context $context,
-        \gcc_jit_rvalue_ptr $rvalue,
+        PHPLLVM\Value $value,
         Operand $op
     ): Variable {
         $type = self::getTypeFromType($op->type);
-        $gccType = $context->getTypeFromString(self::NATIVE_TYPE_MAP[$type]);
-        assert(\gcc_jit_rvalue_get_type($rvalue)->equals($gccType));
         return new Variable(
             $context,
             $type,
             self::KIND_VALUE,
-            $rvalue,
-            null
+            $value
         );
     }
 
@@ -167,16 +156,16 @@ final class Variable {
         $type = self::getTypeFromType($op->type);
         switch ($type) {
             case self::TYPE_NATIVE_LONG:
-                $rvalue = $context->constantFromInteger($op->value, self::getStringType($type));
+                $value = $context->constantFromInteger($op->value, self::getStringType($type));
                 break;
             case self::TYPE_STRING:
-                $rvalue = $context->constantStringFromString($op->value);
+                $value = $context->constantStringFromString($op->value);
                 break;
             case self::TYPE_NATIVE_DOUBLE:
-                $rvalue = $context->constantFromFloat($op->value, self::getStringType($type));
+                $value = $context->constantFromFloat($op->value, self::getStringType($type));
                 break;
             case self::TYPE_NATIVE_BOOL:
-                $rvalue = $context->constantFromInteger($op->value ? 1 : 0, self::getStringType($type));
+                $value = $context->constantFromBool($op->value);
                 break;
             default:
                 throw new \LogicException("Literal type " . self::getStringType($type) . " not yet supported");
@@ -185,8 +174,7 @@ final class Variable {
             $context,
             $type,
             self::KIND_VALUE,
-            $rvalue,
-            null
+            $value
         );
     }
 
@@ -195,35 +183,83 @@ final class Variable {
             $context,
             self::TYPE_NATIVE_LONG,
             self::KIND_VALUE,
-            $context->constantFromInteger($value),
-            null
+            $context->constantFromInteger($value)
         );
     }
 
     public function castTo(int $type): self {
         switch ($type) {
             case self::TYPE_NATIVE_LONG:
+                switch ($this->type) {
+                    case self::TYPE_NATIVE_LONG:
+                        return $this;
+                    case self::TYPE_NATIVE_DOUBLE:
+                        return new self(
+                            $this->context, 
+                            $type,
+                            self::KIND_VALUE,
+                            $this->context->builder->siToFp($this->value)
+                        );
+                    case self::TYPE_NATIVE_BOOL:
+                        return new self(
+                            $this->context, 
+                            $type,
+                            self::KIND_VALUE,
+                            $this->context->builder->trunc($this->value, $this->context->getTypeFromString('bool'))
+                        );
+                }
+                break;
             case self::TYPE_NATIVE_BOOL:
+                switch ($this->type) {
+                    case self::TYPE_NATIVE_BOOL:
+                        return $this;
+                    case self::TYPE_NATIVE_DOUBLE:
+                        return new self(
+                            $this->context, 
+                            $type,
+                            self::KIND_VALUE,
+                            $this->context->builder->siToFp($this->value)
+                        );
+                    case self::TYPE_NATIVE_LONG:
+                        return new self(
+                            $this->context, 
+                            $type,
+                            self::KIND_VALUE,
+                            $this->context->builder->zEdt($this->value, $this->context->getTypeFromString('long long'))
+                        );
+                }
+                break;
             case self::TYPE_NATIVE_DOUBLE:
-                return new self(
-                    $this->context,
-                    $type,
-                    self::KIND_VALUE,
-                    $this->context->helper->cast($this->rvalue, self::getStringType($type)),
-                    null
-                );
-            default:
-                throw new \LogicException('Unhandlable cast operation to type: ' . $type);
+                switch ($this->type) {
+                    case self::TYPE_NATIVE_DOUBLE:
+                        return $this;
+                    case self::TYPE_NATIVE_LONG:
+                        return new self(
+                            $this->context, 
+                            $type,
+                            self::KIND_VALUE,
+                            $this->context->builder->fpToSi($this->value, $this->context->getTypeFromString('long long'))
+                        );
+                    case self::TYPE_NATIVE_BOOL:
+                        return new self(
+                            $this->context, 
+                            $type,
+                            self::KIND_VALUE,
+                            $this->context->builder->fpToSi($this->value, $this->context->getTypeFromString('bool'))
+                        );
+                }
+                break;
         }
+        throw new \LogicException('Unhandlable cast operation to type: ' . $type);
     }
 
-    public function addref(\gcc_jit_block_ptr $block): void {
+    public function addref(): void {
         if ($this->type & self::IS_REFCOUNTED) {
-            $this->context->refcount->addref($block, $this->rvalue);
+            $this->context->refcount->addref($this->value);
         }
     }
 
-    public function free(\gcc_jit_block_ptr $block): void {
+    public function free(): void {
         if ($this->kind === self::KIND_VALUE) {
             return;
         }
@@ -240,31 +276,26 @@ final class Variable {
         if ($this->type & self::IS_NATIVE_ARRAY) {
             // free each
             for ($i = 0; $i < $this->nextFreeElement; $i++) {
-                $this->dimFetch(self::fromConstantInt($this->context, $i))->free($block);
+                $this->dimFetch(self::fromConstantInt($this->context, $i))->free();
             }
             return;
         }
         if ($this->type & self::IS_REFCOUNTED) {
-            $this->context->refcount->delref($block, $this->rvalue);
+            $this->context->refcount->delref($this->value);
             return;
         }
         throw new \LogicException('Unknown free type: ' . $this->type);
     }
 
-    public function initialize(\gcc_jit_block_ptr $block): void {
+    public function initialize(): void {
         if ($this->kind === self::KIND_VALUE) {
             return;
         }
+        $type = $this->context->getTypeFromString(self::getStringType($this->type));
         switch ($this->type) {
             case self::TYPE_STRING:
                 // assign to null
-                \gcc_jit_block_add_assignment(
-                    $block,
-                    $this->context->location(),
-                    $this->lvalue,
-                    \gcc_jit_context_null($this->context->context, $this->context->getTypeFromString(self::getStringType($this->type)))
-                );
-                //$this->context->type->string->allocate($block, $this->lvalue, $this->context->constantFromInteger(0, 'size_t'));
+                $this->context->builder->store($type->constNull(), $this->value);
                 break;
         }
     }
@@ -279,31 +310,24 @@ final class Variable {
     public function dimFetch(self $dim): Variable {
         switch ($this->type) {
             case self::TYPE_STRING:
-                $ptr = $this->context->type->string->dimFetch($this->rvalue, $dim->rvalue);
+                $ptr = $this->context->type->string->dimFetch($this->value, $dim->value);
                 return new Variable(
                     $this->context,
                     self::TYPE_STRING,
                     self::KIND_VALUE,
                     $ptr,
-                    null
                 );
             default:
                 if (!$this->type & self::IS_NATIVE_ARRAY) {
                     throw new \LogicException("Unsupported dim fetch on " . self::getStringType($this->type));
                 }
                 $offset = $dim->castTo(self::TYPE_NATIVE_LONG);
-                $ptr = \gcc_jit_context_new_array_access(
-                    $this->context->context,
-                    $this->context->location(),
-                    $this->rvalue,
-                    $offset->rvalue
-                );
+                $value = $this->context->builder->inBoundsGep($this->value, $dim->value);
                 return new Variable(
                     $this->context,
                     $this->type & (~self::IS_NATIVE_ARRAY),
                     self::KIND_VARIABLE,
-                    $ptr->asRValue(),
-                    $ptr
+                    $value
                 );
         }
     }

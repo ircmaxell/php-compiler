@@ -16,13 +16,24 @@ use PHPCompiler\Block;
 use PHPCompiler\Handler\Builtins;
 use PHPTypes\Type;
 
+use PHPLLVM;
+
 class Context {
 
-    public \gcc_jit_context_ptr $context;
-    public \gcc_jit_block_ptr $initBlock;
-    public \gcc_jit_block_ptr $shutdownBlock;
+    public PHPLLVM\LLVM $llvm;
+    public PHPLLVM\Context $context;
+    public PHPLLVM\Module $module;
+    public PHPLLVM\BasicBlock $initBlock;
+    public PHPLLVM\BasicBlock $shutdownBlock;
+    public PHPLLVM\Builder $builder;
+
+    public ?PHPLLVM\Value\Function_ $main = null;
+    public ?PHPLLVM\Value\Function_ $initFunc = null;
+    public ?PHPLLVM\Value\Function_ $shutdownFunc = null;
+
     public array $functionScope = [];
     private array $typeMap = [];
+    public array $structFieldMap = [];
     private array $intConstant = [];
     private array $stringConstant = [];
     private array $builtins;
@@ -34,34 +45,40 @@ class Context {
     public Builtin\Type $type;
     public Builtin\Refcount $refcount;
     public Builtin\ErrorHandler $error;
-    public Helper $helper;
     public int $loadType;
     private static int $stringConstantCounter = 0;
     private ?string $debugFile = null;
 
     public Scope $scope;
-    private ?\gcc_jit_function_ptr $main = null;
-    private ?\gcc_jit_function_ptr $initFunc = null;
-    private ?\gcc_jit_function_ptr $shutdownFunc = null;
-
     private array $exports = [];
     public Runtime $runtime;
 
     public int $mode;
     public Analyzer $analyzer;
 
+    public array $attributes;
+
     public function __construct(Runtime $runtime, int $loadType) {
         $this->runtime = $runtime;
         $this->scope = new Scope;
         $this->loadType = $loadType;
-        $this->context = \gcc_jit_context_acquire();
-        $this->helper = new Helper($this);
-        $this->location = new Location("Unknown", 1, 1);
+        $this->llvm = PHPLLVM\Chooser::choose();
+        $this->llvm->initializeNative();
+        $this->context = $this->llvm->contextCreate();
+        $this->module = $this->context->moduleCreateWithName('main');
+        $this->builder = $this->context->builderCreate();
+
+        $this->attributes = [
+            'alwaysinline' => $this->context->createEnumAttribute($this->context->getEnumAttributeKindForName('alwaysinline'), 0),
+            'nocapture' => $this->context->createEnumAttribute($this->context->getEnumAttributeKindForName('nocapture'), 0),
+            'readnone' => $this->context->createEnumAttribute($this->context->getEnumAttributeKindForName('readnone'), 0),
+            'readonly' => $this->context->createEnumAttribute($this->context->getEnumAttributeKindForName('readonly'), 0),
+            'writeonly' => $this->context->createEnumAttribute($this->context->getEnumAttributeKindForName('writeonly'), 0),
+        ];
+
         $this->analyzer = new Analyzer;
         
-
         $this->refcount = new Builtin\Refcount($this, $loadType);
-        $this->memory = Builtin\MemoryManager::load($this, $loadType);
         $this->output = new Builtin\Output($this, $loadType);
         $this->type = new Builtin\Type($this, $loadType);
         $this->internal = new Builtin\Internal($this, $loadType);
@@ -71,11 +88,7 @@ class Context {
         $this->defineBuiltins($loadType);
     }
 
-    public function __destruct() {
-        \gcc_jit_context_release($this->context);
-    }
-
-    public function setMain(\gcc_jit_function_ptr $func): void {
+    public function setMain(PHPLLVM\Value\Function_ $func): void {
         $this->main = $func;
     }
 
@@ -93,131 +106,57 @@ class Context {
         $this->scope = array_pop($this->scopeStack);
     }
 
-    public function location(): \gcc_jit_location_ptr {
-        if (is_null($this->location)) {
-            return gcc_jit_context_new_location (
-                $this->context,
-                'Unknown',
-                1,
-                1
-            );
-        }
-        return gcc_jit_context_new_location (
-            $this->context,
-            $this->location->filename,
-            $this->location->line,
-            $this->location->column
-        );
-    }
-
     public function registerBuiltin(Builtin $builtin): void {
         $this->builtins[] = $builtin;
     }
 
     private function defineBuiltins(int $loadType): void {
         foreach ($this->builtins as $builtin) {
-            $this->location = new Location(get_class($builtin) . '::register', 1, 1, $this->location);
             // this is a separate loop, since implementation may
             // depend on global variables set during init()
             // so this way, cross-builtin dependencies are honored
             $builtin->register();
-            $this->location = $this->location->prev;
         }
         if ($loadType === Builtin::LOAD_TYPE_IMPORT) {
             return;
         }
         foreach ($this->builtins as $builtin) {
-            $this->location = new Location(get_class($builtin) . '::implement', 1, 1, $this->location);
             // this is a separate loop, since initialize may
             // depend on functions defined during implement()
             // so this way, cross-builtin dependencies are honored
             $builtin->implement();
-            $this->location = $this->location->prev;
         }
-        $this->initFunc = \gcc_jit_context_new_function(
-            $this->context,
-            null,
-            \GCC_JIT_FUNCTION_EXPORTED,
-            $this->getTypeFromString('void'),
-            '__init__',
-            0,
-            null,
-            0
+        $signature = $this->context->functionType(
+            $this->context->voidType(),
+            false
         );
+        $this->initFunc = $this->module->addFunction('__init__', $signature);
+        $this->initBlock = $this->initFunc->appendBasicBlock('main');
 
-        $this->initBlock = \gcc_jit_function_new_block($this->initFunc, 'initblock');
-        $this->shutdownFunc = \gcc_jit_context_new_function(
-            $this->context,
-            null,
-            \GCC_JIT_FUNCTION_EXPORTED,
-            $this->getTypeFromString('void'),
-            '__shutdown__',
-            0,
-            null,
-            0
-        );
-        $this->shutdownBlock = \gcc_jit_function_new_block($this->shutdownFunc, 'shutdownblock');
+        $this->shutdownFunc = $this->module->addFunction('__shutdown__', $signature);
+        $this->shutdownBlock = $this->shutdownFunc->appendBasicBlock('main');
+
         foreach ($this->builtins as $builtin) {
-            $this->location = new Location(get_class($builtin) . '::initialize', 1, 1, $this->location);
             $builtin->initialize();
-            $this->location = $this->location->prev;
         }
-        
-        
     }
 
     public function compileToFile(string $file) {
         // add main function
         if (!is_null($this->main)) {
-            $main = \gcc_jit_context_new_function(
-                $this->context,
-                null,
-                \GCC_JIT_FUNCTION_EXPORTED,
-                $this->getTypeFromString('void'),
-                'main',
-                0,
-                null,
-                0
-            );
-            $block = \gcc_jit_function_new_block($main, 'main');
-            $this->helper->eval(
-                $block,
-                \gcc_jit_context_new_call(
-                    $this->context,
-                    $this->location(),
-                    $this->initFunc,
-                    0,
-                    null
-                )
-            );
-            $this->helper->eval(
-                $block,
-                \gcc_jit_context_new_call(
-                    $this->context,
-                    $this->location(),
-                    $this->main,
-                    0,
-                    null
-                )
-            );
-            $this->helper->eval(
-                $block,
-                \gcc_jit_context_new_call(
-                    $this->context,
-                    $this->location(),
-                    $this->shutdownFunc,
-                    0,
-                    null
-                )
-            );
-            \gcc_jit_block_end_with_void_return($block, null);
+            $signature = $this->context->functionType($this->context->voidType(), false);
+            $main = $this->module->addFunction('main', $signature);
+            $block = $main->appendBasicBlock('main');
+            $this->builder->positionAtEnd($block);
+            $this->builder->call($this->initFunc);
+            $this->builder->call($this->main);
+            $this->builder->call($this->shutdownFunc);
+            $this->builder->returnVoid();
         }
         $this->compileCommon();
-        \gcc_jit_context_compile_to_file(
-            $this->context,
-            \GCC_JIT_OUTPUT_KIND_EXECUTABLE,
-            $file
-        );
+        $engine = $this->module->createExecutionEngine();
+        $machine = $engine->getTargetMachine();
+        $machine->emitToFile($this->module, $file, $machine::CODEGEN_FILE_TYPE_OBJECT);
     }
 
     public function compileInPlace() {
@@ -225,7 +164,7 @@ class Context {
             $this->compileCommon();
 
             $this->result = new Result(
-                \gcc_jit_context_compile($this->context),
+                $this->module->createJITCompiler(3),
                 $this->loadType
             );
             foreach ($this->exports as $export) {
@@ -236,24 +175,19 @@ class Context {
 
     private function compileCommon() {
         foreach ($this->builtins as $builtin) {
-            $this->location = new Location(get_class($builtin) . '::shutdown', 1, 1, $this->location);
             $builtin->shutdown();
-            $this->location = $this->location->prev;
         }
-        \gcc_jit_block_end_with_void_return($this->initBlock, $this->location());
-        \gcc_jit_block_end_with_void_return($this->shutdownBlock, $this->location());
+        $this->builder->positionAtEnd($this->initBlock);
+        $this->builder->returnVoid();
+        $this->builder->positionAtEnd($this->shutdownBlock);
+        $this->builder->returnVoid();
+
         if (!is_null($this->debugFile)) {
-            gcc_jit_context_dump_reproducer_to_file(
-                $this->context,
-                $this->debugFile . '.reproduce.c'
-            );
-            \gcc_jit_context_dump_to_file(
-                $this->context,
-                $this->debugFile . '.debug.c',
-                1
-            );
+            $this->module->printToFile($this->debugFile . '.bc');
         }
 
+        $this->module->verify($this->module::VERIFY_ACTION_THROW, $message);
+        
     }
 
     public function setDebugFile(string $file): void {
@@ -262,65 +196,40 @@ class Context {
     }
 
     public function setDebug(bool $value): void {
-        \gcc_jit_context_set_bool_option(
-            $this->context,
-            \GCC_JIT_BOOL_OPTION_DEBUGINFO,
-            $value ? 1 : 0
-        );
-        if ($value) {
-            \gcc_jit_context_set_bool_option(
-                $this->context,
-                \GCC_JIT_BOOL_OPTION_DUMP_INITIAL_GIMPLE,
-                1
-            );
-        }
+        // Todo
     }
 
-    public function setOption(int $option, $value) {
-        if (is_int($value)) {
-            \gcc_jit_context_set_int_option(
-                $this->context,
-                $option,
-                $value
-            );
-        } else {
-            throw new \LogicException("Unsupported option type " . gettype($value));
-        }
-    }
-
-    public function lookupFunction(string $name): Func {
+    public function lookupFunction(string $name): PHPLLVM\Value\Function_ {
         if (isset($this->functionScope[$name])) {
             return $this->functionScope[$name];
         }
         throw new \LogicException('Unable to lookup non-existing function ' . $name);
     }
 
-    public function registerFunction(string $name, Func $func): void {
+    public function registerFunction(string $name, PHPLLVM\Value\Function_ $func): void {
         $this->functionScope[$name] = $func;
     }
 
-    public function registerType(string $name, \gcc_jit_type_ptr $type): void {
+    public function registerType(string $name, PHPLLVM\Type $type): void {
         $this->typeMap[$name] = $type;
     }
 
-    public function castToBool(\gcc_jit_rvalue_ptr $value): \gcc_jit_rvalue_ptr {
-        $type = \gcc_jit_rvalue_get_type($value);
+    public function castToBool(PHPLLVM\Value $value): PHPLLVM\Value {
+        $type = $value->typeOf();
         switch ($this->getStringFromType($type)) {
             case 'bool':
+            case 'int1':
                 return $value;
+            case 'unsigned int':
             case 'long long':
-                return \gcc_jit_context_new_comparison(
-                    $this->context,
-                    $this->location(),
-                    \GCC_JIT_COMPARISON_NE,
-                    $value,
-                    $this->constantFromInteger(0, 'long long')
-                );
+            case 'int32':
+            case 'int64':
+                return $this->builder->icmp($this->builder::INT_NE, $value, $type->constInt(0, false));
         }
+        throw new \LogicException("Unknown bool cast from type: " . $this->getStringFromType($type));
     }
 
-    public function getTypeFromType(Type $type): \gcc_jit_type_ptr {
-
+    public function getTypeFromType(Type $type): PHPLLVM\Type {
         static $map = [
             Type::TYPE_LONG => 'long long',
             Type::TYPE_STRING => '__string__*',
@@ -332,57 +241,61 @@ class Context {
         throw new \LogicException("Unsupported Type::TYPE: " . $type->toString());
     }
 
-    public function getStringFromType(\gcc_jit_type_ptr $type): string {
+    public function getStringFromType(PHPLLVM\Type $type): string {
         foreach ($this->typeMap as $name => $ptr) {
-            if ($type->equals($ptr)) {
+            if ($type->toString() === $ptr->toString()) {
                 return $name;
             }
+        }
+        // else, try to figure it out:
+        switch ($type->getKind()) {
+            case PHPLLVM\Type::KIND_DOUBLE:
+                return 'double';
+            case PHPLLVM\Type::KIND_INTEGER:
+                return 'int' . $this->llvm->lib->LLVMGetIntTypeWidth($type->type);
         }
         return 'unknown';
     }
 
-    public function getTypeFromString(string $type): \gcc_jit_type_ptr {
+    public function getTypeFromString(string $type): PHPLLVM\Type {
         if (!isset($this->typeMap[$type])) {
             $this->typeMap[$type] = $this->_getTypeFromString($type);
         }
         return $this->typeMap[$type];
     }
 
-    public function _getTypeFromString(string $type): \gcc_jit_type_ptr {
-        static $map = [
-            'void' => \GCC_JIT_TYPE_VOID,
-            'void*' => \GCC_JIT_TYPE_VOID_PTR,
-            'const char*' => \GCC_JIT_TYPE_CONST_CHAR_PTR,
-            'char' => \GCC_JIT_TYPE_CHAR,
-            'unsigned char' => \GCC_JIT_TYPE_UNSIGNED_CHAR,
-            'int' => \GCC_JIT_TYPE_INT,
-            'long long' => \GCC_JIT_TYPE_LONG_LONG,
-            'unsigned long long' => \GCC_JIT_TYPE_UNSIGNED_LONG_LONG,
-            'size_t' => \GCC_JIT_TYPE_SIZE_T,
-            'uint32_t' => \GCC_JIT_TYPE_UNSIGNED_LONG,
-            'bool' => \GCC_JIT_TYPE_BOOL,
-            'double' => \GCC_JIT_TYPE_DOUBLE,
-        ];
-        if (isset($map[$type])) {
-            return \gcc_jit_context_get_type (
-                $this->context, 
-                $map[$type]
-            );
+    public function _getTypeFromString(string $type): PHPLLVM\Type {
+        switch ($type) {
+            case 'void':
+                return $this->context->voidType();
+            case 'const char':
+                return $this->context->int8Type();
+            case 'char':
+                return $this->context->int8Type();
+            case 'int32':
+            case 'int':
+            case 'unsigned int':
+                return $this->context->int32Type();
+            case 'int64':
+            case 'long long':
+            case 'unsigned long long':
+                return $this->context->int64Type();
+            case 'size_t':
+                return $this->module->getModuleDataLayout()->intPointerType();
+            case 'int1':
+            case 'bool':
+                return $this->context->int1Type();
+            case 'double':
+                return $this->context->doubleType();
+
         }
         if (substr($type, -1) === '*') {
-            return \gcc_jit_type_get_pointer(
-                $this->getTypeFromString(substr($type, 0, -1))
-            );
+            return $this->getTypeFromString(substr($type, 0, -1))->pointerType(0);
         }
         if (substr($type, -1) === ']') {
             // array type
             if (preg_match('(^(.*?)\\[(\d+)\\]$)', $type, $match)) {
-                return \gcc_jit_context_new_array_type(
-                    $this->context,
-                    null,
-                    $this->getTypeFromString($match[1]),
-                    (int) $match[2]
-                );
+                return $this->getTypeFromString($match[1])->arrayType((int) $match[2]);
             } else {
                 throw new \LogicException("Could not parse type with array notation: $type");
             }
@@ -390,90 +303,63 @@ class Context {
         throw new \LogicException("Unsupported native type $type");
     }
 
-    public function constantFromInteger(int $value, ?string $type = null): \gcc_jit_rvalue_ptr {
-        if (!isset($this->intConstant[$value])) {
-            $this->intConstant[$value] = \gcc_jit_context_new_rvalue_from_long(
-                $this->context,
-                $this->getTypeFromString('long long'),
-                $value
-            );
-        }
-        if (!is_null($type) && $type !== 'long long') {
-            return $this->helper->cast(
-                $this->intConstant[$value],
-                $type
-            );
-        }
-        return $this->intConstant[$value];
+    public function constantFromInteger(int $value, ?string $type = null): PHPLLVM\Value {
+        return $this->getTypeFromString($type === null ? 'long long' : $type)->constInt($value, false);
     }
 
-    public function constantFromFloat(float $value, ?string $type = null): \gcc_jit_rvalue_ptr {
-        return \gcc_jit_context_new_rvalue_from_double(
-            $this->context,
-            $this->getTypeFromString(is_null($type) ? 'double' : $type),
-            $value
-        );
+    public function constantFromFloat(float $value, ?string $type = null): PHPLLVM\Value {
+        return $this->getTypeFromString($type === null ? 'double' : $type)->constReal($value);
     }
 
-    public function constantFromString(string $string): \gcc_jit_rvalue_ptr {
+    public function constantFromString(string $string): PHPLLVM\Value {
         if (!isset($this->stringConstant[$string])) {
-            $this->stringConstant[$string] = \gcc_jit_context_new_string_literal(
-                $this->context,
-                $string
-            );
+            $const = $this->context->constString($string, true);
+            $global = $this->module->addGlobal($const->typeOf(), $string);
+            $global->setInitializer($const);
+            $this->stringConstant[$string] = $global;
         }
         return $this->stringConstant[$string];
     }
 
     private array $boolValues = [];
 
-    public function constantFromBool(bool $value): \gcc_jit_rvalue_ptr {
+    public function constantFromBool(bool $value): PHPLLVM\Value {
         $id = $value ? 1 : 0;
         if (!isset($this->boolValues[$id])) {
-            $this->boolValues[$id] = \gcc_jit_context_new_rvalue_from_int(
-                $this->context,
-                $this->getTypeFromString('bool'),
-                $id
-            );
+            $this->boolValues[$id] = $this->getTypeFromString('bool')->constInt($id, false);
         }
         return $this->boolValues[$id];
     }
 
-    public function constantStringFromString(string $string): \gcc_jit_rvalue_ptr {
+    public function constantStringFromString(string $string): PHPLLVM\Value {
         if (!isset($this->stringConstantMap[$string])) {
-            $global = \gcc_jit_context_new_global(
-                $this->context,
-                $this->location(),
-                \GCC_JIT_GLOBAL_INTERNAL,
-                $this->getTypeFromString('__string__*'),
-                '__string__constant_' . (self::$stringConstantCounter++)
-            );
-            $length = $this->constantFromInteger(strlen($string), 'size_t');
+            $global = $this->module->addGlobal($this->type->string->pointer, 'string_const_' . count($this->stringConstantMap));
+            $oldBuilder = $this->builder;
+            $this->builder = $this->context->builderCreate();
+            $this->builder->positionAtEnd($this->initBlock);
             $this->type->string->init(
-                $this->initBlock,
                 $global,
                 $this->constantFromString($string),
-                $length,
+                $this->constantFromInteger(strlen($string), 'size_t'),
                 true
             );
+            $this->builder->positionAtEnd($this->shutdownBlock);
+            $this->builder->free($global);
+            $this->builder = $oldBuilder;
             $this->stringConstantMap[$string] = $global;
-            $this->memory->free(
-                $this->shutdownBlock,
-                $global->asRValue()
-            );
         }
-        return $this->stringConstantMap[$string]->asRValue();
+        return $this->stringConstantMap[$string];
     }
 
     public function makeVariableFromOp(
-        \gcc_jit_function_ptr $func,
-        \gcc_jit_block_ptr $gccBlock,
+        PHPLLVM\Value\Function_ $func,
+        PHPLLVM\BasicBlock $basicBlock,
         Block $block,
         Operand $op
     ) {
         assert(!$this->scope->variables->contains($op));
-        $this->scope->variables[$op] = Variable::fromOp($this, $func, $gccBlock, $block, $op);
-        $this->scope->variables[$op]->initialize($gccBlock);
+        $this->scope->variables[$op] = Variable::fromOp($this, $func, $basicBlock, $block, $op);
+        $this->scope->variables[$op]->initialize($basicBlock);
     }
 
     public function setVariableOp(Operand $op, Variable $var) {
@@ -502,23 +388,23 @@ class Context {
         return $this->scope->variables[$op];
     }
 
-    public function makeVariableFromRValueOp(
-        \gcc_jit_rvalue_ptr $rvalue,
+    public function makeVariableFromValueOp(
+        PHPLLVM\Value $value,
         Operand $op
     ): Variable {
         $this->scope->variables[$op] = Variable::fromRValueOp(
-            $this, $rvalue, $op
+            $this, $value, $op
         );
         return $this->scope->variables[$op];
     }
 
     public function freeDeadVariables(
-        \gcc_jit_function_ptr $func,
-        \gcc_jit_block_ptr $gccBlock,
+        PHPLLVM\Value\Function_ $func,
+        PHPLLVM\BasicBlock $basicBlock,
         Block $block
     ): void {
         foreach ($block->orig->deadOperands as $op) {
-            $this->scope->variables[$op]->free($gccBlock);
+            $this->scope->variables[$op]->free($basicBlock);
         }
     }
 

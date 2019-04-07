@@ -1,0 +1,326 @@
+<?php
+
+/*
+ * This file is part of PHP-Compiler, a PHP CFG Compiler for PHP code
+ *
+ * @copyright 2015 Anthony Ferrara. All rights reserved
+ * @license MIT See LICENSE at the root of the project for more info
+ */
+
+namespace PHPCompiler\JIT\Builtin\Type;
+
+use PHPCompiler\JIT\Builtin\Type;
+use PHPCompiler\JIT\Builtin\Refcount;
+use PHPCompiler\JIT\Variable;
+
+use PHPLLVM;
+
+class String_ extends Type {
+    private PHPLLVM\Type $struct;
+    public PHPLLVM\Type $pointer;
+
+    public function register(): void {
+        declare {
+            struct __string__ {
+                __ref__ $ref;
+                int64 $length;
+                char* $value;
+            };
+            inline function __string__strlen(__string__*): int64;
+            inline function __string__alloc(int64): __string__*;
+            inline function __string__init(int64, const char*): __string__*;
+        }
+    }
+
+    public function implement(): void {
+
+        $this->implementAlloc();
+        $this->implementInit();
+        // $this->implementRealloc();
+        // $this->implementSeparate();
+        $this->implementStrlen();
+    }
+
+    private function implementStrlen(): void {
+        compile {
+            function __string__strlen($string) {
+                $size = $string->length;
+                return $size;
+            }
+        }
+    }
+
+    private function implementAlloc(): void {
+        compile {
+            function __string__alloc($size) {
+                $struct = malloc __string__;
+                $struct->length = $size;
+                // TODO: allocate string itself
+                $ref = (__ref__virtual*) $struct;
+                $typeinfo = (int32) Refcount::TYPE_INFO_TYPE_STRING | Refcount::TYPE_INFO_REFCOUNTED; 
+                __ref__init($typeinfo, $ref);
+                return $struct;
+            }
+        }
+    }
+
+    private function implementInit(): void {
+        compile {
+            function __string__init($size, $value) {
+                $result = __string__alloc($size);
+                $char = $result->value;
+                memcpy $char $value $size;
+                return $result;
+            }
+        }
+    }
+
+    private function implementRealloc(): void {
+        $realloc = $this->context->lookupFunction('__string__realloc');
+        $block = \gcc_jit_function_new_block($realloc->func, 'main');
+        $isnull = \gcc_jit_function_new_block($realloc->func, 'is_null');
+        $notnull = \gcc_jit_function_new_block($realloc->func, 'not_null');
+        
+        $ptr = $realloc->params[0]->asLValue();
+        $reallocSize = $this->context->helper->binaryOp(
+            GCC_JIT_BINARY_OP_PLUS,
+            'size_t',
+            $this->size->asRValue(),
+            $realloc->params[1]->asRValue()
+        );
+        $local = \gcc_jit_function_new_local($realloc->func, null, $this->pointer, 'result');
+        $this->context->helper->assign(
+            $block, 
+            $local,
+            $this->context->memory->realloc($ptr->asRValue(), $reallocSize, $this->pointer) 
+        );
+        $this->context->helper->assign(
+            $block,
+            $this->writeSize($local->asRValue()),
+            $realloc->params[1]->asRValue()
+        );
+        gcc_jit_block_end_with_conditional(
+            $block,
+            $this->context->location(),
+            gcc_jit_context_new_comparison(
+                $this->context->context,
+                $this->context->location(),
+                \GCC_JIT_COMPARISON_EQ,
+                $ptr->asRValue(),
+                $this->nullPointer()
+            ),
+            $isnull,
+            $notnull
+        );
+        $this->context->refcount->init($isnull, $local->asRValue(), Refcount::TYPE_INFO_REFCOUNTED | Refcount::TYPE_INFO_TYPE_STRING);
+
+        \gcc_jit_block_end_with_jump($isnull,  null,$notnull);
+        \gcc_jit_block_end_with_return($notnull,  null, $local->asRValue());
+    }
+
+    private function implementSeparate(): void {
+        $func = $this->context->lookupFunction('__string__separate');
+        $virtual = $func->params[0]->asRValue();
+        $deref = \gcc_jit_rvalue_dereference($virtual, $this->context->location());
+        $from = $this->context->helper->cast(
+            $deref->asRValue(),
+            '__string__*'
+        );
+        $block = \gcc_jit_function_new_block($func->func, 'main');
+        $tmp = \gcc_jit_function_new_local($func->func, $this->context->location(), $this->pointer, 'tmp');
+        $length = $this->sizePtr($from)->asRValue();
+        $this->init(
+            $block,
+            $tmp,
+            $this->context->helper->cast($this->valuePtr($from), 'const char*'),
+            $length
+        );
+        \gcc_jit_block_add_assignment(
+            $block,
+            $this->context->location(),
+            $deref,
+            \gcc_jit_context_new_cast(
+                $this->context->context,
+                $this->context->location(),
+                $tmp->asRValue(),
+                $this->context->refcount->pointer
+            )
+        );
+        \gcc_jit_block_end_with_void_return($block, $this->context->location());   
+    }
+
+    public function initialize(): void {
+    }
+
+    private static $constId = 0;
+    public function allocate(
+        \gcc_jit_block_ptr $block,
+        \gcc_jit_lvalue_ptr $dest, 
+        \gcc_jit_rvalue_ptr $length,
+        bool $isConstant = false
+    ): void {
+        $this->context->helper->assign(
+            $block,
+            $dest,
+            $this->context->helper->call(
+                '__string__alloc',
+                $length
+            )
+        );
+        if ($isConstant) {
+            // disable refcount
+            $this->context->refcount->disableRefcount($block, $dest->asRValue());
+        }
+    }
+
+    public function init(
+        PHPLLVM\Value $dest,
+        PHPLLVM\Value $value,
+        PHPLLVM\Value $length,
+        bool $isConstant = false
+    ): void {
+        $this->context->builder->store($dest, $this->context->builder->call(
+            $this->context->lookupFunction('__string__init'),
+            $value,
+            $length
+        ));
+        if ($isConstant) {
+            // disable refcount
+            $this->context->refcount->disableRefcount($dest);
+        }
+    }
+
+    public function reallocate(
+        \gcc_jit_block_ptr $block,
+        \gcc_jit_lvalue_ptr $original, 
+        \gcc_jit_rvalue_ptr $length
+    ): void {
+        $this->context->helper->assign(
+            $block,
+            $original,
+            $this->context->helper->call(
+                '__string__realloc',
+                $original->asRValue(),
+                $length
+            )
+        );
+    }
+
+    public function isString(PHPLLVM\Value $value): bool {
+        throw new \LogicException("Unknown if it's a string due to type comparisons...");
+    }
+
+    public function size(Variable $var): \gcc_jit_rvalue_ptr {
+        switch ($var->type) {
+            case Variable::TYPE_STRING:
+
+                // pointer call
+                return $this->sizePtr($var->rvalue)->asRValue();
+            case Variable::TYPE_NATIVE_LONG:
+                return $this->context->helper->cast(
+                    $this->context->helper->call(
+                        'snprintf',
+                        \gcc_jit_context_null($this->context->context, $this->context->getTypeFromString('char*')),
+                        $this->context->constantFromInteger(0, 'size_t'),
+                        $this->context->constantFromString('%lld'),
+                        $var->rvalue
+                    ),
+                    'size_t'
+                );
+        }
+    }
+
+    public function value(Variable $var): \gcc_jit_rvalue_ptr {
+        switch ($var->type) {
+            case Variable::TYPE_STRING:
+                // pointer call
+                return $this->valuePtr($var->rvalue);
+        }
+    }
+
+    public function concat(\gcc_jit_block_ptr $block, Variable $dest, Variable $left, Variable $right): void {
+        assert($dest->type === Variable::TYPE_STRING);
+        $this->context->refcount->separate($block, $dest->lvalue);
+
+
+        $leftSize = $this->size($left);
+        $rightSize = $this->size($right);
+        $this->reallocate($block, $dest->lvalue, $this->context->helper->binaryOp(
+            \GCC_JIT_BINARY_OP_PLUS,
+            'size_t',
+            $leftSize,
+            $rightSize
+        ));
+
+        if ($left !== $dest) {
+            $this->copy(
+                $block, 
+                $dest, 
+                $left,
+                $this->context->constantFromInteger(0, 'size_t')
+            );
+        }
+        $this->copy(
+            $block,
+            $dest,
+            $right,
+            $this->context->helper->binaryOp(
+                \GCC_JIT_BINARY_OP_MINUS,
+                'size_t',
+                $this->size($dest),
+                $this->size($right)
+            )
+        );
+    }
+
+    private function copy(\gcc_jit_block_ptr $block, Variable $dest, Variable $other, \gcc_jit_rvalue_ptr $offset): void {
+        $addr = \gcc_jit_lvalue_get_address(
+            \gcc_jit_context_new_array_access(
+                $this->context->context,
+                $this->context->location(),
+                $this->valuePtr($dest->rvalue),
+                $offset
+            ),
+            $this->context->location()
+        );
+        switch ($other->type) {
+            case Variable::TYPE_STRING:
+                $this->context->memory->memcpy($block, $addr, $this->valuePtr($other->rvalue), $this->sizePtr($other->rvalue)->asRValue());
+                break;
+            case Variable::TYPE_NATIVE_LONG:
+                $this->context->helper->eval(
+                    $block,
+                    $this->context->helper->call(
+                        'sprintf',
+                        $addr,
+                        $this->context->constantFromString('%lld'),
+                        $other->rvalue
+                    )
+                );
+                break;
+            default:
+                throw new \LogicException("Unhandled type for copy $other->type");
+        }
+    }
+
+    public function dimFetch(\gcc_jit_rvalue_ptr $str, \gcc_jit_rvalue_ptr $dim): \gcc_jit_rvalue_ptr {
+        return \gcc_jit_lvalue_get_address(\gcc_jit_context_new_array_access(
+            $this->context->context,
+            $this->context->location(),
+            $this->strCharConsts->asRValue(),
+            $this->context->helper->cast(
+                \gcc_jit_context_new_array_access(
+                    $this->context->context,
+                    $this->context->location(),
+                    $this->valuePtr($str),
+                    $this->context->helper->cast(
+                        $dim,
+                        'size_t'
+                    )
+                )->asRValue(),
+                'size_t'
+            )
+        ), $this->context->location());
+    }
+
+}

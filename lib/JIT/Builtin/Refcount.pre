@@ -1,0 +1,161 @@
+<?php
+
+/*
+ * This file is part of PHP-Compiler, a PHP CFG Compiler for PHP code
+ *
+ * @copyright 2015 Anthony Ferrara. All rights reserved
+ * @license MIT See LICENSE at the root of the project for more info
+ */
+
+namespace PHPCompiler\JIT\Builtin;
+
+use PHPCompiler\JIT\Builtin;
+use PHPLLVM;
+
+class Refcount extends Builtin {
+    const TYPE_INFO_NONREFCOUNTED     = 0b0000000000;
+    const TYPE_INFO_REFCOUNTED        = 0b0000000001;
+    const TYPE_INFO_NONREFCOUNTED_MASK = ~self::TYPE_INFO_REFCOUNTED;
+
+    const TYPE_INFO_TYPEMASK          = 0b1111111100;
+    const TYPE_INFO_TYPE_STRING       = 0b0000000100;
+    const TYPE_INFO_TYPE_OBJECT       = 0b0000001000;
+    const TYPE_INFO_TYPE_MASKED_ARRAY = 0b0000001100;
+
+    public PHPLLVM\Type $struct;
+    public PHPLLVM\Type $virtualStruct;
+
+    public PHPLLVM\Type $pointer;
+    public PHPLLVM\Type $doublePointer;
+    
+    private array $fields;
+
+    public function register(): void {
+        declare {
+            struct __ref__ {
+                int32 $refcount;
+                int32 $typeinfo;
+            };
+            struct __ref__virtual {
+                __ref__ $ref;
+            };
+            inline function __ref__init(int32, __ref__virtual*): void;
+            inline function __ref__addref(__ref__virtual*): void;
+            inline function __ref__delref(__ref__virtual*): void;
+            inline function __ref__separate(__ref__virtual**): void;
+        }
+        $this->struct = $this->context->getTypeFromString('__ref__');
+        $this->virtualStruct = $this->context->getTypeFromString('__ref__virtual');
+        $this->pointer = $this->context->getTypeFromString('__ref__virtual*');
+        $this->doublePointer = $this->context->getTypeFromString('__ref__virtual**');
+    }
+
+    public function implement(): void {
+        $this->implementInit();
+        $this->implementAddref();
+        $this->implementDelref();
+        $this->implementSeparate();
+    }
+
+    private function implementInit(): void {
+        compile {
+            function __ref__init($typeinfo, $refVirtual) {
+                $ref = $refVirtual->ref;
+                $ref.refcount = 0;
+                $ref.typeinfo = $typeinfo;
+                return;
+            }
+        }
+    } 
+
+    private function implementAddref(): void {
+        compile {
+            function __ref__addref($refVirtual) {
+                $isNull = $refVirtual === null;
+                if ($isNull) {
+                    return;
+                }
+                $ref = $refVirtual->ref;
+                $typeinfo = $ref.typeinfo;
+                $refMask = (int32) self::TYPE_INFO_REFCOUNTED;
+                $isCounted = $typeinfo & $refMask;
+                if ($isCounted) {
+                    $current = $ref.refcount;
+                    $current++;
+                    $ref.refcount = $current;
+                }
+                return;
+            }
+        }
+    }
+
+    private function implementDelref(): void {
+        compile {
+            function __ref__delref($refVirtual) {
+                $isNull = $refVirtual === null;
+                if ($isNull) {
+                    return;
+                }
+                $ref = $refVirtual->ref;
+                $typeinfo = $ref.typeinfo;
+                $refMask = (int32) self::TYPE_INFO_REFCOUNTED;
+                $isCounted = $typeinfo & $refMask;
+                if ($isCounted) {
+                    $current = $ref.refcount;
+                    $current--;
+                    $ref.refcount = $current;
+                    $test = $current <= 0;
+                    if ($test) {
+                        free $refVirtual;
+                    }
+                }
+                return;
+            }
+        }
+    }
+
+    private function implementSeparate(): void {
+        $func = $this->context->lookupFunction('__ref__separate');
+        $func->addAttributeAtIndex(PHPLLVM\Attribute::INDEX_FUNCTION, $this->context->attributes['alwaysinline']);
+        // TODO
+    }
+
+    public function disableRefcount(PHPLLVM\Value $value): void {
+        compile {
+            $virtual = (__ref__virtual*) $value;
+            $ref = $value->ref;
+            $typeinfo = $ref.typeinfo;
+            $notRefc = (int32) self::TYPE_INFO_NONREFCOUNTED_MASK;
+            $typeinfo = $typeinfo & $notRefc;
+            $ref.typeinfo = $typeinfo;
+        }
+    }
+
+    public function init(PHPLLVM\Value $value, int $typeinfo = 0): void {
+        compile {
+            $typeinfo = (int32) $typeinfo;
+            __ref__init($typeinfo, $value);
+        }
+    }
+
+    public function addref(PHPLLVM\Value $value): void {
+        $value = $this->context->builder->bitcast($value, $this->pointer);
+        compile {
+            __ref__addref($value);
+        }
+    }
+
+    public function delref(PHPLLVM\Value $value): void {
+        $value = $this->context->builder->bitcast($value, $this->pointer);
+        compile {
+            __ref__delref($value);
+        }
+    }
+
+    public function separate(PHPLLVM\Value $value): void {
+        $value = $this->context->builder->bitcast($value, $this->doublePointer);
+        compile {
+            __ref__separate($value);
+        }
+    }
+}

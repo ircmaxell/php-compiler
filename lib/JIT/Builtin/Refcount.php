@@ -1,5 +1,9 @@
 <?php
 
+# This file is generated, changes you make will be lost.
+# Make your changes in /home/ircmaxell/Workspace/PHP-Compiler/PHP-Compiler/lib/JIT/Builtin/Refcount.pre instead.
+
+// First, expand statements
 /*
  * This file is part of PHP-Compiler, a PHP CFG Compiler for PHP code
  *
@@ -10,105 +14,140 @@
 namespace PHPCompiler\JIT\Builtin;
 
 use PHPCompiler\JIT\Builtin;
+use PHPLLVM;
 
 class Refcount extends Builtin {
     const TYPE_INFO_NONREFCOUNTED     = 0b0000000000;
     const TYPE_INFO_REFCOUNTED        = 0b0000000001;
+    const TYPE_INFO_NONREFCOUNTED_MASK = ~self::TYPE_INFO_REFCOUNTED;
 
     const TYPE_INFO_TYPEMASK          = 0b1111111100;
     const TYPE_INFO_TYPE_STRING       = 0b0000000100;
     const TYPE_INFO_TYPE_OBJECT       = 0b0000001000;
     const TYPE_INFO_TYPE_MASKED_ARRAY = 0b0000001100;
 
-    private \gcc_jit_struct_ptr $struct;
-    private \gcc_jit_struct_ptr $virtualStruct;
-    private \gcc_jit_field_ptr $virtualField;
+    public PHPLLVM\Type $struct;
+    public PHPLLVM\Type $virtualStruct;
 
-    public \gcc_jit_type_ptr $type;
-    public \gcc_jit_type_ptr $pointer;
+    public PHPLLVM\Type $pointer;
+    public PHPLLVM\Type $doublePointer;
     
     private array $fields;
 
     public function register(): void {
-        $this->fields = [
-            'refcount' => $this->context->helper->createField('refcount', 'int'),
-            'typeinfo' => $this->context->helper->createField('typeinfo', 'int')
-        ];
-        $this->struct = \gcc_jit_context_new_struct_type(
-            $this->context->context,
-            null,
-            '__ref__',
-            count($this->fields),
-            \gcc_jit_field_ptr_ptr::fromArray(...array_values($this->fields))
-        );
-        $this->type = \gcc_jit_struct_as_type($this->struct);
-        $this->context->registerType(
-            '__ref__',
-            $this->type
-        );
-        $this->virtualField = $this->context->helper->createField(
-            '__ref__count', 
-            '__ref__'
-        );
-        $this->virtualStruct = \gcc_jit_context_new_struct_type(
-            $this->context->context,
-            null,
-            '__ref__virtual',
-            1,
-            \gcc_jit_field_ptr_ptr::fromArray($this->virtualField)
-        );
-        $this->pointer = \gcc_jit_type_get_pointer(
-            \gcc_jit_struct_as_type($this->virtualStruct)
-        );
-        $this->context->registerType(
-            '__ref__virtual*',
-            $this->pointer
-        );
-        $this->context->registerType(
-            '__ref__virtual**',
-            \gcc_jit_type_get_pointer($this->pointer)
-        );
-        $this->context->registerFunction(
-            '__ref__init',
-            $this->context->helper->createNativeFunction(
-                \GCC_JIT_FUNCTION_ALWAYS_INLINE,
-                '__ref__init',
-                'void',
-                false,
-                'int',
-                '__ref__virtual*'
-            )
-        );
-        $this->context->registerFunction(
-            '__ref__addref',
-            $this->context->helper->createNativeFunction(
-                \GCC_JIT_FUNCTION_ALWAYS_INLINE,
-                '__ref__addref',
-                'void',
-                false,
-                '__ref__virtual*'
-            )
-        );
-        $this->context->registerFunction(
-            '__ref__delref',
-            $this->context->helper->createNativeFunction(
-                \GCC_JIT_FUNCTION_ALWAYS_INLINE,
-                '__ref__delref',
-                'void',
-                false,
-                '__ref__virtual*'
-            )
-        );
-        $this->context->registerFunction(
-            '__ref__separate',
-            $this->context->helper->createNativeFunction(
-                \GCC_JIT_FUNCTION_ALWAYS_INLINE,
-                '__ref__separate',
-                'void',
-                false,
-                '__ref__virtual**'
-            )
-        );
+        
+
+        
+
+        $struct___cfcd208495d565ef66e7dff9f98764da = $this->context->context->namedStructType('__ref__');
+            $struct___cfcd208495d565ef66e7dff9f98764da->setBody(
+                false ,  // packed
+                $this->context->getTypeFromString('int32')
+                , $this->context->getTypeFromString('int32')
+                
+            );
+            $this->context->registerType('__ref__', $struct___cfcd208495d565ef66e7dff9f98764da);
+            $this->context->registerType('__ref__' . '*', $struct___cfcd208495d565ef66e7dff9f98764da->pointerType(0));
+            $this->context->registerType('__ref__' . '**', $struct___cfcd208495d565ef66e7dff9f98764da->pointerType(0)->pointerType(0));
+            $this->context->structFieldMap['__ref__'] = [
+                'refcount' => 0
+                , 'typeinfo' => 1
+                
+            ];
+        
+    
+
+        
+
+        $struct___cfcd208495d565ef66e7dff9f98764da = $this->context->context->namedStructType('__ref__virtual');
+            $struct___cfcd208495d565ef66e7dff9f98764da->setBody(
+                false ,  // packed
+                $this->context->getTypeFromString('__ref__')
+                
+            );
+            $this->context->registerType('__ref__virtual', $struct___cfcd208495d565ef66e7dff9f98764da);
+            $this->context->registerType('__ref__virtual' . '*', $struct___cfcd208495d565ef66e7dff9f98764da->pointerType(0));
+            $this->context->registerType('__ref__virtual' . '**', $struct___cfcd208495d565ef66e7dff9f98764da->pointerType(0)->pointerType(0));
+            $this->context->structFieldMap['__ref__virtual'] = [
+                'ref' => 0
+                
+            ];
+        
+    $fntype___cfcd208495d565ef66e7dff9f98764da = $this->context->context->functionType(
+                $this->context->getTypeFromString('void'),
+                false , 
+                $this->context->getTypeFromString('int32')
+                , $this->context->getTypeFromString('__ref__virtual*')
+                
+            );
+            $fn___cfcd208495d565ef66e7dff9f98764da = $this->context->module->addFunction('__ref__init', $fntype___cfcd208495d565ef66e7dff9f98764da);
+            $fn___cfcd208495d565ef66e7dff9f98764da->addAttributeAtIndex(PHPLLVM\Attribute::INDEX_FUNCTION, $this->context->attributes['alwaysinline']);
+            
+            
+            
+            
+            $this->context->registerFunction('__ref__init', $fn___cfcd208495d565ef66e7dff9f98764da);
+        
+
+        
+
+        
+    $fntype___cfcd208495d565ef66e7dff9f98764da = $this->context->context->functionType(
+                $this->context->getTypeFromString('void'),
+                false , 
+                $this->context->getTypeFromString('__ref__virtual*')
+                
+            );
+            $fn___cfcd208495d565ef66e7dff9f98764da = $this->context->module->addFunction('__ref__addref', $fntype___cfcd208495d565ef66e7dff9f98764da);
+            $fn___cfcd208495d565ef66e7dff9f98764da->addAttributeAtIndex(PHPLLVM\Attribute::INDEX_FUNCTION, $this->context->attributes['alwaysinline']);
+            
+            
+            
+            $this->context->registerFunction('__ref__addref', $fn___cfcd208495d565ef66e7dff9f98764da);
+        
+
+        
+
+        
+    $fntype___cfcd208495d565ef66e7dff9f98764da = $this->context->context->functionType(
+                $this->context->getTypeFromString('void'),
+                false , 
+                $this->context->getTypeFromString('__ref__virtual*')
+                
+            );
+            $fn___cfcd208495d565ef66e7dff9f98764da = $this->context->module->addFunction('__ref__delref', $fntype___cfcd208495d565ef66e7dff9f98764da);
+            $fn___cfcd208495d565ef66e7dff9f98764da->addAttributeAtIndex(PHPLLVM\Attribute::INDEX_FUNCTION, $this->context->attributes['alwaysinline']);
+            
+            
+            
+            $this->context->registerFunction('__ref__delref', $fn___cfcd208495d565ef66e7dff9f98764da);
+        
+
+        
+
+        
+    $fntype___cfcd208495d565ef66e7dff9f98764da = $this->context->context->functionType(
+                $this->context->getTypeFromString('void'),
+                false , 
+                $this->context->getTypeFromString('__ref__virtual**')
+                
+            );
+            $fn___cfcd208495d565ef66e7dff9f98764da = $this->context->module->addFunction('__ref__separate', $fntype___cfcd208495d565ef66e7dff9f98764da);
+            $fn___cfcd208495d565ef66e7dff9f98764da->addAttributeAtIndex(PHPLLVM\Attribute::INDEX_FUNCTION, $this->context->attributes['alwaysinline']);
+            
+            
+            
+            $this->context->registerFunction('__ref__separate', $fn___cfcd208495d565ef66e7dff9f98764da);
+        
+
+        
+
+        
+    
+        $this->struct = $this->context->getTypeFromString('__ref__');
+        $this->virtualStruct = $this->context->getTypeFromString('__ref__virtual');
+        $this->pointer = $this->context->getTypeFromString('__ref__virtual*');
+        $this->doublePointer = $this->context->getTypeFromString('__ref__virtual**');
     }
 
     public function implement(): void {
@@ -119,339 +158,271 @@ class Refcount extends Builtin {
     }
 
     private function implementInit(): void {
-        $init = $this->context->lookupFunction('__ref__init');
-        $typeinfo = $init->params[0]->asRValue();
-        $virtual = $init->params[1]->asRValue();
-        $block = \gcc_jit_function_new_block($init->func, "main");
-        $ref = \gcc_jit_rvalue_dereference_field($virtual, null, $this->virtualField);
-        $this->context->helper->assign(
-            $block,
-            gcc_jit_lvalue_access_field($ref, null, $this->fields['refcount']),
-            $this->context->helper->cast($this->context->constantFromInteger(1), 'int')
-        );
-        $this->context->helper->assign(
-            $block,
-            gcc_jit_lvalue_access_field($ref, null, $this->fields['typeinfo']),
-            $typeinfo
-        );
-        \gcc_jit_block_end_with_void_return($block, null);
+        $fn___c4ca4238a0b923820dcc509a6f75849b = $this->context->lookupFunction('__ref__init');
+    $block___c4ca4238a0b923820dcc509a6f75849b = $fn___c4ca4238a0b923820dcc509a6f75849b->appendBasicBlock('main');
+    $this->context->builder->positionAtEnd($block___c4ca4238a0b923820dcc509a6f75849b);
+    $typeinfo = $fn___c4ca4238a0b923820dcc509a6f75849b->getParam(0);
+    $refVirtual = $fn___c4ca4238a0b923820dcc509a6f75849b->getParam(1);
+    
+    $offset___c81e728d9d4c2f636f067f89cc14862c = $this->context->structFieldMap[$refVirtual->typeOf()->getElementType()->getName()]['ref'];
+            $ref = $this->context->builder->load(
+                $this->context->builder->structGep($refVirtual, $offset___c81e728d9d4c2f636f067f89cc14862c)
+            );
+    $structType___c81e728d9d4c2f636f067f89cc14862c = $ref->typeOf();
+            $offset___c81e728d9d4c2f636f067f89cc14862c = $this->context->structFieldMap[$structType___c81e728d9d4c2f636f067f89cc14862c->getName()]['refcount'];
+
+            $this->context->builder->insertValue(
+                $ref, 
+                $structType___c81e728d9d4c2f636f067f89cc14862c->getElementAtIndex($offset___c81e728d9d4c2f636f067f89cc14862c)->constInt(0, false),
+                $offset___c81e728d9d4c2f636f067f89cc14862c
+            );
+    $offset___c81e728d9d4c2f636f067f89cc14862c = $this->context->structFieldMap[$ref->typeOf()->getName()]['typeinfo'];
+            $this->context->builder->insertValue(
+                $ref, 
+                $typeinfo,
+                $offset___c81e728d9d4c2f636f067f89cc14862c
+            );
+    $this->context->builder->returnVoid();
+    
     } 
 
     private function implementAddref(): void {
-        $addref = $this->context->lookupFunction('__ref__addref');
-        $virtual = $addref->params[0]->asRValue();
+        $fn___eccbc87e4b5ce2fe28308fd9f2a7baf3 = $this->context->lookupFunction('__ref__addref');
+    $block___eccbc87e4b5ce2fe28308fd9f2a7baf3 = $fn___eccbc87e4b5ce2fe28308fd9f2a7baf3->appendBasicBlock('main');
+    $this->context->builder->positionAtEnd($block___eccbc87e4b5ce2fe28308fd9f2a7baf3);
+    $refVirtual = $fn___eccbc87e4b5ce2fe28308fd9f2a7baf3->getParam(0);
+    
+    $isNull = $this->context->builder->icmp(
+                $this->context->builder::INT_EQ,
+                $refVirtual,
+                $refVirtual->typeOf()->constNull()
+            );
+    $bool___a87ff679a2f3e71d9181a67b7542122c = $this->context->castToBool($isNull);
+            $prev___a87ff679a2f3e71d9181a67b7542122c = $this->context->builder->getInsertBlock();
+            $ifBlock___a87ff679a2f3e71d9181a67b7542122c = $prev___a87ff679a2f3e71d9181a67b7542122c->insertBasicBlock('ifBlock');
+            $prev___a87ff679a2f3e71d9181a67b7542122c->moveBefore($ifBlock___a87ff679a2f3e71d9181a67b7542122c);
+            
+            $endBlock___a87ff679a2f3e71d9181a67b7542122c[] = $tmp___a87ff679a2f3e71d9181a67b7542122c = $ifBlock___a87ff679a2f3e71d9181a67b7542122c->insertBasicBlock('endBlock');
+                $this->context->builder->branchIf($bool___a87ff679a2f3e71d9181a67b7542122c, $ifBlock___a87ff679a2f3e71d9181a67b7542122c, $tmp___a87ff679a2f3e71d9181a67b7542122c);
+            
 
-        $block = \gcc_jit_function_new_block($addref->func, "main");
-        $refcounted = \gcc_jit_function_new_block(
-            $addref->func, 
-            "refcounted"
-        );
-        $notrefcounted = \gcc_jit_function_new_block(
-            $addref->func,
-            "notcounted"
-        );
-        
-        $ref = \gcc_jit_rvalue_dereference_field($virtual, null, $this->virtualField);
-        $isRefCounted = $this->context->helper->binaryOp(
-            \GCC_JIT_BINARY_OP_BITWISE_AND,
-            'int',
-            gcc_jit_rvalue_access_field($ref->asRValue(), null, $this->fields['typeinfo']),
-            $this->context->constantFromInteger(self::TYPE_INFO_REFCOUNTED, 'int')
-        );
-        gcc_jit_block_end_with_conditional(
-            $block,
-            $this->context->location(),
-            $this->context->helper->cast(
-                $isRefCounted,
-                'bool'
-            ),
-            $refcounted,
-            $notrefcounted
-        );
-        gcc_jit_block_add_assignment_op(
-            $refcounted,
-            $this->context->location(),
-            gcc_jit_lvalue_access_field($ref, null, $this->fields['refcount']),
-            \GCC_JIT_BINARY_OP_PLUS,
-            $this->context->constantFromInteger(1, 'int')
-        );
-        \gcc_jit_block_end_with_void_return(
-            $refcounted, 
-            $this->context->location()
-        );
-        \gcc_jit_block_end_with_void_return(
-            $notrefcounted,
-            $this->context->location()
-        );
+            $this->context->builder->positionAtEnd($ifBlock___a87ff679a2f3e71d9181a67b7542122c);
+            { $this->context->builder->returnVoid();
+    }
+            if ($this->context->builder->getInsertBlock()->getTerminator() === null) {
+                $this->context->builder->branch(end($endBlock___a87ff679a2f3e71d9181a67b7542122c));
+            }
+            
+            $this->context->builder->positionAtEnd(array_pop($endBlock___a87ff679a2f3e71d9181a67b7542122c));
+    $offset___a87ff679a2f3e71d9181a67b7542122c = $this->context->structFieldMap[$refVirtual->typeOf()->getElementType()->getName()]['ref'];
+            $ref = $this->context->builder->load(
+                $this->context->builder->structGep($refVirtual, $offset___a87ff679a2f3e71d9181a67b7542122c)
+            );
+    $offset___a87ff679a2f3e71d9181a67b7542122c = $this->context->structFieldMap[$ref->typeOf()->getName()]['typeinfo'];
+            $typeinfo = $this->context->builder->extractValue(
+                $ref,
+                $offset___a87ff679a2f3e71d9181a67b7542122c
+            );
+    $refMask = $this->context->getTypeFromString('int32')->constInt(self::TYPE_INFO_REFCOUNTED, false);
+    $isCounted = $this->context->builder->bitwiseAnd($typeinfo, $refMask);
+    $bool___a87ff679a2f3e71d9181a67b7542122c = $this->context->castToBool($isCounted);
+            $prev___a87ff679a2f3e71d9181a67b7542122c = $this->context->builder->getInsertBlock();
+            $ifBlock___a87ff679a2f3e71d9181a67b7542122c = $prev___a87ff679a2f3e71d9181a67b7542122c->insertBasicBlock('ifBlock');
+            $prev___a87ff679a2f3e71d9181a67b7542122c->moveBefore($ifBlock___a87ff679a2f3e71d9181a67b7542122c);
+            
+            $endBlock___a87ff679a2f3e71d9181a67b7542122c[] = $tmp___a87ff679a2f3e71d9181a67b7542122c = $ifBlock___a87ff679a2f3e71d9181a67b7542122c->insertBasicBlock('endBlock');
+                $this->context->builder->branchIf($bool___a87ff679a2f3e71d9181a67b7542122c, $ifBlock___a87ff679a2f3e71d9181a67b7542122c, $tmp___a87ff679a2f3e71d9181a67b7542122c);
+            
+
+            $this->context->builder->positionAtEnd($ifBlock___a87ff679a2f3e71d9181a67b7542122c);
+            { $offset___a87ff679a2f3e71d9181a67b7542122c = $this->context->structFieldMap[$ref->typeOf()->getName()]['refcount'];
+            $current = $this->context->builder->extractValue(
+                $ref,
+                $offset___a87ff679a2f3e71d9181a67b7542122c
+            );
+    $current = $this->context->builder->add($current, $current->typeOf()->constInt(1, false));
+    $offset___a87ff679a2f3e71d9181a67b7542122c = $this->context->structFieldMap[$ref->typeOf()->getName()]['refcount'];
+            $this->context->builder->insertValue(
+                $ref, 
+                $current,
+                $offset___a87ff679a2f3e71d9181a67b7542122c
+            );
+    }
+            if ($this->context->builder->getInsertBlock()->getTerminator() === null) {
+                $this->context->builder->branch(end($endBlock___a87ff679a2f3e71d9181a67b7542122c));
+            }
+            
+            $this->context->builder->positionAtEnd(array_pop($endBlock___a87ff679a2f3e71d9181a67b7542122c));
+    $this->context->builder->returnVoid();
+    
     }
 
     private function implementDelref(): void {
-        $delref = $this->context->lookupFunction('__ref__delref');
-        $virtual = $delref->params[0]->asRValue();
+        $fn___8f14e45fceea167a5a36dedd4bea2543 = $this->context->lookupFunction('__ref__delref');
+    $block___8f14e45fceea167a5a36dedd4bea2543 = $fn___8f14e45fceea167a5a36dedd4bea2543->appendBasicBlock('main');
+    $this->context->builder->positionAtEnd($block___8f14e45fceea167a5a36dedd4bea2543);
+    $refVirtual = $fn___8f14e45fceea167a5a36dedd4bea2543->getParam(0);
+    
+    $isNull = $this->context->builder->icmp(
+                $this->context->builder::INT_EQ,
+                $refVirtual,
+                $refVirtual->typeOf()->constNull()
+            );
+    $bool___c9f0f895fb98ab9159f51fd0297e236d = $this->context->castToBool($isNull);
+            $prev___c9f0f895fb98ab9159f51fd0297e236d = $this->context->builder->getInsertBlock();
+            $ifBlock___c9f0f895fb98ab9159f51fd0297e236d = $prev___c9f0f895fb98ab9159f51fd0297e236d->insertBasicBlock('ifBlock');
+            $prev___c9f0f895fb98ab9159f51fd0297e236d->moveBefore($ifBlock___c9f0f895fb98ab9159f51fd0297e236d);
+            
+            $endBlock___c9f0f895fb98ab9159f51fd0297e236d[] = $tmp___c9f0f895fb98ab9159f51fd0297e236d = $ifBlock___c9f0f895fb98ab9159f51fd0297e236d->insertBasicBlock('endBlock');
+                $this->context->builder->branchIf($bool___c9f0f895fb98ab9159f51fd0297e236d, $ifBlock___c9f0f895fb98ab9159f51fd0297e236d, $tmp___c9f0f895fb98ab9159f51fd0297e236d);
+            
 
-        $block = \gcc_jit_function_new_block($delref->func, "main");
-        $notnull = \gcc_jit_function_new_block($delref->func, "not_null");
-        $refcounted = \gcc_jit_function_new_block($delref->func, "refcounted");
-        $needsfree = \gcc_jit_function_new_block($delref->func,'needsfree');
-        $return = \gcc_jit_function_new_block($delref->func,"notcounted");
+            $this->context->builder->positionAtEnd($ifBlock___c9f0f895fb98ab9159f51fd0297e236d);
+            { $this->context->builder->returnVoid();
+    }
+            if ($this->context->builder->getInsertBlock()->getTerminator() === null) {
+                $this->context->builder->branch(end($endBlock___c9f0f895fb98ab9159f51fd0297e236d));
+            }
+            
+            $this->context->builder->positionAtEnd(array_pop($endBlock___c9f0f895fb98ab9159f51fd0297e236d));
+    $offset___c9f0f895fb98ab9159f51fd0297e236d = $this->context->structFieldMap[$refVirtual->typeOf()->getElementType()->getName()]['ref'];
+            $ref = $this->context->builder->load(
+                $this->context->builder->structGep($refVirtual, $offset___c9f0f895fb98ab9159f51fd0297e236d)
+            );
+    $offset___c9f0f895fb98ab9159f51fd0297e236d = $this->context->structFieldMap[$ref->typeOf()->getName()]['typeinfo'];
+            $typeinfo = $this->context->builder->extractValue(
+                $ref,
+                $offset___c9f0f895fb98ab9159f51fd0297e236d
+            );
+    $refMask = $this->context->getTypeFromString('int32')->constInt(self::TYPE_INFO_REFCOUNTED, false);
+    $isCounted = $this->context->builder->bitwiseAnd($typeinfo, $refMask);
+    $bool___c9f0f895fb98ab9159f51fd0297e236d = $this->context->castToBool($isCounted);
+            $prev___c9f0f895fb98ab9159f51fd0297e236d = $this->context->builder->getInsertBlock();
+            $ifBlock___c9f0f895fb98ab9159f51fd0297e236d = $prev___c9f0f895fb98ab9159f51fd0297e236d->insertBasicBlock('ifBlock');
+            $prev___c9f0f895fb98ab9159f51fd0297e236d->moveBefore($ifBlock___c9f0f895fb98ab9159f51fd0297e236d);
+            
+            $endBlock___c9f0f895fb98ab9159f51fd0297e236d[] = $tmp___c9f0f895fb98ab9159f51fd0297e236d = $ifBlock___c9f0f895fb98ab9159f51fd0297e236d->insertBasicBlock('endBlock');
+                $this->context->builder->branchIf($bool___c9f0f895fb98ab9159f51fd0297e236d, $ifBlock___c9f0f895fb98ab9159f51fd0297e236d, $tmp___c9f0f895fb98ab9159f51fd0297e236d);
+            
 
-        gcc_jit_block_end_with_conditional(
-            $block,
-            $this->context->location(),
-            gcc_jit_context_new_comparison(
-                $this->context->context,
-                $this->context->location(),
-                \GCC_JIT_COMPARISON_EQ,
-                $virtual,
-                \gcc_jit_context_null($this->context->context, $this->context->getTypeFromString('__ref__virtual*'))
-            ),
-            $return,
-            $notnull
-        );
-        
-        $ref = \gcc_jit_rvalue_dereference_field($virtual, null, $this->virtualField);
-        $isRefCounted = $this->context->helper->binaryOp(
-            \GCC_JIT_BINARY_OP_BITWISE_AND,
-            'int',
-            gcc_jit_rvalue_access_field($ref->asRValue(), null, $this->fields['typeinfo']),
-            $this->context->constantFromInteger(self::TYPE_INFO_REFCOUNTED, 'int')
-        );
-        gcc_jit_block_end_with_conditional(
-            $notnull,
-            $this->context->location(),
-            $this->context->helper->cast(
-                $isRefCounted,
-                'bool'
-            ),
-            $refcounted,
-            $return
-        );
-        gcc_jit_block_add_assignment_op(
-            $refcounted,
-            $this->context->location(),
-            gcc_jit_lvalue_access_field($ref, null, $this->fields['refcount']),
-            \GCC_JIT_BINARY_OP_MINUS,
-            $this->context->constantFromInteger(1, 'int')
-        );
-        gcc_jit_block_end_with_conditional(
-            $refcounted,
-            $this->context->location(),
-            gcc_jit_context_new_comparison(
-                $this->context->context,
-                $this->context->location(),
-                GCC_JIT_COMPARISON_LE,
-                gcc_jit_rvalue_access_field(
-                    $ref->asRValue(), 
-                    $this->context->location(), 
-                    $this->fields['refcount']
-                ),
-                $this->context->constantFromInteger(0, 'int')
-            ),
-            $needsfree,
-            $return
-        );
-        $this->context->memory->free($needsfree, $virtual);
-        \gcc_jit_block_end_with_void_return(
-            $needsfree,
-            $this->context->location()
-        );
-        \gcc_jit_block_end_with_void_return(
-            $return,
-            $this->context->location()
-        );
+            $this->context->builder->positionAtEnd($ifBlock___c9f0f895fb98ab9159f51fd0297e236d);
+            { $offset___c9f0f895fb98ab9159f51fd0297e236d = $this->context->structFieldMap[$ref->typeOf()->getName()]['refcount'];
+            $current = $this->context->builder->extractValue(
+                $ref,
+                $offset___c9f0f895fb98ab9159f51fd0297e236d
+            );
+    $current = $this->context->builder->sub($current, $current->typeOf()->constInt(1, false));
+    $offset___c9f0f895fb98ab9159f51fd0297e236d = $this->context->structFieldMap[$ref->typeOf()->getName()]['refcount'];
+            $this->context->builder->insertValue(
+                $ref, 
+                $current,
+                $offset___c9f0f895fb98ab9159f51fd0297e236d
+            );
+    $test = $this->context->builder->icmp(
+                $this->context->builder::INT_SLE,
+                $current,
+                $current->typeOf()->constInt(0, false)
+            );
+    $bool___c9f0f895fb98ab9159f51fd0297e236d = $this->context->castToBool($test);
+            $prev___c9f0f895fb98ab9159f51fd0297e236d = $this->context->builder->getInsertBlock();
+            $ifBlock___c9f0f895fb98ab9159f51fd0297e236d = $prev___c9f0f895fb98ab9159f51fd0297e236d->insertBasicBlock('ifBlock');
+            $prev___c9f0f895fb98ab9159f51fd0297e236d->moveBefore($ifBlock___c9f0f895fb98ab9159f51fd0297e236d);
+            
+            $endBlock___c9f0f895fb98ab9159f51fd0297e236d[] = $tmp___c9f0f895fb98ab9159f51fd0297e236d = $ifBlock___c9f0f895fb98ab9159f51fd0297e236d->insertBasicBlock('endBlock');
+                $this->context->builder->branchIf($bool___c9f0f895fb98ab9159f51fd0297e236d, $ifBlock___c9f0f895fb98ab9159f51fd0297e236d, $tmp___c9f0f895fb98ab9159f51fd0297e236d);
+            
+
+            $this->context->builder->positionAtEnd($ifBlock___c9f0f895fb98ab9159f51fd0297e236d);
+            { $this->context->builder->free($refVirtual);
+    }
+            if ($this->context->builder->getInsertBlock()->getTerminator() === null) {
+                $this->context->builder->branch(end($endBlock___c9f0f895fb98ab9159f51fd0297e236d));
+            }
+            
+            $this->context->builder->positionAtEnd(array_pop($endBlock___c9f0f895fb98ab9159f51fd0297e236d));
+    }
+            if ($this->context->builder->getInsertBlock()->getTerminator() === null) {
+                $this->context->builder->branch(end($endBlock___c9f0f895fb98ab9159f51fd0297e236d));
+            }
+            
+            $this->context->builder->positionAtEnd(array_pop($endBlock___c9f0f895fb98ab9159f51fd0297e236d));
+    $this->context->builder->returnVoid();
+    
     }
 
     private function implementSeparate(): void {
         $func = $this->context->lookupFunction('__ref__separate');
-        $virtual = $func->params[0]->asRValue();
-
-        $block = \gcc_jit_function_new_block($func->func, "main");
-        $notnull = \gcc_jit_function_new_block($func->func, "not_null");
-        $refcounted = \gcc_jit_function_new_block($func->func, "refcounted");
-        $allocate = \gcc_jit_function_new_block($func->func, "copy_and_allocate");
-        $shortcircuit = \gcc_jit_function_new_block($func->func, "shortcircuit");
-        $delref = \gcc_jit_function_new_block($func->func, "delref");
-        
-        $ptr = \gcc_jit_rvalue_dereference($virtual, $this->context->location());
-
-        gcc_jit_block_end_with_conditional(
-            $block,
-            $this->context->location(),
-            gcc_jit_context_new_comparison(
-                $this->context->context,
-                $this->context->location(),
-                \GCC_JIT_COMPARISON_EQ,
-                $ptr->asRValue(),
-                \gcc_jit_context_null($this->context->context, $this->context->getTypeFromString('__ref__virtual*'))
-            ),
-            $shortcircuit,
-            $notnull
-        );
-
-
-        $ref = \gcc_jit_rvalue_dereference_field(
-            $ptr->asRValue(), 
-            $this->context->location(), 
-            $this->virtualField
-        );
-
-        $isRefCounted = $this->context->helper->binaryOp(
-            \GCC_JIT_BINARY_OP_BITWISE_AND,
-            'int',
-            gcc_jit_rvalue_access_field($ref->asRValue(), null, $this->fields['typeinfo']),
-            $this->context->constantFromInteger(self::TYPE_INFO_REFCOUNTED, 'int')
-        );
-        gcc_jit_block_end_with_conditional(
-            $notnull,
-            $this->context->location(),
-            $this->context->helper->cast(
-                $isRefCounted,
-                'bool'
-            ),
-            $refcounted,
-            $allocate
-        );
-        gcc_jit_block_end_with_conditional(
-            $refcounted,
-            $this->context->location(),
-            gcc_jit_context_new_comparison(
-                $this->context->context,
-                $this->context->location(),
-                GCC_JIT_COMPARISON_LE,
-                gcc_jit_rvalue_access_field(
-                    $ref->asRValue(), 
-                    $this->context->location(), 
-                    $this->fields['refcount']
-                ),
-                $this->context->constantFromInteger(1, 'int')
-            ),
-            $shortcircuit,
-            $delref
-        );
-        $this->delref($delref, $ptr->asRValue());
-        \gcc_jit_block_end_with_jump($delref, $this->context->location(), $allocate);
-
-        \gcc_jit_block_end_with_void_return(
-            $shortcircuit,
-            $this->context->location()
-        );
-
-        $type = $this->context->helper->binaryOp(
-            \GCC_JIT_BINARY_OP_BITWISE_AND,
-            'int',
-            gcc_jit_rvalue_access_field($ref->asRValue(), null, $this->fields['typeinfo']),
-            $this->context->constantFromInteger(self::TYPE_INFO_TYPEMASK, 'int')
-        );
-        $default = \gcc_jit_function_new_block($func->func, "default");
-        \gcc_jit_block_end_with_void_return(
-            $default,
-            $this->context->location()
-        );
-        $stringBlock = \gcc_jit_function_new_block($func->func, "string_block");
-        $this->context->helper->eval($stringBlock, $this->context->helper->call(
-            '__string__separate',
-            $virtual
-        ));
-        \gcc_jit_block_end_with_void_return(
-            $stringBlock,
-            $this->context->location()
-        );
-        $typeInfoTypeString = \gcc_jit_context_new_rvalue_from_long($this->context->context, $this->context->getTypeFromString('int'), self::TYPE_INFO_TYPE_STRING);
-        \gcc_jit_block_end_with_switch(
-            $allocate,
-            $this->context->location(),
-            $type,
-            $default,
-            1,
-            \gcc_jit_case_ptr_ptr::fromArray(
-                \gcc_jit_context_new_case(
-                    $this->context->context,
-                    $typeInfoTypeString,
-                    $typeInfoTypeString,
-                    $stringBlock
-                )
-            )
-        );
+        $func->addAttributeAtIndex(PHPLLVM\Attribute::INDEX_FUNCTION, $this->context->attributes['alwaysinline']);
+        // TODO
     }
 
-    public function asField(): \gcc_jit_field_ptr {
-        return $this->context->helper->createField(
-            '__ref__count', 
-            '__ref__'
-        );
+    public function disableRefcount(PHPLLVM\Value $value): void {
+        $virtual = $this->context->builder->pointerCast($value, $this->context->getTypeFromString('__ref__virtual*'));
+    $offset___c20ad4d76fe97759aa27a0c99bff6710 = $this->context->structFieldMap[$value->typeOf()->getElementType()->getName()]['ref'];
+            $ref = $this->context->builder->load(
+                $this->context->builder->structGep($value, $offset___c20ad4d76fe97759aa27a0c99bff6710)
+            );
+    $offset___c20ad4d76fe97759aa27a0c99bff6710 = $this->context->structFieldMap[$ref->typeOf()->getName()]['typeinfo'];
+            $typeinfo = $this->context->builder->extractValue(
+                $ref,
+                $offset___c20ad4d76fe97759aa27a0c99bff6710
+            );
+    $notRefc = $this->context->getTypeFromString('int32')->constInt(self::TYPE_INFO_NONREFCOUNTED_MASK, false);
+    $typeinfo = $this->context->builder->bitwiseAnd($typeinfo, $notRefc);
+    $offset___c20ad4d76fe97759aa27a0c99bff6710 = $this->context->structFieldMap[$ref->typeOf()->getName()]['typeinfo'];
+            $this->context->builder->insertValue(
+                $ref, 
+                $typeinfo,
+                $offset___c20ad4d76fe97759aa27a0c99bff6710
+            );
+    
     }
 
-    public function disableRefcount(\gcc_jit_block_ptr $block, \gcc_jit_rvalue_ptr $value): void {
-        $ref = \gcc_jit_rvalue_dereference_field(
-            $this->context->helper->cast(
-                $value,
-                '__ref__virtual*'
-            ), 
-            $this->context->location(), 
-            $this->virtualField
-        );
-        \gcc_jit_block_add_assignment_op(
-            $block,
-            $this->context->location(),
-            gcc_jit_lvalue_access_field($ref, null, $this->fields['typeinfo']),
-            \GCC_JIT_BINARY_OP_BITWISE_AND,
-            $this->context->constantFromInteger(~self::TYPE_INFO_REFCOUNTED, 'int')
-        );
+    public function init(PHPLLVM\Value $value, int $typeinfo = 0): void {
+        $type___c51ce410c124a10e0db5e4b97fc2af39 = $this->context->getTypeFromString('int32');
+            if (!is_object($typeinfo)) {
+                $typeinfo = $type___c51ce410c124a10e0db5e4b97fc2af39->constInt($typeinfo, false);
+            } elseif ($typeinfo->typeOf()->getWidth() >= $type___c51ce410c124a10e0db5e4b97fc2af39->getWidth()) {
+                $typeinfo = $this->context->builder->truncOrBitCast($typeinfo, $type___c51ce410c124a10e0db5e4b97fc2af39);
+            } else {
+                $typeinfo = $this->context->builder->zExtOrBitCast($typeinfo, $type___c51ce410c124a10e0db5e4b97fc2af39);
+            }
+    $this->context->builder->call(
+                $this->context->lookupFunction('__ref__init') , 
+                $typeinfo
+                , $value
+                
+            );
+    
     }
 
-    public function init(\gcc_jit_block_ptr $block, \gcc_jit_rvalue_ptr $value, int $typeinfo = 0): void {
-        $this->context->helper->eval(
-            $block,
-            $this->context->helper->call(
-                '__ref__init',
-                $this->context->helper->cast(
-                    $this->context->constantFromInteger($typeinfo),
-                    'int'
-                ),
-                $this->context->helper->cast(
-                    $value,
-                    '__ref__virtual*'
-                )
-            )
-        );
+    public function addref(PHPLLVM\Value $value): void {
+        $value = $this->context->builder->bitcast($value, $this->pointer);
+        $this->context->builder->call(
+                $this->context->lookupFunction('__ref__addref') , 
+                $value
+                
+            );
+    
     }
 
-    public function addref(\gcc_jit_block_ptr $block, \gcc_jit_rvalue_ptr $value): void {
-        $this->context->helper->eval(
-            $block,
-            $this->context->helper->call(
-                '__ref__addref',
-                $this->context->helper->cast(
-                    $value,
-                    '__ref__virtual*'
-                )
-            )
-        );
+    public function delref(PHPLLVM\Value $value): void {
+        $value = $this->context->builder->bitcast($value, $this->pointer);
+        $this->context->builder->call(
+                $this->context->lookupFunction('__ref__delref') , 
+                $value
+                
+            );
+    
     }
 
-    public function delref(\gcc_jit_block_ptr $block, \gcc_jit_rvalue_ptr $value): void {
-        $this->context->helper->eval(
-            $block,
-            $this->context->helper->call(
-                '__ref__delref',
-                $this->context->helper->cast(
-                    $value,
-                    '__ref__virtual*'
-                )
-            )
-        );
-    }
-
-    public function separate(\gcc_jit_block_ptr $block, \gcc_jit_lvalue_ptr $value): void {
-        $this->context->helper->eval(
-            $block,
-            $this->context->helper->call(
-                '__ref__separate',
-                $this->context->helper->cast(
-                    \gcc_jit_lvalue_get_address($value, $this->context->location()),
-                    '__ref__virtual**'
-                )
-            )
-        );
+    public function separate(PHPLLVM\Value $value): void {
+        $value = $this->context->builder->bitcast($value, $this->doublePointer);
+        $this->context->builder->call(
+                $this->context->lookupFunction('__ref__separate') , 
+                $value
+                
+            );
+    
     }
 }

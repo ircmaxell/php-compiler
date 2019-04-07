@@ -14,11 +14,12 @@
         "ircmaxell/php-cfg": "^1.0",
         "ircmaxell/php-types": "^1.0",
         "ircmaxell/php-optimizer": "dev-master",
-        "ircmaxell/libgccjit": "dev-master"
+        "ircmaxell/php-llvm": "dev-master"
     },
     "require-dev": {
         "phpunit/phpunit": "^8.0",
-        "friendsofphp/php-cs-fixer": "*"
+        "friendsofphp/php-cs-fixer": "*",
+        "pre/plugin": "^0.11.5"
     },
     "minimum-stability": "dev",
     "autoload": {
@@ -26,7 +27,15 @@
             "PHPCompiler\\": "lib/",
             "PHPCompiler\\ext\\": "ext/",
             "php\\": "php/"
-        }
-    }
+        },
+        "files": [
+            "src/macro_functions.php"
+        ]
+    },
+    "extra": {
+        "macros": [
+            "src/macros.yay"
+        ]
+    } 
 
 }

@@ -1,9 +1,5 @@
 <?php
 
-# This file is generated, changes you make will be lost.
-# Make your changes in /home/ircmaxell/Workspace/PHP-Compiler/PHP-Compiler/lib/JIT.pre instead.
-
-// First, expand statements
 /*
  * This file is part of PHP-Compiler, a PHP CFG Compiler for PHP code
  *
@@ -235,56 +231,27 @@ class JIT {
                 case OpCode::TYPE_PRINT:
                     $argOffset = $op->type === OpCode::TYPE_ECHO ? $op->arg1 : $op->arg2;
                     $arg = $this->context->getVariableFromOp($block->getOperand($argOffset));
-                    $charType = $this->context->context->int8Type()->pointerType(0);
                     $argValue = $arg->value;
                     switch ($arg->type) {                            
                         case Variable::TYPE_STRING:            
-                            $global___cfcd208495d565ef66e7dff9f98764da = $this->context->constantFromString("%.*s");
-            // TODO: Cast here, so it works
-            $local___cfcd208495d565ef66e7dff9f98764da = $this->context->builder->pointerCast($global___cfcd208495d565ef66e7dff9f98764da, $this->context->getTypeFromString('char*'));
-            $fmt = $local___cfcd208495d565ef66e7dff9f98764da;
-    $offset___cfcd208495d565ef66e7dff9f98764da = $this->context->structFieldMap[$argValue->typeOf()->getElementType()->getName()]['length'];
-            $length = $this->context->builder->load(
-                $this->context->builder->structGep($argValue, $offset___cfcd208495d565ef66e7dff9f98764da)
-            );
-    $offset___cfcd208495d565ef66e7dff9f98764da = $this->context->structFieldMap[$argValue->typeOf()->getElementType()->getName()]['value'];
-            $value = $this->context->builder->load(
-                $this->context->builder->structGep($argValue, $offset___cfcd208495d565ef66e7dff9f98764da)
-            );
-    $this->context->builder->call(
-                $this->context->lookupFunction('printf') , 
-                $fmt
-                , $length
-                , $value
-                
-            );
-    
+                            compile {
+                                $fmt = "%.*s";
+                                $length = $argValue->length;
+                                $value = $argValue->value;
+                                printf($fmt, $length, $value);
+                            }
                             break;
                         case Variable::TYPE_NATIVE_LONG:
-                            $global___c4ca4238a0b923820dcc509a6f75849b = $this->context->constantFromString("%lld");
-            // TODO: Cast here, so it works
-            $local___c4ca4238a0b923820dcc509a6f75849b = $this->context->builder->pointerCast($global___c4ca4238a0b923820dcc509a6f75849b, $this->context->getTypeFromString('char*'));
-            $fmt = $local___c4ca4238a0b923820dcc509a6f75849b;
-    $this->context->builder->call(
-                $this->context->lookupFunction('printf') , 
-                $fmt
-                , $argValue
-                
-            );
-    
+                            compile {
+                                $fmt = "%lld";
+                                printf($fmt, $argValue);
+                            }
                             break;
                         case Variable::TYPE_NATIVE_DOUBLE:
-                            $global___c81e728d9d4c2f636f067f89cc14862c = $this->context->constantFromString("%G");
-            // TODO: Cast here, so it works
-            $local___c81e728d9d4c2f636f067f89cc14862c = $this->context->builder->pointerCast($global___c81e728d9d4c2f636f067f89cc14862c, $this->context->getTypeFromString('char*'));
-            $fmt = $local___c81e728d9d4c2f636f067f89cc14862c;
-    $this->context->builder->call(
-                $this->context->lookupFunction('printf') , 
-                $fmt
-                , $argValue
-                
-            );
-    
+                            compile {
+                                $fmt = "%G";
+                                printf($fmt, $argValue);
+                            }
                             break;
                         default: 
                             throw new \LogicException("Echo for type $arg->type not implemented");
@@ -329,16 +296,14 @@ class JIT {
                     return $origBasicBlock;
                 case OpCode::TYPE_RETURN_VOID:
                     $this->context->freeDeadVariables($func, $basicBlock, $block);
-                    $this->context->builder->returnVoid();
-    
+                    compile { return; }
                     return $origBasicBlock;
                 case OpCode::TYPE_RETURN:
                     $return = $this->context->getVariableFromOp($block->getOperand($op->arg1));
                     $return->addref();
                     $retval = $return->value;
                     $this->context->freeDeadVariables($func, $basicBlock, $block);
-                    $this->context->builder->returnValue($retval);
-    
+                    compile { return $retval; }
                     return $origBasicBlock;
                 // case OpCode::TYPE_FUNCDEF:
                 //     $nameOp = $block->getOperand($op->arg1);
