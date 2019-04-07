@@ -1,0 +1,49 @@
+<?php
+
+/*
+ * This file is part of PHP-Compiler, a PHP CFG Compiler for PHP code
+ *
+ * @copyright 2015 Anthony Ferrara. All rights reserved
+ * @license MIT See LICENSE at the root of the project for more info
+ */
+
+namespace PHPCompiler\JIT\Builtin;
+
+use PHPCompiler\JIT\Builtin;
+
+use PHPLLVM;
+
+abstract class MemoryManager extends Builtin {
+
+    public function register(): void {
+        declare {
+            inline function __mm__malloc(size_t): void*;
+            inline function __mm__realloc(void*, size_t): void*;
+            inline function __mm__free(void*): void;
+        }
+    }
+
+    public function malloc(PHPLLVM\Type $type): PHPLLVM\Value {
+        compile {
+            $size = sizeof $type;
+            $ptr = __mm__malloc($size);
+        }
+        return $this->context->builder->pointerCast($ptr, $type->pointerType(0));
+    }
+
+    public function mallocWithExtra(PHPLLVM\Type $type, PHPLLVM\Value $extra): PHPLLVM\Value {
+        compile {
+            $size = sizeof $type;
+            $size = $size + $extra;
+            $ptr = __mm__malloc($size);
+        }
+        return $this->context->builder->pointerCast($ptr, $type->pointerType(0));
+    }
+
+    public function free(PHPLLVM\Value $value): void {
+        compile {
+            __mm__free($value);
+        }
+    }
+
+}

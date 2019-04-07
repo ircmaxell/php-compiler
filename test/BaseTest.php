@@ -7,6 +7,7 @@ use PHPUnit\Framework\TestCase;
 abstract class BaseTest extends TestCase {
 
     protected string $BIN = '';
+    protected static string $DIR = __DIR__;
 
     const EXPECTATIONS = [
         'EXPECT',
@@ -44,7 +45,7 @@ abstract class BaseTest extends TestCase {
     ];
 
     public static function providePHPTests(): \Generator {
-        yield from self::providePHPTestsFromDir(__DIR__ . '/cases');
+        yield from self::providePHPTestsFromDir(static::$DIR . '/cases');
     }
 
     private static function providePHPTestsFromDir(string $dir): \Generator {
@@ -157,10 +158,11 @@ abstract class BaseTest extends TestCase {
     ];
 
     protected function assertExpect(string $result, array $sections): void {
-        $actual = preg_replace('(\r\n)', "\n", trim($result));
+        $actual = $this->normalize($result);
         foreach (self::ASSERTIONS as $action => $selectedAssertion) {
             if (isset($sections[$action])) {
-                $content = preg_replace('(\r\n)', "\n", trim($sections[$action]));
+                $content = preg_replace('(\r\n?)', "\n", trim($sections[$action]));
+                $content = $this->normalize($content);
                 $expected = $action === "EXPECTREGEX" ? "/{$content}/" : $content;
                 if ($expected === null) {
                     throw new \LogicException("No PHPT expectation found");
@@ -170,6 +172,14 @@ abstract class BaseTest extends TestCase {
             }
         }
         throw new \RuntimeException('No PHPT assertion found');
+    }
+
+    protected function normalize(string $string): string {
+        $result = preg_replace('(\r\n)', "\n", trim($string)); // get rid of \r\n
+        $result = preg_replace('(^\s+)m', '', $result); // get rid of leading whitespace
+        $result = preg_replace('(\s+$)m', '', $result); // get rid of trailing whitespace
+        $result = preg_replace('(\n\n+)', "\n", $result); // get rid of blank lines
+        return $result;
     }
 
 }

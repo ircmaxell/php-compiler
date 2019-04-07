@@ -79,6 +79,7 @@ class Context {
         $this->analyzer = new Analyzer;
         
         $this->refcount = new Builtin\Refcount($this, $loadType);
+        $this->memory = new Builtin\MemoryManager($this, $loadType);
         $this->output = new Builtin\Output($this, $loadType);
         $this->type = new Builtin\Type($this, $loadType);
         $this->internal = new Builtin\Internal($this, $loadType);

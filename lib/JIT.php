@@ -238,51 +238,51 @@ class JIT {
                     $argValue = $arg->value;
                     switch ($arg->type) {                            
                         case Variable::TYPE_STRING:            
-                            $global___cfcd208495d565ef66e7dff9f98764da = $this->context->constantFromString("%.*s");
-            // TODO: Cast here, so it works
-            $local___cfcd208495d565ef66e7dff9f98764da = $this->context->builder->pointerCast($global___cfcd208495d565ef66e7dff9f98764da, $this->context->getTypeFromString('char*'));
-            $fmt = $local___cfcd208495d565ef66e7dff9f98764da;
+                            $fmt = $this->context->builder->pointerCast(
+                        $this->context->constantFromString("%.*s"),
+                        $this->context->getTypeFromString('char*')
+                    );
     $offset___cfcd208495d565ef66e7dff9f98764da = $this->context->structFieldMap[$argValue->typeOf()->getElementType()->getName()]['length'];
-            $length = $this->context->builder->load(
-                $this->context->builder->structGep($argValue, $offset___cfcd208495d565ef66e7dff9f98764da)
-            );
+                    $length = $this->context->builder->load(
+                        $this->context->builder->structGep($argValue, $offset___cfcd208495d565ef66e7dff9f98764da)
+                    );
     $offset___cfcd208495d565ef66e7dff9f98764da = $this->context->structFieldMap[$argValue->typeOf()->getElementType()->getName()]['value'];
-            $value = $this->context->builder->load(
-                $this->context->builder->structGep($argValue, $offset___cfcd208495d565ef66e7dff9f98764da)
-            );
+                    $value = $this->context->builder->load(
+                        $this->context->builder->structGep($argValue, $offset___cfcd208495d565ef66e7dff9f98764da)
+                    );
     $this->context->builder->call(
-                $this->context->lookupFunction('printf') , 
-                $fmt
-                , $length
-                , $value
-                
-            );
+                    $this->context->lookupFunction('printf') , 
+                    $fmt
+                    , $length
+                    , $value
+                    
+                );
     
                             break;
                         case Variable::TYPE_NATIVE_LONG:
-                            $global___c4ca4238a0b923820dcc509a6f75849b = $this->context->constantFromString("%lld");
-            // TODO: Cast here, so it works
-            $local___c4ca4238a0b923820dcc509a6f75849b = $this->context->builder->pointerCast($global___c4ca4238a0b923820dcc509a6f75849b, $this->context->getTypeFromString('char*'));
-            $fmt = $local___c4ca4238a0b923820dcc509a6f75849b;
+                            $fmt = $this->context->builder->pointerCast(
+                        $this->context->constantFromString("%lld"),
+                        $this->context->getTypeFromString('char*')
+                    );
     $this->context->builder->call(
-                $this->context->lookupFunction('printf') , 
-                $fmt
-                , $argValue
-                
-            );
+                    $this->context->lookupFunction('printf') , 
+                    $fmt
+                    , $argValue
+                    
+                );
     
                             break;
                         case Variable::TYPE_NATIVE_DOUBLE:
-                            $global___c81e728d9d4c2f636f067f89cc14862c = $this->context->constantFromString("%G");
-            // TODO: Cast here, so it works
-            $local___c81e728d9d4c2f636f067f89cc14862c = $this->context->builder->pointerCast($global___c81e728d9d4c2f636f067f89cc14862c, $this->context->getTypeFromString('char*'));
-            $fmt = $local___c81e728d9d4c2f636f067f89cc14862c;
+                            $fmt = $this->context->builder->pointerCast(
+                        $this->context->constantFromString("%G"),
+                        $this->context->getTypeFromString('char*')
+                    );
     $this->context->builder->call(
-                $this->context->lookupFunction('printf') , 
-                $fmt
-                , $argValue
-                
-            );
+                    $this->context->lookupFunction('printf') , 
+                    $fmt
+                    , $argValue
+                    
+                );
     
                             break;
                         default: 

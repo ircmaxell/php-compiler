@@ -9,10 +9,10 @@ $(macro) {
                 token(T_FUNCTION),
                 T_STRING as name,
                 token('('),
-                ls(
+                optional(ls(
                     chain(optional(T_CONST as const), ctype() as type),
                     token(',')
-                ) as params,
+                ) as params),
                 token(')'),
                 token(':'),
                 ctype() as returnType,
@@ -24,10 +24,10 @@ $(macro) {
                 token(T_FUNCTION),
                 T_STRING as vararg_name,
                 token('('),
-                ls(
+                optional(ls(
                     chain(optional(T_CONST as vararg_const), ctype() as vararg_type),
                     token(',')
-                ) as vararg_params,
+                ) as vararg_params),
                 token(','),
                 token(T_ELLIPSIS),
                 token(')'),
@@ -136,27 +136,40 @@ $(macro) {
 $(macro :recursive) {
     compile {
         $(repeat(either(
-            chain(T_VARIABLE as null_result, token('='), T_VARIABLE as null_check, token(T_IS_IDENTICAL), rtoken('(null)'), token(';')) as isnull,
-            chain(T_VARIABLE as const_le_result, token('='), T_VARIABLE as const_le_left, token(T_IS_SMALLER_OR_EQUAL), T_LNUMBER as const_le_value, token(';')) as const_le,
-            chain(token(T_RETURN), token(';')) as return_void,
-            chain(token(T_RETURN), T_VARIABLE as value, token(';')) as return_value,
+            chain(T_VARIABLE as result, token('='), either(
+                chain(T_VARIABLE as nullcheck_var, token(T_IS_IDENTICAL), rtoken('(null)')) as nullcheck,
+                chain(T_VARIABLE as constle_left, token(T_IS_SMALLER_OR_EQUAL), T_LNUMBER as constle_right) as constle,
+                chain(T_CONSTANT_ENCAPSED_STRING as conststr_value) as conststr,
+                chain(token('('), T_STRING as cast_type, token(')'), T_VARIABLE as cast_value) as cast,
+                chain(token('('), T_STRING as constcast_type, token(')'), expression() as constcast_value) as constcast,
+                chain(token('('), ctype() as ptrcast_type, token(')'), T_VARIABLE as ptrcast_value) as ptrcast,
+                chain(T_VARIABLE as field_deref_var, token(T_OBJECT_OPERATOR), label() as field_deref_field) as field_deref,
+                chain(T_VARIABLE as field_extract_var, token('.'), label() as field_extract_field) as field_extract,
+                chain(buffer('sizeof'), T_VARIABLE as sizeof_var) as sizeof,
+                chain(buffer('sizeof'), ctype() as sizeoftype_type) as sizeoftype,
+                chain(buffer('malloc'), ctype() as malloc_type, optional(T_VARIABLE as malloc_extra)) as malloc,
+                chain(T_STRING as call_func, token('('), ls(T_VARIABLE as call_arg, token(',')) as call_args, token(')')) as call,
+                chain(T_VARIABLE as binary_left, either(
+                    token('&') as binary_and,
+                    token('|') as binary_or,
+                    token('+') as binary_add,
+                    token('-') as binary_sub
+                ) as binary_op, T_VARIABLE as binary_right) as binary
+            ), token(';')) as assignop, 
+            chain(token(T_RETURN), token(';')) as returnvoid,
+            chain(token(T_RETURN), T_VARIABLE as returnvalue_value, token(';')) as returnvalue,
             chain(T_VARIABLE as inc_result, token(T_INC), token(';')) as inc,
             chain(T_VARIABLE as dec_result, token(T_DEC), token(';')) as dec,
-            chain(T_VARIABLE as const_str_result, token('='), T_CONSTANT_ENCAPSED_STRING as const_str_value, token(';')) as const_str,
-            chain(T_VARIABLE as cast_result, token('='), token('('), T_STRING as cast_type, token(')'), T_VARIABLE as cast_value, token(';')) as cast,
-            chain(T_VARIABLE as constcast_result, token('='), token('('), T_STRING as constcast_type, token(')'), expression() as constcast_value, token(';')) as constcast,
-            chain(T_VARIABLE as ptrcast_result, token('='), token('('), ctype() as ptrcast_type, token(')'), T_VARIABLE as ptrcast_value, token(';')) as ptrcast,
-            chain(T_VARIABLE as bitwise_and_result, token('='), T_VARIABLE as bitwise_and_left, token('&'), T_VARIABLE as bitwise_and_right, token(';')) as bitwise_and,
             chain(token(T_IF), token('('), T_VARIABLE as cond, token(')'), token('{'), layer() as if_stmts, token('}'), optional(chain(token(T_ELSE), token('{'), layer() as else_stmts, token('}')))) as if_stmt,
-            chain(T_VARIABLE as field_deref_result, token('='), T_VARIABLE as field_deref_var, token(T_OBJECT_OPERATOR), label() as field_deref_field, token(';')) as field_deref,
-            chain(T_VARIABLE as field_extract_result, token('='), T_VARIABLE as field_extract_var, token('.'), label() as field_extract_field, token(';')) as field_extract,
+            
+            
             chain(T_VARIABLE as field_deref_write_result, token(T_OBJECT_OPERATOR), T_STRING as field_deref_write_field, token('='), T_VARIABLE as field_deref_write_value, token(';')) as field_deref_write,
             chain(T_VARIABLE as const_field_assign_var, token('.'), label() as const_field_assign_field, token('='), T_LNUMBER as const_field_assign_value, token(';')) as const_field_assign,
             chain(T_VARIABLE as field_assign_var, token('.'), label() as field_assign_field, token('='), T_VARIABLE as field_assign_value, token(';')) as field_assign,
+            
             chain(buffer('free'), T_VARIABLE as free_var, token(';')) as free,
             chain(buffer('memcpy'), T_VARIABLE as memcpy_dest, T_VARIABLE as memcpy_src, T_VARIABLE as memcpy_length, token(';')) as memcpy,
-            chain(T_VARIABLE as malloc_result, token('='), buffer('malloc'), ctype() as malloc_type, token(';')) as malloc,
-            chain(T_VARIABLE as call_result, token('='), T_STRING as call_func, token('('), ls(T_VARIABLE as call_arg, token(',')) as call_args, token(')'), token(';')) as call,
+            
             chain(T_STRING as voidcall_func, token('('), ls(T_VARIABLE as voidcall_arg, token(',')) as voidcall_args, token(')'), token(';')) as voidcall
         )) as stmts)
     }
@@ -164,178 +177,209 @@ $(macro :recursive) {
     $(stmts ... {
         $$(trim {
 
-        $(isnull ? ... {
-            $(null_result) = $this->context->builder->icmp(
-                $this->context->builder::INT_EQ,
-                $(null_check),
-                $(null_check)->typeOf()->constNull()
-            );
-        })
+            $(assignop ? ... {
+                $(nullcheck ? ... {
+                    $(result) = $this->context->builder->icmp(PHPLLVM\Builder::INT_EQ, $(nullcheck_var), $(nullcheck_var)->typeOf()->constNull());
+                })
 
-        $(const_le ? ... {
-            $(const_le_result) = $this->context->builder->icmp(
-                $this->context->builder::INT_SLE,
-                $(const_le_left),
-                $(const_le_left)->typeOf()->constInt($(const_le_value), false)
-            );
-        })
+                $(constle ? ... {
+                    $(result) = $this->context->builder->icmp(
+                        PHPLLVM\Builder::INT_SLE,
+                        $(constle_left),
+                        $(constle_left)->typeOf()->constInt($(constle_right), false)
+                    );
+                })
 
-        $(return_void ? {
-            $this->context->builder->returnVoid();
-        })
+                $(conststr ? ... {
+                    $(result) = $this->context->builder->pointerCast(
+                        $this->context->constantFromString($(conststr_value)),
+                        $this->context->getTypeFromString('char*')
+                    );
+                })
 
-        $(return_value ? ... {
-            $this->context->builder->returnValue($(value));
-        })
+                $(cast ? ... {
+                    $type = $this->context->getTypeFromString($$(stringify($(cast_type))));
+                    if (!is_object($(cast_value))) {
+                        $(result) = $type->constInt($(cast_value), false);
+                    } elseif ($(cast_value)->typeOf()->getWidth() >= $type->getWidth()) {
+                        $(result) = $this->context->builder->truncOrBitCast($(cast_value), $type);
+                    } else {
+                        $(result) = $this->context->builder->zExtOrBitCast($(cast_value), $type);
+                    }
+                })
 
-        $(inc ? ... {
-            $(inc_result) = $this->context->builder->add($(inc_result), $(inc_result)->typeOf()->constInt(1, false));
-        })
+                $(constcast ? ... {
+                    $(result) = $this->context->getTypeFromString($$(stringify($(constcast_type))))->constInt($(constcast_value), false);
+                })
 
-        $(dec ? ... {
-            $(dec_result) = $this->context->builder->sub($(dec_result), $(dec_result)->typeOf()->constInt(1, false));
-        })
+                $(ptrcast ? ... {
+                    $(result) = $this->context->builder->pointerCast(
+                        $(ptrcast_value), 
+                        $this->context->getTypeFromString($$(stringify($(ptrcast_type))))
+                    );
+                })
 
-        $(const_str ? ... {
-            $global = $this->context->constantFromString($(const_str_value));
-            // TODO: Cast here, so it works
-            $local = $this->context->builder->pointerCast($global, $this->context->getTypeFromString('char*'));
-            $(const_str_result) = $local;
-        })
+                $(binary ? ... {
+                    $(binary_op ... {
+                        $(binary_and ? ... {
+                            $(result) = $this->context->builder->bitwiseAnd($(binary_left), $(binary_right));
+                        })
 
-        $(cast ? ... {
-            $type = $this->context->getTypeFromString($$(stringify($(cast_type))));
-            if (!is_object($(cast_value))) {
-                $(cast_result) = $type->constInt($(cast_value), false);
-            } elseif ($(cast_value)->typeOf()->getWidth() >= $type->getWidth()) {
-                $(cast_result) = $this->context->builder->truncOrBitCast($(cast_value), $type);
-            } else {
-                $(cast_result) = $this->context->builder->zExtOrBitCast($(cast_value), $type);
-            }
-        })
+                        $(binary_or ? ... {
+                            $(result) = $this->context->builder->bitwiseOr($(binary_left), $(binary_right));
+                        })
 
-        $(constcast ? ... {
-            $(constcast_result) = $this->context->getTypeFromString($$(stringify($(constcast_type))))->constInt($(constcast_value), false);
-        })
+                        $(binary_add ? ... {
+                            $(result) = $this->context->builder->add($(binary_left), $(binary_right));
+                        })
 
-        $(ptrcast ? ... {
-            $(ptrcast_result) = $this->context->builder->pointerCast($(ptrcast_value), $this->context->getTypeFromString($$(stringify($(ptrcast_type)))));
-        })
+                        $(binary_sub ? ... {
+                            $(result) = $this->context->builder->sub($(binary_left), $(binary_right));
+                        })
+                    })
+                })
 
-        $(bitwise_and ? ... {
-            $(bitwise_and_result) = $this->context->builder->bitwiseAnd($(bitwise_and_left), $(bitwise_and_right));
-        })
+                $(bitwise_and ? ... {
+                    
+                })
 
-        $(if_stmt ? ... {
+                $(field_extract ? ... {
+                    $offset = $this->context->structFieldMap[$(field_extract_var)->typeOf()->getName()][$$(stringify($(field_extract_field)))];
+                    $(result) = $this->context->builder->extractValue($(field_extract_var), $offset);
+                })
 
-            $bool = $this->context->castToBool($(cond));
-            $prev = $this->context->builder->getInsertBlock();
-            $ifBlock = $prev->insertBasicBlock('ifBlock');
-            $prev->moveBefore($ifBlock);
-            $(else_stmts ? { 
-                $elseBlock[] = $tmp = $ifBlock->insertBasicBlock('elseBlock');
-                $endBlock[] = $ifBlock->insertBasicBlock('endBlock');
-                $this->context->builder->branchIf($bool, $ifBlock, $tmp);
+                $(field_deref ? ... {
+                    $offset = $this->context->structFieldMap[$(field_deref_var)->typeOf()->getElementType()->getName()][$$(stringify($(field_deref_field)))];
+                    $(result) = $this->context->builder->load(
+                        $this->context->builder->structGep($(field_deref_var), $offset)
+                    );
+                })
+
+                $(sizeof ? ... {
+                    if ($(sizeof_var) instanceof \PHPLLVM\Type) {
+                        $type = $(sizeof_var);
+                    } elseif ($(sizeof_var) instanceof \PHPLLVM\Value) {
+                        $type = $(sizeof_var)->typeOf();
+                    } else {
+                        throw new \LogicException("Attempt to call sizeof on non-PHPLLVM type/value");
+                    }
+                    $(result) = $type->sizeOf();
+                })
+
+                $(sizeoftype ? ... {
+                    $type = $this->context->getTypeFromString($$(stringify($(sizeoftype_type))));
+                    $(result) = $type->sizeOf();
+                })
+
+                $(malloc ? ... {
+                    $type = $this->context->getTypeFromString($$(stringify($(malloc_type))));
+                    $(malloc_extra ? {
+                        $(result) = $this->context->memory->mallocWithExtra($type, $(malloc_extra));
+                    })
+                    $(malloc_extra ! {
+                        $(result) = $this->context->memory->malloc($type);
+                    })
+                })
+
+                $(call ? ... {
+                    $(result) = $this->context->builder->call(
+                        $this->context->lookupFunction($$(stringify($(call_func)))) $(call_args ? {, })
+                        $(call_args ... (, ) {
+                            $(call_arg)
+                        })
+                    );
+                })
             })
-            $(else_stmts ! {
-                $endBlock[] = $tmp = $ifBlock->insertBasicBlock('endBlock');
-                $this->context->builder->branchIf($bool, $ifBlock, $tmp);
+
+            $(returnvoid ? {
+                $this->context->builder->returnVoid();
             })
 
-            $this->context->builder->positionAtEnd($ifBlock);
-            $$(expand( { compile {
-                $(if_stmts)
-            }}))
-            if ($this->context->builder->getInsertBlock()->getTerminator() === null) {
-                $this->context->builder->branch(end($endBlock));
-            }
-            $(else_stmts ? {
-                $this->context->builder->positionAtEnd(array_pop($elseBlock));
+            $(returnvalue ? ... {
+                $this->context->builder->returnValue($(returnvalue_value));
+            })
+
+            $(inc ? ... {
+                $(inc_result) = $this->context->builder->add($(inc_result), $(inc_result)->typeOf()->constInt(1, false));
+            })
+
+            $(dec ? ... {
+                $(dec_result) = $this->context->builder->sub($(dec_result), $(dec_result)->typeOf()->constInt(1, false));
+            })
+
+            $(if_stmt ? ... {
+                $bool = $this->context->castToBool($(cond));
+                $prev = $this->context->builder->getInsertBlock();
+                $ifBlock = $prev->insertBasicBlock('ifBlock');
+                $prev->moveBefore($ifBlock);
+                $(else_stmts ? { 
+                    $elseBlock[] = $tmp = $ifBlock->insertBasicBlock('elseBlock');
+                    $endBlock[] = $ifBlock->insertBasicBlock('endBlock');
+                    $this->context->builder->branchIf($bool, $ifBlock, $tmp);
+                })
+                $(else_stmts ! {
+                    $endBlock[] = $tmp = $ifBlock->insertBasicBlock('endBlock');
+                    $this->context->builder->branchIf($bool, $ifBlock, $tmp);
+                })
+                $this->context->builder->positionAtEnd($ifBlock);
                 $$(expand( { compile {
-                    $(else_stmts)
+                    $(if_stmts)
                 }}))
                 if ($this->context->builder->getInsertBlock()->getTerminator() === null) {
                     $this->context->builder->branch(end($endBlock));
                 }
+                $(else_stmts ? {
+                    $this->context->builder->positionAtEnd(array_pop($elseBlock));
+                    $$(expand( { compile {
+                        $(else_stmts)
+                    }}))
+                    if ($this->context->builder->getInsertBlock()->getTerminator() === null) {
+                        $this->context->builder->branch(end($endBlock));
+                    }
+                })
+                $this->context->builder->positionAtEnd(array_pop($endBlock));
             })
-            $this->context->builder->positionAtEnd(array_pop($endBlock));
-        })
 
-        $(field_extract ? ... {
-            $offset = $this->context->structFieldMap[$(field_extract_var)->typeOf()->getName()][$$(stringify($(field_extract_field)))];
-            $(field_extract_result) = $this->context->builder->extractValue(
-                $(field_extract_var),
-                $offset
-            );
-        })
+            $(field_deref_write ? ... {
+                $offset = $this->context->structFieldMap[$(field_deref_write_result)->typeOf()->getElementType()->getName()][$$(stringify($(field_deref_write_field)))];
+                $this->context->builder->store(
+                    $(field_deref_write_value),
+                    $this->context->builder->structGep($(field_deref_write_result), $offset)
+                );
+            })
 
-        $(field_deref ? ... {
-            $offset = $this->context->structFieldMap[$(field_deref_var)->typeOf()->getElementType()->getName()][$$(stringify($(field_deref_field)))];
-            $(field_deref_result) = $this->context->builder->load(
-                $this->context->builder->structGep($(field_deref_var), $offset)
-            );
-        })
+            $(field_assign ? ... {
+                $offset = $this->context->structFieldMap[$(field_assign_var)->typeOf()->getName()][$$(stringify($(field_assign_field)))];
+                $this->context->builder->insertValue(
+                    $(field_assign_var), 
+                    $(field_assign_value),
+                    $offset
+                );
+            })
 
-        $(field_deref_write ? ... {
-            $offset = $this->context->structFieldMap[$(field_deref_write_result)->typeOf()->getElementType()->getName()][$$(stringify($(field_deref_write_field)))];
-            $this->context->builder->store(
-                $(field_deref_write_value),
-                $this->context->builder->structGep($(field_deref_write_result), $offset)
-            );
-        })
+            $(const_field_assign ? ... {
+                $structType = $(const_field_assign_var)->typeOf();
+                $offset = $this->context->structFieldMap[$structType->getName()][$$(stringify($(const_field_assign_field)))];
 
-        $(field_assign ? ... {
-            $offset = $this->context->structFieldMap[$(field_assign_var)->typeOf()->getName()][$$(stringify($(field_assign_field)))];
-            $this->context->builder->insertValue(
-                $(field_assign_var), 
-                $(field_assign_value),
-                $offset
-            );
-        })
+                $this->context->builder->insertValue(
+                    $(const_field_assign_var), 
+                    $structType->getElementAtIndex($offset)->constInt($(const_field_assign_value), false),
+                    $offset
+                );
+            })
 
-        $(const_field_assign ? ... {
-            $structType = $(const_field_assign_var)->typeOf();
-            $offset = $this->context->structFieldMap[$structType->getName()][$$(stringify($(const_field_assign_field)))];
+            $(free ? ... {
+                $this->context->memory->free($(free_var));
+            })
 
-            $this->context->builder->insertValue(
-                $(const_field_assign_var), 
-                $structType->getElementAtIndex($offset)->constInt($(const_field_assign_value), false),
-                $offset
-            );
-        })
-
-        $(free ? ... {
-            $this->context->builder->free($(free_var));
-        })
-
-        $(memcpy ? ... {
-            // TODO
-        })
-
-        $(malloc ? ... {
-            $type = $this->context->getTypeFromString($$(stringify($(malloc_type))));
-            $(malloc_result) = $this->context->builder->pointerCast($this->context->builder->malloc($type), $type->pointerType(0));
-        })
-
-        $(call ? ... {
-            $(call_result) = $this->context->builder->call(
-                $this->context->lookupFunction($$(stringify($(call_func)))) $(call_args ? {, })
-                $(call_args ... (, ) {
-                    $(call_arg)
-                })
-            );
-        })
-
-        $(voidcall ? ... {
-            $this->context->builder->call(
-                $this->context->lookupFunction($$(stringify($(voidcall_func)))) $(voidcall_args ? {, })
-                $(voidcall_args ... (, ) {
-                    $(voidcall_arg)
-                })
-            );
-        })
-
-
+            $(voidcall ? ... {
+                $this->context->builder->call(
+                    $this->context->lookupFunction($$(stringify($(voidcall_func)))) $(voidcall_args ? {, })
+                    $(voidcall_args ... (, ) {
+                        $(voidcall_arg)
+                    })
+                );
+            })
 
         })
     })

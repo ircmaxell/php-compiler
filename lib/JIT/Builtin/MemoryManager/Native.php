@@ -15,25 +15,11 @@ class Native extends MemoryManager {
 
     public function register(): void {
         parent::register();
-        $this->context->helper->importFunction(
-            'free',
-            'void',
-            false,
-            'void*'
-        );
-        $this->context->helper->importFunction(
-            'malloc',
-            'void*',
-            false,
-            'size_t'
-        );
-        $this->context->helper->importFunction(
-            'realloc',
-            'void*',
-            false,
-            'void*',
-            'size_t'
-        );
+        declare {
+            function malloc(size_t): void*;
+            function realloc(void*, size_t): void*;
+            function free(void*): void;            
+        }
     } 
 
     public function malloc(\gcc_jit_rvalue_ptr $size, \gcc_jit_type_ptr $type): \gcc_jit_rvalue_ptr {

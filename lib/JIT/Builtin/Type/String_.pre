@@ -51,6 +51,9 @@ class String_ extends Type {
     }
 
     private function implementAlloc(): void {
+
+        // TODO
+        
         compile {
             function __string__alloc($size) {
                 $struct = malloc __string__;

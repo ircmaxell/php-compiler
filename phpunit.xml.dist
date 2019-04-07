@@ -10,8 +10,14 @@
          stopOnFailure="false"
          bootstrap="./vendor/autoload.php">
     <testsuites>
-        <testsuite name="PHPCompiler Test Suite">
-            <directory suffix=".php">./test</directory>
+        <testsuite name="PHPCompiler Compliance Test Suites">
+            <directory suffix=".php">./test/compliance</directory>
+        </testsuite>
+        <testsuite name="PHPCompiler Unit Test Suites">
+            <directory suffix=".php">./test/unit</directory>
+        </testsuite>
+        <testsuite name="PHPCompiler Macro Test Suites">
+            <directory suffix=".php">./test/macro</directory>
         </testsuite>
     </testsuites>
 
