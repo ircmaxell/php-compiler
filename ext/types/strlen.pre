@@ -9,12 +9,13 @@
 
 namespace PHPCompiler\ext\types;
 
-use PHPCompiler\Func\Internal\JITInlined;
+use PHPCompiler\Func\Internal;
 use PHPCompiler\Frame;
-use PHPCompiler\JIT;
-use PHPCompiler\JIT\Func as JITFunc;
 
-class strlen extends JITInlined {
+use PHPCompiler\JIT;
+
+
+class strlen extends Internal {
 
     public function execute(Frame $frame): void {
         if (count($frame->calledArgs) !== 1) {

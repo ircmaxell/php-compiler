@@ -11,7 +11,7 @@ namespace Yay {
     {
         return chain(
             llvmidentifier()->as('type'),
-            optional(repeat(token('*'))->as('ptr'))
+            optional(repeat(either(token('*'), token(T_POW)))->as('ptr'))
         );
     }
 

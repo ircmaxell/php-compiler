@@ -11,11 +11,13 @@ namespace PHPCompiler\JIT;
 
 use PHPCfg\Operand;
 
+use PHPLLVM;
+
 class Scope {
     public int $classId = 0;
     public \SplObjectStorage $blockStorage;
     public \SplObjectStorage $variables;
-    public ?Func $toCall = null;
+    public ?PHPLLVM\Value $toCall = null;
     public array $args = [];
 
     public function __construct() {

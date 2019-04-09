@@ -27,6 +27,7 @@ class String_ extends Type {
             };
             inline function __string__strlen(__string__*): int64;
             inline function __string__alloc(int64): __string__*;
+            inline function __string__realloc(__string__**, int64): void;
             inline function __string__init(int64, const char*): __string__*;
             inline function __string__separate(__string__ *): __string__*;
         }
@@ -37,7 +38,7 @@ class String_ extends Type {
 
         $this->implementAlloc();
         $this->implementInit();
-        // $this->implementRealloc();
+        $this->implementRealloc();
         $this->implementSeparate();
         $this->implementStrlen();
     }
@@ -55,7 +56,7 @@ class String_ extends Type {
         compile {
             function __string__alloc($size) {
                 $allocSize = $size + 1;
-                $struct = malloc __string__ $allocSize;
+                $struct = malloc __string__ $size;
                 $struct->length = $size;
                 $char = &$struct->value;
                 memset $char 0 $allocSize;
@@ -79,46 +80,36 @@ class String_ extends Type {
     }
 
     private function implementRealloc(): void {
-        $realloc = $this->context->lookupFunction('__string__realloc');
-        $block = \gcc_jit_function_new_block($realloc->func, 'main');
-        $isnull = \gcc_jit_function_new_block($realloc->func, 'is_null');
-        $notnull = \gcc_jit_function_new_block($realloc->func, 'not_null');
-        
-        $ptr = $realloc->params[0]->asLValue();
-        $reallocSize = $this->context->helper->binaryOp(
-            GCC_JIT_BINARY_OP_PLUS,
-            'size_t',
-            $this->size->asRValue(),
-            $realloc->params[1]->asRValue()
-        );
-        $local = \gcc_jit_function_new_local($realloc->func, null, $this->pointer, 'result');
-        $this->context->helper->assign(
-            $block, 
-            $local,
-            $this->context->memory->realloc($ptr->asRValue(), $reallocSize, $this->pointer) 
-        );
-        $this->context->helper->assign(
-            $block,
-            $this->writeSize($local->asRValue()),
-            $realloc->params[1]->asRValue()
-        );
-        gcc_jit_block_end_with_conditional(
-            $block,
-            $this->context->location(),
-            gcc_jit_context_new_comparison(
-                $this->context->context,
-                $this->context->location(),
-                \GCC_JIT_COMPARISON_EQ,
-                $ptr->asRValue(),
-                $this->nullPointer()
-            ),
-            $isnull,
-            $notnull
-        );
-        $this->context->refcount->init($isnull, $local->asRValue(), Refcount::TYPE_INFO_REFCOUNTED | Refcount::TYPE_INFO_TYPE_STRING);
+        compile {
+            function __string__realloc($doublePtr, $newSize) {
+                $refVirtual = (__ref__virtual**) $doublePtr;
+                __ref__separate($refVirtual);
+                $destVar = load $doublePtr;
+                $test = $destVar == null;
+                if ($test) {
+                    $result = __string__alloc($newSize);
+                    store $result $doublePtr;
+                    return;
+                }
+                $oldSize = $destVar->length;
 
-        \gcc_jit_block_end_with_jump($isnull,  null,$notnull);
-        \gcc_jit_block_end_with_return($notnull,  null, $local->asRValue());
+                $destValue = realloc $destVar $newSize;
+                $destValue->length = $newSize;
+                $char = &$destValue->value;
+
+                $test = $newSize > $oldSize;
+                if ($test) {
+                    $char = gep $char $oldSize;
+                    $diff = $newSize - $oldSize;
+                    memset $char 0 $diff;    
+                } else {
+                    $char = gep $char $newSize;
+                    $end = (int64) 1;
+                    memset $char 0 $end;
+                }
+                return;
+            }
+        }
     }
 
     private function implementSeparate(): void {
@@ -128,46 +119,11 @@ class String_ extends Type {
                 $new = __string__alloc($size);
                 $char = &$string->value;
                 $dest = &$new->value;
-
-                memcpy $dest $char $size;
-
-                $ref = $string->ref;
-                $typeinfo = $ref.typeinfo;
-                $virtual = (__ref__virtual*) $new;
-                __ref__init($typeinfo, $virtual);
+                $copySize = $size + 1;
+                memcpy $dest $char $copySize;
                 return $new;
             }
         }
-        return;
-
-        $func = $this->context->lookupFunction('__string__separate');
-        $virtual = $func->params[0]->asRValue();
-        $deref = \gcc_jit_rvalue_dereference($virtual, $this->context->location());
-        $from = $this->context->helper->cast(
-            $deref->asRValue(),
-            '__string__*'
-        );
-        $block = \gcc_jit_function_new_block($func->func, 'main');
-        $tmp = \gcc_jit_function_new_local($func->func, $this->context->location(), $this->pointer, 'tmp');
-        $length = $this->sizePtr($from)->asRValue();
-        $this->init(
-            $block,
-            $tmp,
-            $this->context->helper->cast($this->valuePtr($from), 'const char*'),
-            $length
-        );
-        \gcc_jit_block_add_assignment(
-            $block,
-            $this->context->location(),
-            $deref,
-            \gcc_jit_context_new_cast(
-                $this->context->context,
-                $this->context->location(),
-                $tmp->asRValue(),
-                $this->context->refcount->pointer
-            )
-        );
-        \gcc_jit_block_end_with_void_return($block, $this->context->location());   
     }
 
     public function initialize(): void {
@@ -259,39 +215,33 @@ class String_ extends Type {
         }
     }
 
-    public function concat(\gcc_jit_block_ptr $block, Variable $dest, Variable $left, Variable $right): void {
+    public function concat(Variable $dest, Variable $left, Variable $right): void {
         assert($dest->type === Variable::TYPE_STRING);
-        $this->context->refcount->separate($block, $dest->lvalue);
-
-
-        $leftSize = $this->size($left);
-        $rightSize = $this->size($right);
-        $this->reallocate($block, $dest->lvalue, $this->context->helper->binaryOp(
-            \GCC_JIT_BINARY_OP_PLUS,
-            'size_t',
-            $leftSize,
-            $rightSize
-        ));
-
-        if ($left !== $dest) {
-            $this->copy(
-                $block, 
-                $dest, 
-                $left,
-                $this->context->constantFromInteger(0, 'size_t')
-            );
+        if ($dest->kind === Variable::KIND_VALUE) {
+            // What do do?
+            throw new \LogicException("Unknown how to assign to a value");
+        } else {
+            $destVar = $dest->value;
         }
-        $this->copy(
-            $block,
-            $dest,
-            $right,
-            $this->context->helper->binaryOp(
-                \GCC_JIT_BINARY_OP_MINUS,
-                'size_t',
-                $this->size($dest),
-                $this->size($right)
-            )
-        );
+        $leftVar = $this->context->helper->loadValue($left);
+        $rightVar = $this->context->helper->loadValue($right);
+
+        unsigned compile {
+            $leftSize = $leftVar->length;
+            $rightSize = $rightVar->length;
+            $size = $leftSize + $rightSize;
+            __string__realloc($destVar, $size);
+            $destValue = load $destVar;
+
+            $destValue->length = $size;
+            $char = &$destValue->value;
+            $leftChar = &$leftVar->value;
+            memcpy $char $leftChar $leftSize;
+            $char = gep $char $leftSize;
+            $rightChar = &$rightVar->value;
+            memcpy $char $rightChar $rightSize;
+        }
+        $this->context->builder->store($destValue, $dest->value);
     }
 
     private function copy(\gcc_jit_block_ptr $block, Variable $dest, Variable $other, \gcc_jit_rvalue_ptr $offset): void {

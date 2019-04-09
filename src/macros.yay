@@ -137,7 +137,7 @@ $(macro :unsafe :recursive) {
     $(optional(buffer('unsigned')) as unsigned) compile {
         $(repeat(either(
             chain(T_VARIABLE as result, token('='), either(
-                chain(T_VARIABLE as nullcheck_var, token(T_IS_IDENTICAL), buffer('null')) as nullcheck,
+                chain(T_VARIABLE as nullcheck_var, token(T_IS_EQUAL), buffer('null')) as nullcheck,
                 chain(T_CONSTANT_ENCAPSED_STRING as conststr_value) as conststr,
                 chain(token('('), T_STRING as cast_type, token(')'), T_VARIABLE as cast_value) as cast,
                 chain(token('('), T_STRING as constcast_type, token(')'), expression() as constcast_value) as constcast,
@@ -151,6 +151,8 @@ $(macro :unsafe :recursive) {
                 chain(buffer('sizeof'), T_VARIABLE as sizeof_var) as sizeof,
                 chain(buffer('sizeof'), ctype() as sizeoftype_type) as sizeoftype,
                 chain(buffer('malloc'), ctype() as malloc_type, optional(T_VARIABLE as malloc_extra)) as malloc,
+                chain(buffer('realloc'), T_VARIABLE as realloc_var, T_VARIABLE as realloc_extra) as realloc,
+                chain(buffer('gep'), T_VARIABLE as gep_var, T_VARIABLE as gep_offset) as gep,
                 chain(llvmidentifier() as call_func, token('('), ls(T_VARIABLE as call_arg, token(',')) as call_args, token(')')) as call,
                 chain(T_VARIABLE as binary_left, either(
                     token('&') as binary_and,
@@ -418,6 +420,15 @@ $(macro :unsafe :recursive) {
                     );
                 })
 
+                $(gep ? ... {
+                    $(result) = $this->context->builder->gep(
+                        $(gep_var),
+                        //$this->context->context->int32Type()->constInt(0, false),
+                        //$this->context->context->int32Type()->constInt(0, false),
+                        $(gep_offset)
+                    );
+                })
+
                 $(malloc ? ... {
                     $type = $this->context->getTypeFromString($$(stringify($(malloc_type))));
                     $(malloc_extra ? {
@@ -426,6 +437,10 @@ $(macro :unsafe :recursive) {
                     $(malloc_extra ! {
                         $(result) = $this->context->memory->malloc($type);
                     })
+                })
+
+                $(realloc ? ... {
+                    $(result) = $this->context->memory->realloc($(realloc_var), $(realloc_extra));
                 })
 
                 $(call ? ... {

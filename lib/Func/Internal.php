@@ -15,7 +15,6 @@ use PHPCompiler\Frame;
 use PHPCompiler\VM\Context;
 use PHPCompiler\VM\Variable;
 use PHPCompiler\JIT;
-use PHPCompiler\JIT\Func as JITFunc;
 
 abstract class Internal extends Func implements Handler {
 
@@ -31,6 +30,6 @@ abstract class Internal extends Func implements Handler {
         return new Frame($this, null, null);
     }
 
-    abstract public function jit(JIT $jit): JITFunc;
+    public function jit(JIT $jit): void;
 
 }

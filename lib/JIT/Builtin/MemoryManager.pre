@@ -40,6 +40,17 @@ abstract class MemoryManager extends Builtin {
         return $this->context->builder->pointerCast($ptr, $type->pointerType(0));
     }
 
+    public function realloc(PHPLLVM\Value $value, PHPLLVM\Value $extra): PHPLLVM\Value {
+        $type = $value->typeOf()->getElementType();
+        unsigned compile {
+            $size = sizeof $type;
+            $allocSize = $size + $extra;
+            $void = (void*) $value;
+            $ptr = __mm__realloc($void, $allocSize);
+        }
+        return $this->context->builder->pointerCast($ptr, $type->pointerType(0));
+    }
+
     public function free(PHPLLVM\Value $value): void {
         compile {
             $void = (void*) $value;

@@ -42,7 +42,8 @@ class Refcount extends Builtin {
             inline function __ref__init(int32, __ref__virtual*): void;
             inline function __ref__addref(__ref__virtual*): void;
             inline function __ref__delref(__ref__virtual*): void;
-            inline function __ref__separate(__ref__virtual*): __ref__virtual*;
+            inline function __ref__separate(__ref__virtual**): void;
+            inline function __ref__separate_ex(__ref__virtual**, int32): void;
         }
         $this->struct = $this->context->getTypeFromString('__ref__');
         $this->virtualStruct = $this->context->getTypeFromString('__ref__virtual');
@@ -71,7 +72,7 @@ class Refcount extends Builtin {
     private function implementAddref(): void {
         compile {
             function __ref__addref($refVirtual) {
-                $isNull = $refVirtual === null;
+                $isNull = $refVirtual == null;
                 if ($isNull) {
                     return;
                 }
@@ -92,7 +93,7 @@ class Refcount extends Builtin {
     private function implementDelref(): void {
         compile {
             function __ref__delref($refVirtual) {
-                $isNull = $refVirtual === null;
+                $isNull = $refVirtual == null;
                 if ($isNull) {
                     return;
                 }
@@ -118,31 +119,44 @@ class Refcount extends Builtin {
         // TODO
         compile {
             function __ref__separate($virtualPtr) {
-                // $virtual = load $virtualPtr;
-                // $ref = $virtual->ref;
-                // $typeinfo = $ref.typeinfo;
-                // $refMask = (int32) self::TYPE_INFO_REFCOUNTED;
-                // $isCounted = $typeinfo & $refMask;
-                // if ($isCounted) {
-                //     $current = $ref.refcount;
-                //     $test = $current > 1;
-                //     if ($test) {
-                //         // Separate
-                //         __ref__delref($virtual);
-                //         $typeMask = (int32) self::TYPE_INFO_TYPEMASK;
-                //         $type = $typeinfo & $typeMask;
-                //         $stringType = (int32) self::TYPE_INFO_TYPE_STRING;
-                //         $isString = $type == $stringType;
-                //         if ($isString) {
-                //             $string = (__string__*) $virtual;
-                //             $stringResult = __string__separate($string);
-                //             $result = (__ref__virtual*) $stringResult;
-                //             store $result $virtualPtr;
-                //             return;
-                //         }
-                //     }
-                // }
-                return $virtualPtr;
+                $virtual = load $virtualPtr;
+                $test = $virtual == null;
+                if ($test) {
+                    return;
+                }
+                $ref = $virtual->ref;
+                $typeinfo = $ref.typeinfo;
+                $refMask = (int32) self::TYPE_INFO_REFCOUNTED;
+                $isCounted = $typeinfo & $refMask;
+                if ($isCounted) {
+                    $current = $ref.refcount;
+                    $test = $current > 1;
+                    if ($test) {
+                        __ref__separate_ex($virtualPtr, $typeinfo);                        
+                    }
+                } else {
+                    __ref__separate_ex($virtualPtr, $typeinfo);
+                }
+                return;
+            }
+        }
+
+        compile {
+            function __ref__separate_ex($virtualPtr, $typeinfo) {
+                $virtual = load $virtualPtr;
+                __ref__delref($virtual);
+                $ref = $virtual->ref;
+                $typeMask = (int32) self::TYPE_INFO_TYPEMASK;
+                $type = $typeinfo & $typeMask;
+                $stringType = (int32) self::TYPE_INFO_TYPE_STRING;
+                $isString = $type == $stringType;
+                if ($isString) {
+                    $string = (__string__*) $virtual;
+                    $stringResult = __string__separate($string);
+                    $result = (__ref__virtual*) $stringResult;
+                    store $result $virtualPtr;
+                }
+                return;
             }
         }
     }
@@ -180,7 +194,7 @@ class Refcount extends Builtin {
     }
 
     public function separate(PHPLLVM\Value $value): void {
-        $value = $this->context->builder->bitcast($value, $this->doublePointer);
+        $value = $this->context->builder->pointerCast($value, $this->doublePointer);
         compile {
             __ref__separate($value);
         }

@@ -262,7 +262,10 @@ class Context {
                 return 'double';
             case PHPLLVM\Type::KIND_INTEGER:
                 return 'int' . $this->llvm->lib->LLVMGetIntTypeWidth($type->type);
+            case PHPLLVM\Type::KIND_POINTER:
+                return $this->getStringFromType($type->getElementType()) . '*';
         }
+        var_dump($type->getKind());
         return 'unknown';
     }
 
@@ -403,7 +406,7 @@ class Context {
         PHPLLVM\Value $value,
         Operand $op
     ): Variable {
-        $this->scope->variables[$op] = Variable::fromRValueOp(
+        $this->scope->variables[$op] = Variable::fromValueOp(
             $this, $value, $op
         );
         return $this->scope->variables[$op];

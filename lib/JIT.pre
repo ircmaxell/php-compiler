@@ -132,7 +132,7 @@ class JIT {
         );
 
         foreach ($args as $idx => $arg) {
-            $argVars[] = new Variable($this->context, $rawTypes[$idx]->type, Variable::KIND_VALUE, $func->getParam($idx));
+            $argVars[] = new Variable($this->context, Variable::getTypeFromType($rawTypes[$idx]), Variable::KIND_VALUE, $func->getParam($idx));
         }
 
         if (!is_null($funcName)) {
@@ -161,7 +161,7 @@ class JIT {
         $builder->positionAtEnd($basicBlock);
         // Handle hoisted variables
         foreach ($block->orig->hoistedOperands as $operand) {
-            $var = $this->context->makeVariableFromOp($func, $basicBlock, $block, $operand);
+            $this->context->makeVariableFromOp($func, $basicBlock, $block, $operand);
         }
 
         for ($i = 0, $length = count($block->opCodes); $i < $length; $i++) {
@@ -218,6 +218,10 @@ class JIT {
                 //     }
                 //     break;
                 case OpCode::TYPE_CONCAT:
+                    if (!$this->context->hasVariableOp($block->getOperand($op->arg1))) {
+                        // don't bother with constant operations
+                        break;
+                    }
                     $result = $this->context->getVariableFromOp($block->getOperand($op->arg1));
                     $left = $this->context->getVariableFromOp($block->getOperand($op->arg2));
                     $right = $this->context->getVariableFromOp($block->getOperand($op->arg3));
@@ -290,14 +294,18 @@ class JIT {
                 // case OpCode::TYPE_CASE:
                 case OpCode::TYPE_JUMP:
                     $newBlock = $this->compileBlockInternal($func, $op->block1, ...$args);
+                    $builder->positionAtEnd($basicBlock);
                     $this->context->freeDeadVariables($func, $basicBlock, $block);
                     $builder->branch($newBlock);
                     return $origBasicBlock;
                 case OpCode::TYPE_JUMPIF:
                     $if = $this->compileBlockInternal($func, $op->block1, ...$args);
                     $else = $this->compileBlockInternal($func, $op->block2, ...$args);
+
+                    $builder->positionAtEnd($basicBlock);
+
                     $condition = $this->context->castToBool(
-                        $this->context->getVariableFromOp($block->getOperand($op->arg1))->value
+                        $this->context->helper->loadValue($this->context->getVariableFromOp($block->getOperand($op->arg1)))
                     );
 
                     $this->context->freeDeadVariables($func, $basicBlock, $block);
@@ -310,44 +318,47 @@ class JIT {
                 case OpCode::TYPE_RETURN:
                     $return = $this->context->getVariableFromOp($block->getOperand($op->arg1));
                     $return->addref();
-                    $retval = $return->value;
+                    $retval = $this->context->helper->loadValue($return);
                     $this->context->freeDeadVariables($func, $basicBlock, $block);
                     compile { return $retval; }
                     return $origBasicBlock;
-                // case OpCode::TYPE_FUNCDEF:
-                //     $nameOp = $block->getOperand($op->arg1);
-                //     assert($nameOp instanceof Operand\Literal);
-                //     $this->compileBlock($op->block1, $nameOp->value);
-                //     break;
-                // case OpCode::TYPE_FUNCCALL_INIT:
-                //     $nameOp = $block->getOperand($op->arg1);
-                //     if (!$nameOp instanceof Operand\Literal) {
-                //         throw new \LogicException("Variable function calls not yet supported");
-                //     }
-                //     $lcname = strtolower($nameOp->value);
-                //     if (!isset($this->context->functions[$lcname])) {
-                //         throw new \RuntimeException("Call to undefined function $lcname");
-                //     }
-                //     $this->context->scope->toCall = $this->context->functions[$lcname];
-                //     $this->context->scope->args = [];
-                //     break;
-                // case OpCode::TYPE_ARG_SEND:
-                //     $this->context->scope->args[] = $this->context->getVariableFromOp($block->getOperand($op->arg1))->rvalue;
-                //     break;
-                // case OpCode::TYPE_FUNCCALL_EXEC_NORETURN:
-                //     if (is_null($this->context->scope->toCall)) {
-                //         // short circuit
-                //         break;
-                //     }
-                //     $this->context->helper->eval($gccBlock, $this->context->scope->toCall->call(...$this->context->scope->args));
-                //     break;
-                // case OpCode::TYPE_FUNCCALL_EXEC_RETURN:
-                //     $this->context->helper->assign(
-                //         $gccBlock,
-                //         $this->context->getVariableFromOp($block->getOperand($op->arg1))->lvalue,
-                //         $this->context->scope->toCall->call(...$this->context->scope->args)
-                //     );
-                //     break;
+                case OpCode::TYPE_FUNCDEF:
+                    $nameOp = $block->getOperand($op->arg1);
+                    assert($nameOp instanceof Operand\Literal);
+                    $this->compileBlock($op->block1, $nameOp->value);
+                    break;
+                case OpCode::TYPE_FUNCCALL_INIT:
+                    $nameOp = $block->getOperand($op->arg1);
+                    if (!$nameOp instanceof Operand\Literal) {
+                        throw new \LogicException("Variable function calls not yet supported");
+                    }
+                    $lcname = strtolower($nameOp->value);
+                    if (!isset($this->context->functions[$lcname])) {
+                        throw new \RuntimeException("Call to undefined function $lcname");
+                    }
+                    $this->context->scope->toCall = $this->context->functions[$lcname];
+                    $this->context->scope->args = [];
+                    break;
+                case OpCode::TYPE_ARG_SEND:
+                    $this->context->scope->args[] = $this->context->helper->loadValue($this->context->getVariableFromOp($block->getOperand($op->arg1)));
+                    break;
+                case OpCode::TYPE_FUNCCALL_EXEC_NORETURN:
+                    if (is_null($this->context->scope->toCall)) {
+                        // short circuit
+                        break;
+                    }
+                    $this->context->builder->call(
+                        $this->context->scope->toCall,
+                        ... $this->context->scope->args
+                    );
+                    break;
+                case OpCode::TYPE_FUNCCALL_EXEC_RETURN:
+                    $result = $this->context->builder->call(
+                        $this->context->scope->toCall,
+                        ... $this->context->scope->args
+                    );
+                    $this->assignOperandValue($block->getOperand($op->arg1), $result);
+                    break;
                 // case OpCode::TYPE_DECLARE_CLASS:
                 //     $this->context->pushScope();
                 //     $this->context->scope->classId = $this->context->type->object->declareClass($block->getOperand($op->arg1));
@@ -409,15 +420,18 @@ class JIT {
         if (empty($result->usages) && !$this->context->scope->variables->contains($result)) {
             return;
         }
+        if (!$this->context->hasVariableOp($result)) {
+            // it's a kind!
+            $this->context->makeVariableFromValueOp($this->context->helper->loadValue($value), $result);
+            return;
+        }
         $result = $this->context->getVariableFromOp($result);
         if ($result->kind !== Variable::KIND_VARIABLE) {
             throw new \LogicException("Cannot assign to a value");
         }
         if ($value->type === $result->type) {
-
-            if ($value->type === Variable::TYPE_STRING) {
-                $this->context->refcount->delref($result->value);
-            } elseif ($value->type & Variable::IS_NATIVE_ARRAY) {
+            $result->free();
+            if ($value->type & Variable::IS_NATIVE_ARRAY) {
                 // copy over the nextfreelement
                 //$result->nextFreeElement = $value->nextFreeElement;
             }
@@ -425,13 +439,32 @@ class JIT {
                 $this->context->helper->loadValue($value),
                 $result->value
             );
-            if ($value->type === Variable::TYPE_STRING) {
-                $this->context->refcount->addref($result->value);
-            }
-
+            $result->addref();
             return;
         }
-        throw new \LogicException("Cannot assign operands of different types (yet)");
+        throw new \LogicException("Cannot assign operands of different types (yet): {$value->type}, {$result->type}");
+    }
+
+    private function assignOperandValue(Operand $result, PHPLLVM\Value $value): void {
+        if (empty($result->usages) && !$this->context->scope->variables->contains($result)) {
+            return;
+        }
+        if (!$this->context->hasVariableOp($result)) {
+            // it's a kind!
+            $this->context->makeVariableFromValueOp($value, $result);
+            return;
+        }
+        $result = $this->context->getVariableFromOp($result);
+        if ($result->kind !== Variable::KIND_VARIABLE) {
+            throw new \LogicException("Cannot assign to a value");
+        }
+        $result->free();
+
+        $this->context->builder->store(
+            $value,
+            $result->value
+        );
+        $result->addref();
     }
 
 }

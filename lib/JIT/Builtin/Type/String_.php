@@ -80,6 +80,25 @@ class String_ extends Type {
 
         
     $fntype___cfcd208495d565ef66e7dff9f98764da = $this->context->context->functionType(
+                $this->context->getTypeFromString('void'),
+                false , 
+                $this->context->getTypeFromString('__string__**')
+                , $this->context->getTypeFromString('int64')
+                
+            );
+            $fn___cfcd208495d565ef66e7dff9f98764da = $this->context->module->addFunction('__string__realloc', $fntype___cfcd208495d565ef66e7dff9f98764da);
+            $fn___cfcd208495d565ef66e7dff9f98764da->addAttributeAtIndex(PHPLLVM\Attribute::INDEX_FUNCTION, $this->context->attributes['alwaysinline']);
+            
+            
+            
+            
+            $this->context->registerFunction('__string__realloc', $fn___cfcd208495d565ef66e7dff9f98764da);
+        
+
+        
+
+        
+    $fntype___cfcd208495d565ef66e7dff9f98764da = $this->context->context->functionType(
                 $this->context->getTypeFromString('__string__*'),
                 false , 
                 $this->context->getTypeFromString('int64')
@@ -125,7 +144,7 @@ class String_ extends Type {
 
         $this->implementAlloc();
         $this->implementInit();
-        // $this->implementRealloc();
+        $this->implementRealloc();
         $this->implementSeparate();
         $this->implementStrlen();
     }
@@ -164,7 +183,7 @@ class String_ extends Type {
                         
                             $allocSize = $this->context->builder->addNoSignedWrap($size, $__right);
     $type = $this->context->getTypeFromString('__string__');
-                    $struct = $this->context->memory->mallocWithExtra($type, $allocSize);
+                    $struct = $this->context->memory->mallocWithExtra($type, $size);
     $offset = $this->context->structFieldMap[$struct->typeOf()->getElementType()->getName()]['length'];
                 $this->context->builder->store(
                     $size,
@@ -215,53 +234,138 @@ class String_ extends Type {
     }
 
     private function implementRealloc(): void {
-        $realloc = $this->context->lookupFunction('__string__realloc');
-        $block = \gcc_jit_function_new_block($realloc->func, 'main');
-        $isnull = \gcc_jit_function_new_block($realloc->func, 'is_null');
-        $notnull = \gcc_jit_function_new_block($realloc->func, 'not_null');
-        
-        $ptr = $realloc->params[0]->asLValue();
-        $reallocSize = $this->context->helper->binaryOp(
-            GCC_JIT_BINARY_OP_PLUS,
-            'size_t',
-            $this->size->asRValue(),
-            $realloc->params[1]->asRValue()
-        );
-        $local = \gcc_jit_function_new_local($realloc->func, null, $this->pointer, 'result');
-        $this->context->helper->assign(
-            $block, 
-            $local,
-            $this->context->memory->realloc($ptr->asRValue(), $reallocSize, $this->pointer) 
-        );
-        $this->context->helper->assign(
-            $block,
-            $this->writeSize($local->asRValue()),
-            $realloc->params[1]->asRValue()
-        );
-        gcc_jit_block_end_with_conditional(
-            $block,
-            $this->context->location(),
-            gcc_jit_context_new_comparison(
-                $this->context->context,
-                $this->context->location(),
-                \GCC_JIT_COMPARISON_EQ,
-                $ptr->asRValue(),
-                $this->nullPointer()
-            ),
-            $isnull,
-            $notnull
-        );
-        $this->context->refcount->init($isnull, $local->asRValue(), Refcount::TYPE_INFO_REFCOUNTED | Refcount::TYPE_INFO_TYPE_STRING);
+        $fn___8f14e45fceea167a5a36dedd4bea2543 = $this->context->lookupFunction('__string__realloc');
+    $block___8f14e45fceea167a5a36dedd4bea2543 = $fn___8f14e45fceea167a5a36dedd4bea2543->appendBasicBlock('main');
+    $this->context->builder->positionAtEnd($block___8f14e45fceea167a5a36dedd4bea2543);
+    $doublePtr = $fn___8f14e45fceea167a5a36dedd4bea2543->getParam(0);
+    $newSize = $fn___8f14e45fceea167a5a36dedd4bea2543->getParam(1);
+    
+    $refVirtual = $this->context->builder->pointerCast(
+                        $doublePtr, 
+                        $this->context->getTypeFromString('__ref__virtual**')
+                    );
+    $this->context->builder->call(
+                    $this->context->lookupFunction('__ref__separate') , 
+                    $refVirtual
+                    
+                );
+    $destVar = $this->context->builder->load($doublePtr);
+    $test = $this->context->builder->icmp(PHPLLVM\Builder::INT_EQ, $destVar, $destVar->typeOf()->constNull());
+    $bool = $this->context->castToBool($test);
+                $prev = $this->context->builder->getInsertBlock();
+                $ifBlock = $prev->insertBasicBlock('ifBlock');
+                $prev->moveBefore($ifBlock);
+                
+                $endBlock[] = $tmp = $ifBlock->insertBasicBlock('endBlock');
+                    $this->context->builder->branchIf($bool, $ifBlock, $tmp);
+                
+                $this->context->builder->positionAtEnd($ifBlock);
+                { $result = $this->context->builder->call(
+                        $this->context->lookupFunction('__string__alloc') , 
+                        $newSize
+                        
+                    );
+    $this->context->builder->store($result, $doublePtr);
+    $this->context->builder->returnVoid();
+    }
+                if ($this->context->builder->getInsertBlock()->getTerminator() === null) {
+                    $this->context->builder->branch(end($endBlock));
+                }
+                
+                $this->context->builder->positionAtEnd(array_pop($endBlock));
+    $offset = $this->context->structFieldMap[$destVar->typeOf()->getElementType()->getName()]['length'];
+                    $oldSize = $this->context->builder->load(
+                        $this->context->builder->structGep($destVar, $offset)
+                    );
+    $destValue = $this->context->memory->realloc($destVar, $newSize);
+    $offset = $this->context->structFieldMap[$destValue->typeOf()->getElementType()->getName()]['length'];
+                $this->context->builder->store(
+                    $newSize,
+                    $this->context->builder->structGep($destValue, $offset)
+                );
+    $offset = $this->context->structFieldMap[$destValue->typeOf()->getElementType()->getName()]['value'];
+                    $char = $this->context->builder->structGep($destValue, $offset);
+    $__right = $this->context->builder->intCast($oldSize, $newSize->typeOf());
+                            
+                            
+                        
 
-        \gcc_jit_block_end_with_jump($isnull,  null,$notnull);
-        \gcc_jit_block_end_with_return($notnull,  null, $local->asRValue());
+                        
+
+                        
+
+                        
+
+                        
+
+                        
+
+                        
+
+                        
+
+                        
+
+                        
+
+                        
+
+                        
+                            $cmp = PHPLLVM\Builder::INT_SGT;
+                            
+                            $test = $this->context->builder->icmp($cmp, $newSize, $__right);
+    $bool = $this->context->castToBool($test);
+                $prev = $this->context->builder->getInsertBlock();
+                $ifBlock = $prev->insertBasicBlock('ifBlock');
+                $prev->moveBefore($ifBlock);
+                
+                $endBlock[] = $tmp = $ifBlock->insertBasicBlock('endBlock');
+                    $this->context->builder->branchIf($bool, $ifBlock, $tmp);
+                
+                $this->context->builder->positionAtEnd($ifBlock);
+                { $char = $this->context->builder->gep(
+                        $char,
+                        //$this->context->context->int32Type()->constInt(0, false),
+                        //$this->context->context->int32Type()->constInt(0, false),
+                        $oldSize
+                    );
+    $__right = $this->context->builder->intCast($oldSize, $newSize->typeOf());
+                            
+                            
+                        
+
+                        
+
+                        
+
+                        
+
+                        
+
+                        
+                            $diff = $this->context->builder->subNoSignedWrap($newSize, $__right);
+    $this->context->intrinsic->memset(
+                    $char, 
+                    $this->context->context->int8Type()->constInt(0, false),
+                    $diff, 
+                    false
+                );
+    }
+                if ($this->context->builder->getInsertBlock()->getTerminator() === null) {
+                    $this->context->builder->branch(end($endBlock));
+                }
+                
+                $this->context->builder->positionAtEnd(array_pop($endBlock));
+    $this->context->builder->returnVoid();
+    
+    $this->context->builder->clearInsertionPosition();
     }
 
     private function implementSeparate(): void {
-        $fn___8f14e45fceea167a5a36dedd4bea2543 = $this->context->lookupFunction('__string__separate');
-    $block___8f14e45fceea167a5a36dedd4bea2543 = $fn___8f14e45fceea167a5a36dedd4bea2543->appendBasicBlock('main');
-    $this->context->builder->positionAtEnd($block___8f14e45fceea167a5a36dedd4bea2543);
-    $string = $fn___8f14e45fceea167a5a36dedd4bea2543->getParam(0);
+        $fn___6512bd43d9caa6e02c990b0a82652dca = $this->context->lookupFunction('__string__separate');
+    $block___6512bd43d9caa6e02c990b0a82652dca = $fn___6512bd43d9caa6e02c990b0a82652dca->appendBasicBlock('main');
+    $this->context->builder->positionAtEnd($block___6512bd43d9caa6e02c990b0a82652dca);
+    $string = $fn___6512bd43d9caa6e02c990b0a82652dca->getParam(0);
     
     $offset = $this->context->structFieldMap[$string->typeOf()->getElementType()->getName()]['length'];
                     $size = $this->context->builder->load(
@@ -276,56 +380,22 @@ class String_ extends Type {
                     $char = $this->context->builder->structGep($string, $offset);
     $offset = $this->context->structFieldMap[$new->typeOf()->getElementType()->getName()]['value'];
                     $dest = $this->context->builder->structGep($new, $offset);
-    $this->context->intrinsic->memcpy($dest, $char, $size, false);
-    $offset = $this->context->structFieldMap[$string->typeOf()->getElementType()->getName()]['ref'];
-                    $ref = $this->context->builder->load(
-                        $this->context->builder->structGep($string, $offset)
-                    );
-    $offset = $this->context->structFieldMap[$ref->typeOf()->getName()]['typeinfo'];
-                    $typeinfo = $this->context->builder->extractValue($ref, $offset);
-    $virtual = $this->context->builder->pointerCast(
-                        $new, 
-                        $this->context->getTypeFromString('__ref__virtual*')
-                    );
-    $this->context->builder->call(
-                    $this->context->lookupFunction('__ref__init') , 
-                    $typeinfo
-                    , $virtual
-                    
-                );
+    $__right = $size->typeOf()->constInt(1, false);
+                            
+                        
+
+                        
+
+                        
+
+                        
+
+                        
+                            $copySize = $this->context->builder->addNoSignedWrap($size, $__right);
+    $this->context->intrinsic->memcpy($dest, $char, $copySize, false);
     $this->context->builder->returnValue($new);
     
     $this->context->builder->clearInsertionPosition();
-        return;
-
-        $func = $this->context->lookupFunction('__string__separate');
-        $virtual = $func->params[0]->asRValue();
-        $deref = \gcc_jit_rvalue_dereference($virtual, $this->context->location());
-        $from = $this->context->helper->cast(
-            $deref->asRValue(),
-            '__string__*'
-        );
-        $block = \gcc_jit_function_new_block($func->func, 'main');
-        $tmp = \gcc_jit_function_new_local($func->func, $this->context->location(), $this->pointer, 'tmp');
-        $length = $this->sizePtr($from)->asRValue();
-        $this->init(
-            $block,
-            $tmp,
-            $this->context->helper->cast($this->valuePtr($from), 'const char*'),
-            $length
-        );
-        \gcc_jit_block_add_assignment(
-            $block,
-            $this->context->location(),
-            $deref,
-            \gcc_jit_context_new_cast(
-                $this->context->context,
-                $this->context->location(),
-                $tmp->asRValue(),
-                $this->context->refcount->pointer
-            )
-        );
-        \gcc_jit_block_end_with_void_return($block, $this->context->location());   
     }
 
     public function initialize(): void {
@@ -424,39 +494,65 @@ class String_ extends Type {
         }
     }
 
-    public function concat(\gcc_jit_block_ptr $block, Variable $dest, Variable $left, Variable $right): void {
+    public function concat(Variable $dest, Variable $left, Variable $right): void {
         assert($dest->type === Variable::TYPE_STRING);
-        $this->context->refcount->separate($block, $dest->lvalue);
-
-
-        $leftSize = $this->size($left);
-        $rightSize = $this->size($right);
-        $this->reallocate($block, $dest->lvalue, $this->context->helper->binaryOp(
-            \GCC_JIT_BINARY_OP_PLUS,
-            'size_t',
-            $leftSize,
-            $rightSize
-        ));
-
-        if ($left !== $dest) {
-            $this->copy(
-                $block, 
-                $dest, 
-                $left,
-                $this->context->constantFromInteger(0, 'size_t')
-            );
+        if ($dest->kind === Variable::KIND_VALUE) {
+            // What do do?
+            throw new \LogicException("Unknown how to assign to a value");
+        } else {
+            $destVar = $dest->value;
         }
-        $this->copy(
-            $block,
-            $dest,
-            $right,
-            $this->context->helper->binaryOp(
-                \GCC_JIT_BINARY_OP_MINUS,
-                'size_t',
-                $this->size($dest),
-                $this->size($right)
-            )
-        );
+        $leftVar = $this->context->helper->loadValue($left);
+        $rightVar = $this->context->helper->loadValue($right);
+
+        $offset = $this->context->structFieldMap[$leftVar->typeOf()->getElementType()->getName()]['length'];
+                    $leftSize = $this->context->builder->load(
+                        $this->context->builder->structGep($leftVar, $offset)
+                    );
+    $offset = $this->context->structFieldMap[$rightVar->typeOf()->getElementType()->getName()]['length'];
+                    $rightSize = $this->context->builder->load(
+                        $this->context->builder->structGep($rightVar, $offset)
+                    );
+    $__right = $this->context->builder->intCast($rightSize, $leftSize->typeOf());
+                            
+                            
+                        
+
+                        
+
+                        
+
+                        
+
+                        $size = $this->context->builder->addNoUnsignedWrap($leftSize, $__right);
+    $this->context->builder->call(
+                    $this->context->lookupFunction('__string__realloc') , 
+                    $destVar
+                    , $size
+                    
+                );
+    $destValue = $this->context->builder->load($destVar);
+    $offset = $this->context->structFieldMap[$destValue->typeOf()->getElementType()->getName()]['length'];
+                $this->context->builder->store(
+                    $size,
+                    $this->context->builder->structGep($destValue, $offset)
+                );
+    $offset = $this->context->structFieldMap[$destValue->typeOf()->getElementType()->getName()]['value'];
+                    $char = $this->context->builder->structGep($destValue, $offset);
+    $offset = $this->context->structFieldMap[$leftVar->typeOf()->getElementType()->getName()]['value'];
+                    $leftChar = $this->context->builder->structGep($leftVar, $offset);
+    $this->context->intrinsic->memcpy($char, $leftChar, $leftSize, false);
+    $char = $this->context->builder->gep(
+                        $char,
+                        //$this->context->context->int32Type()->constInt(0, false),
+                        //$this->context->context->int32Type()->constInt(0, false),
+                        $leftSize
+                    );
+    $offset = $this->context->structFieldMap[$rightVar->typeOf()->getElementType()->getName()]['value'];
+                    $rightChar = $this->context->builder->structGep($rightVar, $offset);
+    $this->context->intrinsic->memcpy($char, $rightChar, $rightSize, false);
+    
+        $this->context->builder->store($destValue, $dest->value);
     }
 
     private function copy(\gcc_jit_block_ptr $block, Variable $dest, Variable $other, \gcc_jit_rvalue_ptr $offset): void {
