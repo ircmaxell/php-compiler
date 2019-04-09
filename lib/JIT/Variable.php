@@ -38,7 +38,7 @@ final class Variable {
         self::TYPE_NATIVE_LONG => 'int64',
         self::TYPE_NATIVE_BOOL => 'int1',
         self::TYPE_NATIVE_DOUBLE => 'double',
-        self::TYPE_STRING => '__string__',
+        self::TYPE_STRING => '__string__*',
         self::TYPE_OBJECT => '__object__*',
         self::TYPE_VALUE => '__value__',
         self::TYPE_HASHTABLE => '__hashtable__*',
@@ -131,7 +131,7 @@ final class Variable {
             $context,
             $type,
             self::KIND_VARIABLE,
-            $context->builder->alloca($context->getTypeFromString($stringType)->pointerType(0))
+            $context->builder->alloca($context->getTypeFromString($stringType))
         );
     }
 
