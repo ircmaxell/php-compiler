@@ -8,7 +8,7 @@ So here we go :)
 
 # Installation
 
-Install PHP 7.4, being sure to enable the FFI extension (`--with-ffi`).
+Install PHP 7.4, being sure to enable the FFI extension, OpenSSL extension, and mbstring extension (`--with-ffi --with-openssl --enable-mbstring`).
 
 Also, you need to install the system dependency `libgccjit`. On Ubuntu:
 
