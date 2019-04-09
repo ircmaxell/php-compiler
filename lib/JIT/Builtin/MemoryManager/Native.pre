@@ -1,0 +1,47 @@
+<?php
+
+/*
+ * This file is part of PHP-Compiler, a PHP CFG Compiler for PHP code
+ *
+ * @copyright 2015 Anthony Ferrara. All rights reserved
+ * @license MIT See LICENSE at the root of the project for more info
+ */
+
+namespace PHPCompiler\JIT\Builtin\MemoryManager;
+
+use PHPCompiler\JIT\Builtin\MemoryManager;
+
+class Native extends MemoryManager {
+
+    public function register(): void {
+        parent::register();
+        declare {
+            function malloc(size_t): void*;
+            function realloc(void*, size_t): void*;
+            function free(void*): void;            
+        }
+    } 
+
+    public function implement(): void {
+        // Todo
+        compile {
+            function __mm__malloc($size) {
+                $result = malloc($size);
+                return $result;
+            }
+        }
+        compile {
+            function __mm__realloc($void, $size) {
+                $result = realloc($void, $size);
+                return $result;
+            }
+        }
+        compile {
+            function __mm__free($void) {
+                free($void);
+                return;
+            }
+        }
+    }
+
+}

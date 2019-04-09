@@ -32,7 +32,7 @@ abstract class MemoryManager extends Builtin {
     }
 
     public function mallocWithExtra(PHPLLVM\Type $type, PHPLLVM\Value $extra): PHPLLVM\Value {
-        compile {
+        unsigned compile {
             $size = sizeof $type;
             $size = $size + $extra;
             $ptr = __mm__malloc($size);
@@ -42,7 +42,8 @@ abstract class MemoryManager extends Builtin {
 
     public function free(PHPLLVM\Value $value): void {
         compile {
-            __mm__free($value);
+            $void = (void*) $value;
+            __mm__free($void);
         }
     }
 

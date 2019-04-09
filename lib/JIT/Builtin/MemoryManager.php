@@ -83,15 +83,21 @@ abstract class MemoryManager extends Builtin
     public function malloc(PHPLLVM\Type $type): PHPLLVM\Value
     {
         if ($type instanceof \PHPLLVM\Type) {
-            $type___c4ca4238a0b923820dcc509a6f75849b = $type;
+            $type = $type;
         } elseif ($type instanceof \PHPLLVM\Value) {
-            $type___c4ca4238a0b923820dcc509a6f75849b = $type->typeOf();
+            $type = $type->typeOf();
         } else {
             throw new \LogicException(
                 "Attempt to call sizeof on non-PHPLLVM type/value"
             );
         }
-        $size = $type___c4ca4238a0b923820dcc509a6f75849b->sizeOf();
+        $size = $this->context->builder->ptrToInt(
+            $this->context->builder->gep(
+                $type->pointerType(0)->constNull(),
+                $this->context->context->int32Type()->constInt(1, false)
+            ),
+            $this->context->getTypeFromString('size_t')
+        );
         $ptr = $this->context->builder->call(
             $this->context->lookupFunction('__mm__malloc'),
             $size
@@ -108,16 +114,24 @@ abstract class MemoryManager extends Builtin
         PHPLLVM\Value $extra
     ): PHPLLVM\Value {
         if ($type instanceof \PHPLLVM\Type) {
-            $type___c81e728d9d4c2f636f067f89cc14862c = $type;
+            $type = $type;
         } elseif ($type instanceof \PHPLLVM\Value) {
-            $type___c81e728d9d4c2f636f067f89cc14862c = $type->typeOf();
+            $type = $type->typeOf();
         } else {
             throw new \LogicException(
                 "Attempt to call sizeof on non-PHPLLVM type/value"
             );
         }
-        $size = $type___c81e728d9d4c2f636f067f89cc14862c->sizeOf();
-        $size = $this->context->builder->add($size, $extra);
+        $size = $this->context->builder->ptrToInt(
+            $this->context->builder->gep(
+                $type->pointerType(0)->constNull(),
+                $this->context->context->int32Type()->constInt(1, false)
+            ),
+            $this->context->getTypeFromString('size_t')
+        );
+        $__right = $this->context->builder->intCast($extra, $size->typeOf());
+
+        $size = $this->context->builder->addNoUnsignedWrap($size, $__right);
         $ptr = $this->context->builder->call(
             $this->context->lookupFunction('__mm__malloc'),
             $size
@@ -131,9 +145,13 @@ abstract class MemoryManager extends Builtin
 
     public function free(PHPLLVM\Value $value): void
     {
+        $void = $this->context->builder->pointerCast(
+            $value,
+            $this->context->getTypeFromString('void*')
+        );
         $this->context->builder->call(
             $this->context->lookupFunction('__mm__free'),
-            $value
+            $void
         );
     }
 }

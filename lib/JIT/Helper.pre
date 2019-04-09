@@ -1,0 +1,117 @@
+<?php
+
+/*
+ * This file is part of PHP-Compiler, a PHP CFG Compiler for PHP code
+ *
+ * @copyright 2015 Anthony Ferrara. All rights reserved
+ * @license MIT See LICENSE at the root of the project for more info
+ */
+
+namespace PHPCompiler\JIT;
+
+use PHPCompiler\OpCode;
+use PHPLLVM;
+
+class Helper {
+    
+    public Context $context;
+
+    public function __construct(Context $context) {
+        $this->context = $context;
+    }
+
+    public function binaryOp(int $opcode, Variable $left, Variable $right): Variable {
+        $leftValue = $this->loadValue($left);
+        $rightValue = $this->loadValue($right);
+        switch (type_pair($left->type, $right->type)) {
+            case TYPE_PAIR_NATIVE_LONG_NATIVE_LONG:
+                switch ($opcode) {
+                    case OpCode::TYPE_MUL:
+                        compile {
+                            $result = $leftValue * $rightValue;
+                        }
+                        goto return_long;
+                    case OpCode::TYPE_PLUS:
+                        compile {
+                            $result = $leftValue + $rightValue;
+                        }
+                        goto return_long;
+                    case OpCode::TYPE_MINUS:
+                        compile {
+                            $result = $leftValue - $rightValue;
+                        }
+                        goto return_long;
+                    case OpCode::TYPE_DIV:
+                        compile {
+                            $result = $leftValue / $rightValue;
+                        }
+                        goto return_long;
+                    case OpCode::TYPE_MODULO:
+                        compile {
+                            $result = $leftValue % $rightValue;
+                        }
+                        goto return_long;
+                    case OpCode::TYPE_BITWISE_AND:
+                        compile {
+                            $result = $leftValue & $rightValue;
+                        }
+                        goto return_long;
+                    case OpCode::TYPE_BITWISE_OR:
+                        compile {
+                            $result = $leftValue | $rightValue;
+                        }
+                        goto return_long;
+                    case OpCode::TYPE_BITWISE_XOR:
+                        compile {
+                            $result = $leftValue ^ $rightValue;
+                        }
+                        goto return_long;
+                    case OpCode::TYPE_GREATER_OR_EQUAL:
+                        compile {
+                            $result = $leftValue >= $rightValue;
+                        }
+                        goto return_bool;
+                    case OpCode::TYPE_SMALLER_OR_EQUAL:
+                        compile {
+                            $result = $leftValue <= $rightValue;
+                        }
+                        goto return_bool;
+                    case OpCode::TYPE_GREATER:
+                        compile {
+                            $result = $leftValue > $rightValue;
+                        }
+                        goto return_bool;
+                    case OpCode::TYPE_SMALLER:
+                        compile {
+                            $result = $leftValue < $rightValue;
+                        }
+                        goto return_bool;
+                    case OpCode::TYPE_IDENTICAL:
+                        compile {
+                            $result = $leftValue == $rightValue;
+                        }
+                        goto return_bool;
+                    case OpCode::TYPE_EQUAL:
+                        compile {
+                            $result = $leftValue != $rightValue;
+                        }
+                        goto return_bool;
+                    default:
+                        throw new \LogicException("Unknown integer-integer binary operation found: $opcode");
+                }
+        }
+        throw new \LogicException("Reached end of switch, can't handle binary operation yet: $opcode");
+return_long:
+        return new Variable($this->context, Variable::TYPE_NATIVE_LONG, Variable::KIND_VALUE, $result);
+return_bool:
+        return new Variable($this->context, Variable::TYPE_NATIVE_BOOL, Variable::KIND_VALUE, $result);
+    }
+
+    public function loadValue(Variable $variable): PHPLLVM\Value {
+        if ($variable->kind === Variable::KIND_VALUE) {
+            return $variable->value;
+        }
+        return $this->context->builder->load($variable->value);
+    }
+
+}

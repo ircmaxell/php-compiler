@@ -7,7 +7,7 @@ $(macro) {
                 optional(buffer('static') as static),
                 optional(buffer('inline') as inline),
                 token(T_FUNCTION),
-                T_STRING as name,
+                llvmidentifier() as name,
                 token('('),
                 optional(ls(
                     chain(optional(T_CONST as const), ctype() as type),
@@ -22,13 +22,12 @@ $(macro) {
                 optional(buffer('static') as vararg_static),
                 optional(buffer('inline') as vararg_inline),
                 token(T_FUNCTION),
-                T_STRING as vararg_name,
+                llvmidentifier() as vararg_name,
                 token('('),
-                optional(ls(
+                optional(chain(ls(
                     chain(optional(T_CONST as vararg_const), ctype() as vararg_type),
                     token(',')
-                ) as vararg_params),
-                token(','),
+                ) as vararg_params, token(',')) as vararg_outer_params),
                 token(T_ELLIPSIS),
                 token(')'),
                 token(':'),
@@ -37,7 +36,7 @@ $(macro) {
             ) as vararg_func,
             chain(
                 buffer('struct'),
-                T_STRING as struct_name,
+                llvmidentifier() as struct_name,
                 token('{'),
                 repeat(
                     chain(ctype() as field_type, T_VARIABLE as field_name, token(';'))
@@ -73,21 +72,21 @@ $(macro) {
         $(vararg_func ? ... {
             $fntype = $this->context->context->functionType(
                 $this->context->getTypeFromString($$(stringify($(vararg_returnType)))),
-                true $(vararg_params ? { , })
-                $(vararg_params ... ( , ) {
+                true $(vararg_outer_params ... { $(vararg_params ? { , }) })
+                $(vararg_outer_params ... { $(vararg_params ... ( , ) {
                     $this->context->getTypeFromString($$(stringify($(vararg_type))))
-                })
+                }) })
             );
             $fn = $this->context->module->addFunction($$(stringify($(vararg_name))), $fntype);
             $(vararg_inline ? ... {
                 $fn->addAttributeAtIndex(PHPLLVM\Attribute::INDEX_FUNCTION, $this->context->attributes['alwaysinline']);
             })
-            $(vararg_params ... i {
+            $(vararg_outer_params ... { $(vararg_params ... i {
                 $(vararg_const ? {
                     $fn->addAttributeAtIndex($(i) + 1, $this->context->attributes['readonly'], 0);
                     $fn->addAttributeAtIndex($(i) + 1, $this->context->attributes['nocapture'], 0);
                 })
-            })
+            }) })
             $this->context->registerFunction($$(stringify($(vararg_name))), $fn);
         })
 
@@ -113,7 +112,7 @@ $(macro) {
 
 $(macro) {
     compile {
-        function $(T_STRING as name) ($(ls(
+        function $(llvmidentifier() as name) ($(ls(
             T_VARIABLE as param,
             token(',')
         ) as params)) {
@@ -130,47 +129,60 @@ $(macro) {
     compile {
         $(stmts)
     }
+    $this->context->builder->clearInsertionPosition();
 }
 
 // First, expand statements
-$(macro :recursive) {
-    compile {
+$(macro :unsafe :recursive) {
+    $(optional(buffer('unsigned')) as unsigned) compile {
         $(repeat(either(
             chain(T_VARIABLE as result, token('='), either(
-                chain(T_VARIABLE as nullcheck_var, token(T_IS_IDENTICAL), rtoken('(null)')) as nullcheck,
-                chain(T_VARIABLE as constle_left, token(T_IS_SMALLER_OR_EQUAL), T_LNUMBER as constle_right) as constle,
+                chain(T_VARIABLE as nullcheck_var, token(T_IS_IDENTICAL), buffer('null')) as nullcheck,
                 chain(T_CONSTANT_ENCAPSED_STRING as conststr_value) as conststr,
                 chain(token('('), T_STRING as cast_type, token(')'), T_VARIABLE as cast_value) as cast,
                 chain(token('('), T_STRING as constcast_type, token(')'), expression() as constcast_value) as constcast,
                 chain(token('('), ctype() as ptrcast_type, token(')'), T_VARIABLE as ptrcast_value) as ptrcast,
                 chain(T_VARIABLE as field_deref_var, token(T_OBJECT_OPERATOR), label() as field_deref_field) as field_deref,
+                chain(token('&'), T_VARIABLE as field_deref_ref_var, token(T_OBJECT_OPERATOR), label() as field_deref_ref_field) as field_deref_ref,
                 chain(T_VARIABLE as field_extract_var, token('.'), label() as field_extract_field) as field_extract,
+                chain(token('&'), T_VARIABLE as field_extract_ref_var, token('.'), label() as field_extract_ref_field) as field_extract_ref,
+                chain(buffer('load'), T_VARIABLE as load_var) as load,
+                chain(buffer('typeof'), T_VARIABLE as typeof_var) as typeof,
                 chain(buffer('sizeof'), T_VARIABLE as sizeof_var) as sizeof,
                 chain(buffer('sizeof'), ctype() as sizeoftype_type) as sizeoftype,
                 chain(buffer('malloc'), ctype() as malloc_type, optional(T_VARIABLE as malloc_extra)) as malloc,
-                chain(T_STRING as call_func, token('('), ls(T_VARIABLE as call_arg, token(',')) as call_args, token(')')) as call,
+                chain(llvmidentifier() as call_func, token('('), ls(T_VARIABLE as call_arg, token(',')) as call_args, token(')')) as call,
                 chain(T_VARIABLE as binary_left, either(
                     token('&') as binary_and,
                     token('|') as binary_or,
+                    token('^') as binary_xor,
                     token('+') as binary_add,
-                    token('-') as binary_sub
-                ) as binary_op, T_VARIABLE as binary_right) as binary
+                    token('-') as binary_sub,
+                    token('*') as binary_mul,
+                    token('/') as binary_div,
+                    token('%') as binary_mod,
+                    token('<') as binary_smaller,
+                    token(T_IS_SMALLER_OR_EQUAL) as binary_smaller_equal,
+                    token('>') as binary_greater,
+                    token(T_IS_GREATER_OR_EQUAL) as binary_greater_equal,
+                    token(T_IS_EQUAL) as binary_equals,
+                    token(T_IS_NOT_EQUAL) as binary_not_equal
+                ) as binary_op, either(T_VARIABLE as binary_variable, T_LNUMBER as binary_number) as binary_right) as binary
             ), token(';')) as assignop, 
             chain(token(T_RETURN), token(';')) as returnvoid,
             chain(token(T_RETURN), T_VARIABLE as returnvalue_value, token(';')) as returnvalue,
             chain(T_VARIABLE as inc_result, token(T_INC), token(';')) as inc,
             chain(T_VARIABLE as dec_result, token(T_DEC), token(';')) as dec,
             chain(token(T_IF), token('('), T_VARIABLE as cond, token(')'), token('{'), layer() as if_stmts, token('}'), optional(chain(token(T_ELSE), token('{'), layer() as else_stmts, token('}')))) as if_stmt,
-            
-            
             chain(T_VARIABLE as field_deref_write_result, token(T_OBJECT_OPERATOR), T_STRING as field_deref_write_field, token('='), T_VARIABLE as field_deref_write_value, token(';')) as field_deref_write,
             chain(T_VARIABLE as const_field_assign_var, token('.'), label() as const_field_assign_field, token('='), T_LNUMBER as const_field_assign_value, token(';')) as const_field_assign,
             chain(T_VARIABLE as field_assign_var, token('.'), label() as field_assign_field, token('='), T_VARIABLE as field_assign_value, token(';')) as field_assign,
-            
+            chain(buffer('store'), T_VARIABLE as store_value, T_VARIABLE as store_pointer, token(';')) as store,
+            chain(buffer('dump'), T_VARIABLE as dump_var, token(';')) as dump,
             chain(buffer('free'), T_VARIABLE as free_var, token(';')) as free,
             chain(buffer('memcpy'), T_VARIABLE as memcpy_dest, T_VARIABLE as memcpy_src, T_VARIABLE as memcpy_length, token(';')) as memcpy,
-            
-            chain(T_STRING as voidcall_func, token('('), ls(T_VARIABLE as voidcall_arg, token(',')) as voidcall_args, token(')'), token(';')) as voidcall
+            chain(buffer('memset'), T_VARIABLE as memset_dest, T_LNUMBER as memset_value, T_VARIABLE as memset_length, token(';')) as memset,
+            chain(llvmidentifier() as voidcall_func, token('('), ls(T_VARIABLE as voidcall_arg, token(',')) as voidcall_args, token(')'), token(';')) as voidcall
         )) as stmts)
     }
 } >> {
@@ -208,6 +220,10 @@ $(macro :recursive) {
                     }
                 })
 
+                $(load ? ... {
+                    $(result) = $this->context->builder->load($(load_var));
+                })
+
                 $(constcast ? ... {
                     $(result) = $this->context->getTypeFromString($$(stringify($(constcast_type))))->constInt($(constcast_value), false);
                 })
@@ -221,26 +237,121 @@ $(macro :recursive) {
 
                 $(binary ? ... {
                     $(binary_op ... {
+
+                        $(binary_right ... {
+                            $(binary_variable ? {
+                                $__right = $this->context->builder->intCast($(binary_variable), $(binary_left)->typeOf());
+                            })
+                            $(binary_number ? {
+                                $__right = $(binary_left)->typeOf()->constInt($(binary_number), false);
+                            })
+                        })
+
                         $(binary_and ? ... {
-                            $(result) = $this->context->builder->bitwiseAnd($(binary_left), $(binary_right));
+                            $(result) = $this->context->builder->bitwiseAnd($(binary_left), $__right);
                         })
 
                         $(binary_or ? ... {
-                            $(result) = $this->context->builder->bitwiseOr($(binary_left), $(binary_right));
+                            $(result) = $this->context->builder->bitwiseOr($(binary_left), $__right);
+                        })
+
+                        $(binary_xor ? ... {
+                            $(result) = $this->context->builder->bitwiseXor($(binary_left), $__right);
                         })
 
                         $(binary_add ? ... {
-                            $(result) = $this->context->builder->add($(binary_left), $(binary_right));
+                            $(unsigned ? {
+                                $(result) = $this->context->builder->addNoUnsignedWrap($(binary_left), $__right);
+                            })
+                            $(unsigned ! {
+                                $(result) = $this->context->builder->addNoSignedWrap($(binary_left), $__right);
+                            })
                         })
 
                         $(binary_sub ? ... {
-                            $(result) = $this->context->builder->sub($(binary_left), $(binary_right));
+                            $(unsigned ? {
+                                $(result) = $this->context->builder->subNoUnsignedWrap($(binary_left), $__right);
+                            })
+                            $(unsigned ! {
+                                $(result) = $this->context->builder->subNoSignedWrap($(binary_left), $__right);
+                            })
+                        })
+
+                        $(binary_mul ? ... {
+                            $(unsigned ? {
+                                $(result) = $this->context->builder->mulNoUnsignedWrap($(binary_left), $__right);
+                            })
+                            $(unsigned ! {
+                                $(result) = $this->context->builder->mulNoSignedWrap($(binary_left), $__right);
+                            })
+                        })
+
+                        $(binary_div ? ... {
+                            $(unsigned ? {
+                                $(result) = $this->context->builder->unsignedDiv($(binary_left), $__right);
+                            })
+                            $(unsigned ! {
+                                $(result) = $this->context->builder->signedDiv($(binary_left), $__right);
+                            })
+                        })
+
+                        $(binary_mod ? ... {
+                            $(unsigned ? {
+                                $(result) = $this->context->builder->unsignedRem($(binary_left), $__right);
+                            })
+                            $(unsigned ! {
+                                $(result) = $this->context->builder->signedRem($(binary_left), $__right);
+                            })
+                        })
+
+                        $(binary_smaller ? ... {
+                            $(unsigned ? {
+                                $cmp = PHPLLVM\Builder::INT_ULT;
+                            })
+                            $(unsigned ! {
+                                $cmp = PHPLLVM\Builder::INT_SLT;
+                            })
+                            $(result) = $this->context->builder->icmp($cmp, $(binary_left), $__right);
+                        })
+
+                        $(binary_smaller_equal ? ... {
+                            $(unsigned ? {
+                                $cmp = PHPLLVM\Builder::INT_ULE;
+                            })
+                            $(unsigned ! {
+                                $cmp = PHPLLVM\Builder::INT_SLE;
+                            })
+                            $(result) = $this->context->builder->icmp($cmp, $(binary_left), $__right);
+                        })
+
+                        $(binary_greater ? ... {
+                            $(unsigned ? {
+                                $cmp = PHPLLVM\Builder::INT_UGT;
+                            })
+                            $(unsigned ! {
+                                $cmp = PHPLLVM\Builder::INT_SGT;
+                            })
+                            $(result) = $this->context->builder->icmp($cmp, $(binary_left), $__right);
+                        })
+
+                        $(binary_greater_equal ? ... {
+                            $(unsigned ? {
+                                $cmp = PHPLLVM\Builder::INT_UGE;
+                            })
+                            $(unsigned ! {
+                                $cmp = PHPLLVM\Builder::INT_SGE;
+                            })
+                            $(result) = $this->context->builder->icmp($cmp, $(binary_left), $__right);
+                        })
+
+                        $(binary_equals ? ... {
+                            $(result) = $this->context->builder->icmp(PHPLLVM\Builder::INT_EQ, $(binary_left), $__right);
+                        })
+
+                        $(binary_not_equal ? ... {
+                            $(result) = $this->context->builder->icmp(PHPLLVM\Builder::INT_NE, $(binary_left), $__right);
                         })
                     })
-                })
-
-                $(bitwise_and ? ... {
-                    
                 })
 
                 $(field_extract ? ... {
@@ -255,6 +366,20 @@ $(macro :recursive) {
                     );
                 })
 
+                $(field_extract_ref ? ... {
+                    $offset = $this->context->structFieldMap[$(field_extract_ref_var)->typeOf()->getName()][$$(stringify($(field_extract_ref_field)))];
+                    $(result) = $this->context->builder->gep(
+                        $(field_extract_ref_var),
+                        $this->context->context->int32Type()->constInt(0, false),
+                        $this->context->context->int32Type()->constInt($offset, false)
+                    );
+                })
+
+                $(field_deref_ref ? ... {
+                    $offset = $this->context->structFieldMap[$(field_deref_ref_var)->typeOf()->getElementType()->getName()][$$(stringify($(field_deref_ref_field)))];
+                    $(result) = $this->context->builder->structGep($(field_deref_ref_var), $offset);
+                })
+
                 $(sizeof ? ... {
                     if ($(sizeof_var) instanceof \PHPLLVM\Type) {
                         $type = $(sizeof_var);
@@ -263,12 +388,34 @@ $(macro :recursive) {
                     } else {
                         throw new \LogicException("Attempt to call sizeof on non-PHPLLVM type/value");
                     }
-                    $(result) = $type->sizeOf();
+                    $(result) = $this->context->builder->ptrToInt(
+                        $this->context->builder->gep(
+                            $type->pointerType(0)->constNull(),
+                            $this->context->context->int32Type()->constInt(1, false)
+                        ),
+                        $this->context->getTypeFromString('size_t')
+                    );
+                })
+
+                $(typeof ? ... {
+                    if ($(typeof_var) instanceof \PHPLLVM\Type) {
+                        $(result) = $(typeof_var);
+                    } elseif ($(typeof_var) instanceof \PHPLLVM\Value) {
+                        $(result) = $(typeof_var)->typeOf();
+                    } else {
+                        throw new \LogicException("Attempt to call typeof on non-PHPLLVM type/value");
+                    }
                 })
 
                 $(sizeoftype ? ... {
                     $type = $this->context->getTypeFromString($$(stringify($(sizeoftype_type))));
-                    $(result) = $type->sizeOf();
+                    $(result) = $this->context->builder->ptrToInt(
+                        $this->context->builder->gep(
+                            $type->pointerType(0)->constNull(),
+                            $this->context->context->int32Type()->constInt(1, false)
+                        ),
+                        $this->context->getTypeFromString('size_t')
+                    );
                 })
 
                 $(malloc ? ... {
@@ -368,8 +515,29 @@ $(macro :recursive) {
                 );
             })
 
+            $(memcpy ? ... {
+                $this->context->intrinsic->memcpy($(memcpy_dest), $(memcpy_src), $(memcpy_length), false);
+            })
+
+            $(memset ? ... {
+                $this->context->intrinsic->memset(
+                    $(memset_dest), 
+                    $this->context->context->int8Type()->constInt($(memset_value), false),
+                    $(memset_length), 
+                    false
+                );
+            })
+
+            $(store ? ... {
+                $this->context->builder->store($(store_value), $(store_pointer));
+            })
+
             $(free ? ... {
                 $this->context->memory->free($(free_var));
+            })
+
+            $(dump ? ... {
+                $(dump_var)->dump();
             })
 
             $(voidcall ? ... {

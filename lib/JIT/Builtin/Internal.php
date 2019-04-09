@@ -1,5 +1,9 @@
 <?php
 
+# This file is generated, changes you make will be lost.
+# Make your changes in /home/ircmaxell/Workspace/PHP-Compiler/PHP-Compiler/lib/JIT/Builtin/Internal.pre instead.
+
+// First, expand statements
 /*
  * This file is part of PHP-Compiler, a PHP CFG Compiler for PHP code
  *
@@ -11,10 +15,9 @@ namespace PHPCompiler\JIT\Builtin;
 
 use PHPCompiler\JIT\Builtin;
 
-class Internal extends Builtin {
-
-    public function register(): void {
-        
+class Internal extends Builtin
+{
+    public function register(): void
+    {
     }
-
 }

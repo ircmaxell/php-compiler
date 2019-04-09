@@ -54,12 +54,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/ircmaxell/php-llvm.git",
-                "reference": "85431d156e709ea9a2a9cb448705556b45f003f9"
+                "reference": "a8a7104f201497f5c8275bdde8579f183492dea3"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/ircmaxell/php-llvm/zipball/85431d156e709ea9a2a9cb448705556b45f003f9",
-                "reference": "85431d156e709ea9a2a9cb448705556b45f003f9",
+                "url": "https://api.github.com/repos/ircmaxell/php-llvm/zipball/a8a7104f201497f5c8275bdde8579f183492dea3",
+                "reference": "a8a7104f201497f5c8275bdde8579f183492dea3",
                 "shasum": ""
             },
             "require": {
@@ -90,7 +90,7 @@
                 }
             ],
             "description": "A lightweight abstraction around LLVM-C",
-            "time": "2019-04-05T12:13:09+00:00"
+            "time": "2019-04-08T22:00:17+00:00"
         },
         {
             "name": "ircmaxell/php-optimizer",
@@ -658,12 +658,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/myclabs/DeepCopy.git",
-                "reference": "3e01bdad3e18354c3dce54466b7fbe33a9f9f7f8"
+                "reference": "e6828efaba2c9b79f4499dae1d66ef8bfa7b2b72"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/myclabs/DeepCopy/zipball/3e01bdad3e18354c3dce54466b7fbe33a9f9f7f8",
-                "reference": "3e01bdad3e18354c3dce54466b7fbe33a9f9f7f8",
+                "url": "https://api.github.com/repos/myclabs/DeepCopy/zipball/e6828efaba2c9b79f4499dae1d66ef8bfa7b2b72",
+                "reference": "e6828efaba2c9b79f4499dae1d66ef8bfa7b2b72",
                 "shasum": ""
             },
             "require": {
@@ -698,7 +698,7 @@
                 "object",
                 "object graph"
             ],
-            "time": "2018-06-11T23:09:50+00:00"
+            "time": "2019-04-07T13:18:21+00:00"
         },
         {
             "name": "paragonie/random_compat",
@@ -1368,12 +1368,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/sebastianbergmann/phpunit.git",
-                "reference": "42f63b2c42b59053ce7de1848da09d7c79ec7e63"
+                "reference": "893a342763f454e029579b6a5175cd8c4a408168"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sebastianbergmann/phpunit/zipball/42f63b2c42b59053ce7de1848da09d7c79ec7e63",
-                "reference": "42f63b2c42b59053ce7de1848da09d7c79ec7e63",
+                "url": "https://api.github.com/repos/sebastianbergmann/phpunit/zipball/893a342763f454e029579b6a5175cd8c4a408168",
+                "reference": "893a342763f454e029579b6a5175cd8c4a408168",
                 "shasum": ""
             },
             "require": {
@@ -1442,7 +1442,7 @@
                 "testing",
                 "xunit"
             ],
-            "time": "2019-04-05T10:27:58+00:00"
+            "time": "2019-04-08T16:09:04+00:00"
         },
         {
             "name": "pre/plugin",
@@ -2112,12 +2112,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/console.git",
-                "reference": "93d8bd2aa30c6f0614e155dec377c3503b9cba7b"
+                "reference": "425c2023f6bdde287df2f32bef68845757827998"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/console/zipball/93d8bd2aa30c6f0614e155dec377c3503b9cba7b",
-                "reference": "93d8bd2aa30c6f0614e155dec377c3503b9cba7b",
+                "url": "https://api.github.com/repos/symfony/console/zipball/425c2023f6bdde287df2f32bef68845757827998",
+                "reference": "425c2023f6bdde287df2f32bef68845757827998",
                 "shasum": ""
             },
             "require": {
@@ -2179,7 +2179,7 @@
             ],
             "description": "Symfony Console Component",
             "homepage": "https://symfony.com",
-            "time": "2019-04-06T16:39:17+00:00"
+            "time": "2019-04-08T15:52:58+00:00"
         },
         {
             "name": "symfony/contracts",
@@ -2187,12 +2187,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/contracts.git",
-                "reference": "a4b5e697e24544ddeaf9f9255cdda6e4c2c32659"
+                "reference": "2ae87c20fb85e5f71af65adfe39cde9e09a72ed2"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/contracts/zipball/a4b5e697e24544ddeaf9f9255cdda6e4c2c32659",
-                "reference": "a4b5e697e24544ddeaf9f9255cdda6e4c2c32659",
+                "url": "https://api.github.com/repos/symfony/contracts/zipball/2ae87c20fb85e5f71af65adfe39cde9e09a72ed2",
+                "reference": "2ae87c20fb85e5f71af65adfe39cde9e09a72ed2",
                 "shasum": ""
             },
             "require": {
@@ -2250,7 +2250,7 @@
                 "interoperability",
                 "standards"
             ],
-            "time": "2019-04-03T09:22:57+00:00"
+            "time": "2019-04-07T08:26:05+00:00"
         },
         {
             "name": "symfony/event-dispatcher",

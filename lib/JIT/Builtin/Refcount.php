@@ -127,9 +127,9 @@ class Refcount extends Builtin {
 
         
     $fntype___cfcd208495d565ef66e7dff9f98764da = $this->context->context->functionType(
-                $this->context->getTypeFromString('void'),
+                $this->context->getTypeFromString('__ref__virtual*'),
                 false , 
-                $this->context->getTypeFromString('__ref__virtual**')
+                $this->context->getTypeFromString('__ref__virtual*')
                 
             );
             $fn___cfcd208495d565ef66e7dff9f98764da = $this->context->module->addFunction('__ref__separate', $fntype___cfcd208495d565ef66e7dff9f98764da);
@@ -164,26 +164,27 @@ class Refcount extends Builtin {
     $typeinfo = $fn___c4ca4238a0b923820dcc509a6f75849b->getParam(0);
     $refVirtual = $fn___c4ca4238a0b923820dcc509a6f75849b->getParam(1);
     
-    $offset___c81e728d9d4c2f636f067f89cc14862c = $this->context->structFieldMap[$refVirtual->typeOf()->getElementType()->getName()]['ref'];
+    $offset = $this->context->structFieldMap[$refVirtual->typeOf()->getElementType()->getName()]['ref'];
                     $ref = $this->context->builder->load(
-                        $this->context->builder->structGep($refVirtual, $offset___c81e728d9d4c2f636f067f89cc14862c)
+                        $this->context->builder->structGep($refVirtual, $offset)
                     );
-    $structType___c81e728d9d4c2f636f067f89cc14862c = $ref->typeOf();
-                $offset___c81e728d9d4c2f636f067f89cc14862c = $this->context->structFieldMap[$structType___c81e728d9d4c2f636f067f89cc14862c->getName()]['refcount'];
+    $structType = $ref->typeOf();
+                $offset = $this->context->structFieldMap[$structType->getName()]['refcount'];
 
                 $this->context->builder->insertValue(
                     $ref, 
-                    $structType___c81e728d9d4c2f636f067f89cc14862c->getElementAtIndex($offset___c81e728d9d4c2f636f067f89cc14862c)->constInt(0, false),
-                    $offset___c81e728d9d4c2f636f067f89cc14862c
+                    $structType->getElementAtIndex($offset)->constInt(0, false),
+                    $offset
                 );
-    $offset___c81e728d9d4c2f636f067f89cc14862c = $this->context->structFieldMap[$ref->typeOf()->getName()]['typeinfo'];
+    $offset = $this->context->structFieldMap[$ref->typeOf()->getName()]['typeinfo'];
                 $this->context->builder->insertValue(
                     $ref, 
                     $typeinfo,
-                    $offset___c81e728d9d4c2f636f067f89cc14862c
+                    $offset
                 );
     $this->context->builder->returnVoid();
     
+    $this->context->builder->clearInsertionPosition();
     } 
 
     private function implementAddref(): void {
@@ -193,56 +194,62 @@ class Refcount extends Builtin {
     $refVirtual = $fn___eccbc87e4b5ce2fe28308fd9f2a7baf3->getParam(0);
     
     $isNull = $this->context->builder->icmp(PHPLLVM\Builder::INT_EQ, $refVirtual, $refVirtual->typeOf()->constNull());
-    $bool___a87ff679a2f3e71d9181a67b7542122c = $this->context->castToBool($isNull);
-                $prev___a87ff679a2f3e71d9181a67b7542122c = $this->context->builder->getInsertBlock();
-                $ifBlock___a87ff679a2f3e71d9181a67b7542122c = $prev___a87ff679a2f3e71d9181a67b7542122c->insertBasicBlock('ifBlock');
-                $prev___a87ff679a2f3e71d9181a67b7542122c->moveBefore($ifBlock___a87ff679a2f3e71d9181a67b7542122c);
+    $bool = $this->context->castToBool($isNull);
+                $prev = $this->context->builder->getInsertBlock();
+                $ifBlock = $prev->insertBasicBlock('ifBlock');
+                $prev->moveBefore($ifBlock);
                 
-                $endBlock___a87ff679a2f3e71d9181a67b7542122c[] = $tmp___a87ff679a2f3e71d9181a67b7542122c = $ifBlock___a87ff679a2f3e71d9181a67b7542122c->insertBasicBlock('endBlock');
-                    $this->context->builder->branchIf($bool___a87ff679a2f3e71d9181a67b7542122c, $ifBlock___a87ff679a2f3e71d9181a67b7542122c, $tmp___a87ff679a2f3e71d9181a67b7542122c);
+                $endBlock[] = $tmp = $ifBlock->insertBasicBlock('endBlock');
+                    $this->context->builder->branchIf($bool, $ifBlock, $tmp);
                 
-                $this->context->builder->positionAtEnd($ifBlock___a87ff679a2f3e71d9181a67b7542122c);
+                $this->context->builder->positionAtEnd($ifBlock);
                 { $this->context->builder->returnVoid();
     }
                 if ($this->context->builder->getInsertBlock()->getTerminator() === null) {
-                    $this->context->builder->branch(end($endBlock___a87ff679a2f3e71d9181a67b7542122c));
+                    $this->context->builder->branch(end($endBlock));
                 }
                 
-                $this->context->builder->positionAtEnd(array_pop($endBlock___a87ff679a2f3e71d9181a67b7542122c));
-    $offset___a87ff679a2f3e71d9181a67b7542122c = $this->context->structFieldMap[$refVirtual->typeOf()->getElementType()->getName()]['ref'];
+                $this->context->builder->positionAtEnd(array_pop($endBlock));
+    $offset = $this->context->structFieldMap[$refVirtual->typeOf()->getElementType()->getName()]['ref'];
                     $ref = $this->context->builder->load(
-                        $this->context->builder->structGep($refVirtual, $offset___a87ff679a2f3e71d9181a67b7542122c)
+                        $this->context->builder->structGep($refVirtual, $offset)
                     );
-    $offset___a87ff679a2f3e71d9181a67b7542122c = $this->context->structFieldMap[$ref->typeOf()->getName()]['typeinfo'];
-                    $typeinfo = $this->context->builder->extractValue($ref, $offset___a87ff679a2f3e71d9181a67b7542122c);
+    $offset = $this->context->structFieldMap[$ref->typeOf()->getName()]['typeinfo'];
+                    $typeinfo = $this->context->builder->extractValue($ref, $offset);
     $refMask = $this->context->getTypeFromString('int32')->constInt(self::TYPE_INFO_REFCOUNTED, false);
-    $isCounted = $this->context->builder->bitwiseAnd($typeinfo, $refMask);
-    $bool___a87ff679a2f3e71d9181a67b7542122c = $this->context->castToBool($isCounted);
-                $prev___a87ff679a2f3e71d9181a67b7542122c = $this->context->builder->getInsertBlock();
-                $ifBlock___a87ff679a2f3e71d9181a67b7542122c = $prev___a87ff679a2f3e71d9181a67b7542122c->insertBasicBlock('ifBlock');
-                $prev___a87ff679a2f3e71d9181a67b7542122c->moveBefore($ifBlock___a87ff679a2f3e71d9181a67b7542122c);
+    $__right = $this->context->builder->intCast($refMask, $typeinfo->typeOf());
+                            
+                            
+                        
+
+                        $isCounted = $this->context->builder->bitwiseAnd($typeinfo, $__right);
+    $bool = $this->context->castToBool($isCounted);
+                $prev = $this->context->builder->getInsertBlock();
+                $ifBlock = $prev->insertBasicBlock('ifBlock');
+                $prev->moveBefore($ifBlock);
                 
-                $endBlock___a87ff679a2f3e71d9181a67b7542122c[] = $tmp___a87ff679a2f3e71d9181a67b7542122c = $ifBlock___a87ff679a2f3e71d9181a67b7542122c->insertBasicBlock('endBlock');
-                    $this->context->builder->branchIf($bool___a87ff679a2f3e71d9181a67b7542122c, $ifBlock___a87ff679a2f3e71d9181a67b7542122c, $tmp___a87ff679a2f3e71d9181a67b7542122c);
+                $endBlock[] = $tmp = $ifBlock->insertBasicBlock('endBlock');
+                    $this->context->builder->branchIf($bool, $ifBlock, $tmp);
                 
-                $this->context->builder->positionAtEnd($ifBlock___a87ff679a2f3e71d9181a67b7542122c);
-                { $offset___a87ff679a2f3e71d9181a67b7542122c = $this->context->structFieldMap[$ref->typeOf()->getName()]['refcount'];
-                    $current = $this->context->builder->extractValue($ref, $offset___a87ff679a2f3e71d9181a67b7542122c);
+                $this->context->builder->positionAtEnd($ifBlock);
+                { $offset = $this->context->structFieldMap[$ref->typeOf()->getName()]['refcount'];
+                    $current = $this->context->builder->extractValue($ref, $offset);
     $current = $this->context->builder->add($current, $current->typeOf()->constInt(1, false));
-    $offset___a87ff679a2f3e71d9181a67b7542122c = $this->context->structFieldMap[$ref->typeOf()->getName()]['refcount'];
+    $offset = $this->context->structFieldMap[$ref->typeOf()->getName()]['refcount'];
                 $this->context->builder->insertValue(
                     $ref, 
                     $current,
-                    $offset___a87ff679a2f3e71d9181a67b7542122c
+                    $offset
                 );
     }
                 if ($this->context->builder->getInsertBlock()->getTerminator() === null) {
-                    $this->context->builder->branch(end($endBlock___a87ff679a2f3e71d9181a67b7542122c));
+                    $this->context->builder->branch(end($endBlock));
                 }
                 
-                $this->context->builder->positionAtEnd(array_pop($endBlock___a87ff679a2f3e71d9181a67b7542122c));
+                $this->context->builder->positionAtEnd(array_pop($endBlock));
     $this->context->builder->returnVoid();
     
+    $this->context->builder->clearInsertionPosition();
     }
 
     private function implementDelref(): void {
@@ -252,83 +259,116 @@ class Refcount extends Builtin {
     $refVirtual = $fn___8f14e45fceea167a5a36dedd4bea2543->getParam(0);
     
     $isNull = $this->context->builder->icmp(PHPLLVM\Builder::INT_EQ, $refVirtual, $refVirtual->typeOf()->constNull());
-    $bool___c9f0f895fb98ab9159f51fd0297e236d = $this->context->castToBool($isNull);
-                $prev___c9f0f895fb98ab9159f51fd0297e236d = $this->context->builder->getInsertBlock();
-                $ifBlock___c9f0f895fb98ab9159f51fd0297e236d = $prev___c9f0f895fb98ab9159f51fd0297e236d->insertBasicBlock('ifBlock');
-                $prev___c9f0f895fb98ab9159f51fd0297e236d->moveBefore($ifBlock___c9f0f895fb98ab9159f51fd0297e236d);
+    $bool = $this->context->castToBool($isNull);
+                $prev = $this->context->builder->getInsertBlock();
+                $ifBlock = $prev->insertBasicBlock('ifBlock');
+                $prev->moveBefore($ifBlock);
                 
-                $endBlock___c9f0f895fb98ab9159f51fd0297e236d[] = $tmp___c9f0f895fb98ab9159f51fd0297e236d = $ifBlock___c9f0f895fb98ab9159f51fd0297e236d->insertBasicBlock('endBlock');
-                    $this->context->builder->branchIf($bool___c9f0f895fb98ab9159f51fd0297e236d, $ifBlock___c9f0f895fb98ab9159f51fd0297e236d, $tmp___c9f0f895fb98ab9159f51fd0297e236d);
+                $endBlock[] = $tmp = $ifBlock->insertBasicBlock('endBlock');
+                    $this->context->builder->branchIf($bool, $ifBlock, $tmp);
                 
-                $this->context->builder->positionAtEnd($ifBlock___c9f0f895fb98ab9159f51fd0297e236d);
+                $this->context->builder->positionAtEnd($ifBlock);
                 { $this->context->builder->returnVoid();
     }
                 if ($this->context->builder->getInsertBlock()->getTerminator() === null) {
-                    $this->context->builder->branch(end($endBlock___c9f0f895fb98ab9159f51fd0297e236d));
+                    $this->context->builder->branch(end($endBlock));
                 }
                 
-                $this->context->builder->positionAtEnd(array_pop($endBlock___c9f0f895fb98ab9159f51fd0297e236d));
-    $offset___c9f0f895fb98ab9159f51fd0297e236d = $this->context->structFieldMap[$refVirtual->typeOf()->getElementType()->getName()]['ref'];
+                $this->context->builder->positionAtEnd(array_pop($endBlock));
+    $offset = $this->context->structFieldMap[$refVirtual->typeOf()->getElementType()->getName()]['ref'];
                     $ref = $this->context->builder->load(
-                        $this->context->builder->structGep($refVirtual, $offset___c9f0f895fb98ab9159f51fd0297e236d)
+                        $this->context->builder->structGep($refVirtual, $offset)
                     );
-    $offset___c9f0f895fb98ab9159f51fd0297e236d = $this->context->structFieldMap[$ref->typeOf()->getName()]['typeinfo'];
-                    $typeinfo = $this->context->builder->extractValue($ref, $offset___c9f0f895fb98ab9159f51fd0297e236d);
+    $offset = $this->context->structFieldMap[$ref->typeOf()->getName()]['typeinfo'];
+                    $typeinfo = $this->context->builder->extractValue($ref, $offset);
     $refMask = $this->context->getTypeFromString('int32')->constInt(self::TYPE_INFO_REFCOUNTED, false);
-    $isCounted = $this->context->builder->bitwiseAnd($typeinfo, $refMask);
-    $bool___c9f0f895fb98ab9159f51fd0297e236d = $this->context->castToBool($isCounted);
-                $prev___c9f0f895fb98ab9159f51fd0297e236d = $this->context->builder->getInsertBlock();
-                $ifBlock___c9f0f895fb98ab9159f51fd0297e236d = $prev___c9f0f895fb98ab9159f51fd0297e236d->insertBasicBlock('ifBlock');
-                $prev___c9f0f895fb98ab9159f51fd0297e236d->moveBefore($ifBlock___c9f0f895fb98ab9159f51fd0297e236d);
+    $__right = $this->context->builder->intCast($refMask, $typeinfo->typeOf());
+                            
+                            
+                        
+
+                        $isCounted = $this->context->builder->bitwiseAnd($typeinfo, $__right);
+    $bool = $this->context->castToBool($isCounted);
+                $prev = $this->context->builder->getInsertBlock();
+                $ifBlock = $prev->insertBasicBlock('ifBlock');
+                $prev->moveBefore($ifBlock);
                 
-                $endBlock___c9f0f895fb98ab9159f51fd0297e236d[] = $tmp___c9f0f895fb98ab9159f51fd0297e236d = $ifBlock___c9f0f895fb98ab9159f51fd0297e236d->insertBasicBlock('endBlock');
-                    $this->context->builder->branchIf($bool___c9f0f895fb98ab9159f51fd0297e236d, $ifBlock___c9f0f895fb98ab9159f51fd0297e236d, $tmp___c9f0f895fb98ab9159f51fd0297e236d);
+                $endBlock[] = $tmp = $ifBlock->insertBasicBlock('endBlock');
+                    $this->context->builder->branchIf($bool, $ifBlock, $tmp);
                 
-                $this->context->builder->positionAtEnd($ifBlock___c9f0f895fb98ab9159f51fd0297e236d);
-                { $offset___c9f0f895fb98ab9159f51fd0297e236d = $this->context->structFieldMap[$ref->typeOf()->getName()]['refcount'];
-                    $current = $this->context->builder->extractValue($ref, $offset___c9f0f895fb98ab9159f51fd0297e236d);
+                $this->context->builder->positionAtEnd($ifBlock);
+                { $offset = $this->context->structFieldMap[$ref->typeOf()->getName()]['refcount'];
+                    $current = $this->context->builder->extractValue($ref, $offset);
     $current = $this->context->builder->sub($current, $current->typeOf()->constInt(1, false));
-    $offset___c9f0f895fb98ab9159f51fd0297e236d = $this->context->structFieldMap[$ref->typeOf()->getName()]['refcount'];
+    $offset = $this->context->structFieldMap[$ref->typeOf()->getName()]['refcount'];
                 $this->context->builder->insertValue(
                     $ref, 
                     $current,
-                    $offset___c9f0f895fb98ab9159f51fd0297e236d
+                    $offset
                 );
-    $test = $this->context->builder->icmp(
-                        PHPLLVM\Builder::INT_SLE,
-                        $current,
-                        $current->typeOf()->constInt(0, false)
-                    );
-    $bool___c9f0f895fb98ab9159f51fd0297e236d = $this->context->castToBool($test);
-                $prev___c9f0f895fb98ab9159f51fd0297e236d = $this->context->builder->getInsertBlock();
-                $ifBlock___c9f0f895fb98ab9159f51fd0297e236d = $prev___c9f0f895fb98ab9159f51fd0297e236d->insertBasicBlock('ifBlock');
-                $prev___c9f0f895fb98ab9159f51fd0297e236d->moveBefore($ifBlock___c9f0f895fb98ab9159f51fd0297e236d);
+    $__right = $current->typeOf()->constInt(0, false);
+                            
+                        
+
+                        
+
+                        
+
+                        
+
+                        
+
+                        
+
+                        
+
+                        
+
+                        
+
+                        
+
+                        
+                            $cmp = PHPLLVM\Builder::INT_SLE;
+                            
+                            $test = $this->context->builder->icmp($cmp, $current, $__right);
+    $bool = $this->context->castToBool($test);
+                $prev = $this->context->builder->getInsertBlock();
+                $ifBlock = $prev->insertBasicBlock('ifBlock');
+                $prev->moveBefore($ifBlock);
                 
-                $endBlock___c9f0f895fb98ab9159f51fd0297e236d[] = $tmp___c9f0f895fb98ab9159f51fd0297e236d = $ifBlock___c9f0f895fb98ab9159f51fd0297e236d->insertBasicBlock('endBlock');
-                    $this->context->builder->branchIf($bool___c9f0f895fb98ab9159f51fd0297e236d, $ifBlock___c9f0f895fb98ab9159f51fd0297e236d, $tmp___c9f0f895fb98ab9159f51fd0297e236d);
+                $endBlock[] = $tmp = $ifBlock->insertBasicBlock('endBlock');
+                    $this->context->builder->branchIf($bool, $ifBlock, $tmp);
                 
-                $this->context->builder->positionAtEnd($ifBlock___c9f0f895fb98ab9159f51fd0297e236d);
+                $this->context->builder->positionAtEnd($ifBlock);
                 { $this->context->memory->free($refVirtual);
     }
                 if ($this->context->builder->getInsertBlock()->getTerminator() === null) {
-                    $this->context->builder->branch(end($endBlock___c9f0f895fb98ab9159f51fd0297e236d));
+                    $this->context->builder->branch(end($endBlock));
                 }
                 
-                $this->context->builder->positionAtEnd(array_pop($endBlock___c9f0f895fb98ab9159f51fd0297e236d));
+                $this->context->builder->positionAtEnd(array_pop($endBlock));
     }
                 if ($this->context->builder->getInsertBlock()->getTerminator() === null) {
-                    $this->context->builder->branch(end($endBlock___c9f0f895fb98ab9159f51fd0297e236d));
+                    $this->context->builder->branch(end($endBlock));
                 }
                 
-                $this->context->builder->positionAtEnd(array_pop($endBlock___c9f0f895fb98ab9159f51fd0297e236d));
+                $this->context->builder->positionAtEnd(array_pop($endBlock));
     $this->context->builder->returnVoid();
     
+    $this->context->builder->clearInsertionPosition();
     }
 
     private function implementSeparate(): void {
-        $func = $this->context->lookupFunction('__ref__separate');
-        $func->addAttributeAtIndex(PHPLLVM\Attribute::INDEX_FUNCTION, $this->context->attributes['alwaysinline']);
         // TODO
+        $fn___c20ad4d76fe97759aa27a0c99bff6710 = $this->context->lookupFunction('__ref__separate');
+    $block___c20ad4d76fe97759aa27a0c99bff6710 = $fn___c20ad4d76fe97759aa27a0c99bff6710->appendBasicBlock('main');
+    $this->context->builder->positionAtEnd($block___c20ad4d76fe97759aa27a0c99bff6710);
+    $virtualPtr = $fn___c20ad4d76fe97759aa27a0c99bff6710->getParam(0);
+    
+    $this->context->builder->returnValue($virtualPtr);
+    
+    $this->context->builder->clearInsertionPosition();
     }
 
     public function disableRefcount(PHPLLVM\Value $value): void {
@@ -336,31 +376,36 @@ class Refcount extends Builtin {
                         $value, 
                         $this->context->getTypeFromString('__ref__virtual*')
                     );
-    $offset___c20ad4d76fe97759aa27a0c99bff6710 = $this->context->structFieldMap[$value->typeOf()->getElementType()->getName()]['ref'];
+    $offset = $this->context->structFieldMap[$virtual->typeOf()->getElementType()->getName()]['ref'];
                     $ref = $this->context->builder->load(
-                        $this->context->builder->structGep($value, $offset___c20ad4d76fe97759aa27a0c99bff6710)
+                        $this->context->builder->structGep($virtual, $offset)
                     );
-    $offset___c20ad4d76fe97759aa27a0c99bff6710 = $this->context->structFieldMap[$ref->typeOf()->getName()]['typeinfo'];
-                    $typeinfo = $this->context->builder->extractValue($ref, $offset___c20ad4d76fe97759aa27a0c99bff6710);
+    $offset = $this->context->structFieldMap[$ref->typeOf()->getName()]['typeinfo'];
+                    $typeinfo = $this->context->builder->extractValue($ref, $offset);
     $notRefc = $this->context->getTypeFromString('int32')->constInt(self::TYPE_INFO_NONREFCOUNTED_MASK, false);
-    $typeinfo = $this->context->builder->bitwiseAnd($typeinfo, $notRefc);
-    $offset___c20ad4d76fe97759aa27a0c99bff6710 = $this->context->structFieldMap[$ref->typeOf()->getName()]['typeinfo'];
+    $__right = $this->context->builder->intCast($notRefc, $typeinfo->typeOf());
+                            
+                            
+                        
+
+                        $typeinfo = $this->context->builder->bitwiseAnd($typeinfo, $__right);
+    $offset = $this->context->structFieldMap[$ref->typeOf()->getName()]['typeinfo'];
                 $this->context->builder->insertValue(
                     $ref, 
                     $typeinfo,
-                    $offset___c20ad4d76fe97759aa27a0c99bff6710
+                    $offset
                 );
     
     }
 
     public function init(PHPLLVM\Value $value, int $typeinfo = 0): void {
-        $type___c51ce410c124a10e0db5e4b97fc2af39 = $this->context->getTypeFromString('int32');
+        $type = $this->context->getTypeFromString('int32');
                     if (!is_object($typeinfo)) {
-                        $typeinfo = $type___c51ce410c124a10e0db5e4b97fc2af39->constInt($typeinfo, false);
-                    } elseif ($typeinfo->typeOf()->getWidth() >= $type___c51ce410c124a10e0db5e4b97fc2af39->getWidth()) {
-                        $typeinfo = $this->context->builder->truncOrBitCast($typeinfo, $type___c51ce410c124a10e0db5e4b97fc2af39);
+                        $typeinfo = $type->constInt($typeinfo, false);
+                    } elseif ($typeinfo->typeOf()->getWidth() >= $type->getWidth()) {
+                        $typeinfo = $this->context->builder->truncOrBitCast($typeinfo, $type);
                     } else {
-                        $typeinfo = $this->context->builder->zExtOrBitCast($typeinfo, $type___c51ce410c124a10e0db5e4b97fc2af39);
+                        $typeinfo = $this->context->builder->zExtOrBitCast($typeinfo, $type);
                     }
     $this->context->builder->call(
                     $this->context->lookupFunction('__ref__init') , 

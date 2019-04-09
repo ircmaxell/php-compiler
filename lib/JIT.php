@@ -161,12 +161,12 @@ class JIT {
         self::$blockNumber++;
         $origBasicBlock = $basicBlock = $func->appendBasicBlock('block_' . self::$blockNumber);
         $this->context->scope->blockStorage[$block] = $basicBlock;
+        $builder = $this->context->builder;
+        $builder->positionAtEnd($basicBlock);
         // Handle hoisted variables
         foreach ($block->orig->hoistedOperands as $operand) {
             $var = $this->context->makeVariableFromOp($func, $basicBlock, $block, $operand);
         }
-        $builder = $this->context->builder;
-        $builder->positionAtEnd($basicBlock);
 
         for ($i = 0, $length = count($block->opCodes); $i < $length; $i++) {
             $op = $block->opCodes[$i];
@@ -235,26 +235,24 @@ class JIT {
                 case OpCode::TYPE_PRINT:
                     $argOffset = $op->type === OpCode::TYPE_ECHO ? $op->arg1 : $op->arg2;
                     $arg = $this->context->getVariableFromOp($block->getOperand($argOffset));
-                    $argValue = $arg->value;
+                    $argValue = $this->context->helper->loadValue($arg);
                     switch ($arg->type) {                            
                         case Variable::TYPE_STRING:            
                             $fmt = $this->context->builder->pointerCast(
                         $this->context->constantFromString("%.*s"),
                         $this->context->getTypeFromString('char*')
                     );
-    $offset___cfcd208495d565ef66e7dff9f98764da = $this->context->structFieldMap[$argValue->typeOf()->getElementType()->getName()]['length'];
-                    $length = $this->context->builder->load(
-                        $this->context->builder->structGep($argValue, $offset___cfcd208495d565ef66e7dff9f98764da)
+    $offset = $this->context->structFieldMap[$argValue->typeOf()->getElementType()->getName()]['length'];
+                    $__str__length = $this->context->builder->load(
+                        $this->context->builder->structGep($argValue, $offset)
                     );
-    $offset___cfcd208495d565ef66e7dff9f98764da = $this->context->structFieldMap[$argValue->typeOf()->getElementType()->getName()]['value'];
-                    $value = $this->context->builder->load(
-                        $this->context->builder->structGep($argValue, $offset___cfcd208495d565ef66e7dff9f98764da)
-                    );
+    $offset = $this->context->structFieldMap[$argValue->typeOf()->getElementType()->getName()]['value'];
+                    $__str__value = $this->context->builder->structGep($argValue, $offset);
     $this->context->builder->call(
                     $this->context->lookupFunction('printf') , 
                     $fmt
-                    , $length
-                    , $value
+                    , $__str__length
+                    , $__str__value
                     
                 );
     
@@ -295,20 +293,29 @@ class JIT {
                         );
                     }
                     break;
-                // case OpCode::TYPE_MUL:
-                // case OpCode::TYPE_PLUS:
-                // case OpCode::TYPE_MINUS:
-                // case OpCode::TYPE_DIV:
-                // case OpCode::TYPE_MODULO:
-                // case OpCode::TYPE_BITWISE_AND:
-                // case OpCode::TYPE_BITWISE_OR:
-                // case OpCode::TYPE_BITWISE_XOR:
-                // case OpCode::TYPE_GREATER_OR_EQUAL:
-                // case OpCode::TYPE_SMALLER_OR_EQUAL:
-                // case OpCode::TYPE_GREATER:
-                // case OpCode::TYPE_SMALLER:
-                // case OpCode::TYPE_IDENTICAL:
-                // case OpCode::TYPE_EQUAL:
+                case OpCode::TYPE_MUL:
+                case OpCode::TYPE_PLUS:
+                case OpCode::TYPE_MINUS:
+                case OpCode::TYPE_DIV:
+                case OpCode::TYPE_MODULO:
+                case OpCode::TYPE_BITWISE_AND:
+                case OpCode::TYPE_BITWISE_OR:
+                case OpCode::TYPE_BITWISE_XOR:
+                case OpCode::TYPE_GREATER_OR_EQUAL:
+                case OpCode::TYPE_SMALLER_OR_EQUAL:
+                case OpCode::TYPE_GREATER:
+                case OpCode::TYPE_SMALLER:
+                case OpCode::TYPE_IDENTICAL:
+                case OpCode::TYPE_EQUAL:
+                    $this->assignOperand(
+                        $block->getOperand($op->arg1),
+                        $this->context->helper->binaryOp(
+                            $op->type,
+                            $this->context->getVariableFromOp($block->getOperand($op->arg2)),
+                            $this->context->getVariableFromOp($block->getOperand($op->arg3))
+                        )
+                    );
+                    break;
                 // case OpCode::TYPE_UNARY_MINUS:
                 // case OpCode::TYPE_CASE:
                 case OpCode::TYPE_JUMP:
@@ -435,18 +442,28 @@ class JIT {
             return;
         }
         $result = $this->context->getVariableFromOp($result);
+        if ($result->kind !== Variable::KIND_VARIABLE) {
+            throw new \LogicException("Cannot assign to a value");
+        }
         if ($value->type === $result->type) {
+
             if ($value->type === Variable::TYPE_STRING) {
                 $this->context->refcount->delref($result->value);
-                $this->context->refcount->addref($value->value);
             } elseif ($value->type & Variable::IS_NATIVE_ARRAY) {
                 // copy over the nextfreelement
-                $result->nextFreeElement = $value->nextFreeElement;
+                //$result->nextFreeElement = $value->nextFreeElement;
             }
-            $this->context->builder->store($value->value, $result->value);
+            $this->context->builder->store(
+                $this->context->helper->loadValue($value),
+                $result->value
+            );
+            if ($value->type === Variable::TYPE_STRING) {
+                $this->context->refcount->addref($result->value);
+            }
+
             return;
         }
-
+        throw new \LogicException("Cannot assign operands of different types (yet)");
     }
 
 }

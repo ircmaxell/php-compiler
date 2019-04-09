@@ -35,10 +35,10 @@ final class Variable {
     ];
 
     const NATIVE_TYPE_MAP = [
-        self::TYPE_NATIVE_LONG => 'long long',
-        self::TYPE_NATIVE_BOOL => 'bool',
+        self::TYPE_NATIVE_LONG => 'int64',
+        self::TYPE_NATIVE_BOOL => 'int1',
         self::TYPE_NATIVE_DOUBLE => 'double',
-        self::TYPE_STRING => '__string__*',
+        self::TYPE_STRING => '__string__',
         self::TYPE_OBJECT => '__object__*',
         self::TYPE_VALUE => '__value__',
         self::TYPE_HASHTABLE => '__hashtable__*',
@@ -131,7 +131,7 @@ final class Variable {
             $context,
             $type,
             self::KIND_VARIABLE,
-            $context->builder->alloca($context->getTypeFromString($stringType))
+            $context->builder->alloca($context->getTypeFromString($stringType)->pointerType(0))
         );
     }
 
@@ -159,7 +159,7 @@ final class Variable {
                 $value = $context->constantFromInteger($op->value, self::getStringType($type));
                 break;
             case self::TYPE_STRING:
-                $value = $context->constantStringFromString($op->value);
+                $value = $context->builder->load($context->constantStringFromString($op->value));
                 break;
             case self::TYPE_NATIVE_DOUBLE:
                 $value = $context->constantFromFloat($op->value, self::getStringType($type));
@@ -291,11 +291,10 @@ final class Variable {
         if ($this->kind === self::KIND_VALUE) {
             return;
         }
-        $type = $this->context->getTypeFromString(self::getStringType($this->type));
         switch ($this->type) {
             case self::TYPE_STRING:
                 // assign to null
-                $this->context->builder->store($type->constNull(), $this->value);
+                $this->context->builder->store($this->context->type->string->pointer->constNull(), $this->value);
                 break;
         }
     }

@@ -26,6 +26,8 @@ class Context {
     public PHPLLVM\BasicBlock $initBlock;
     public PHPLLVM\BasicBlock $shutdownBlock;
     public PHPLLVM\Builder $builder;
+    public PHPLLVM\Intrinsic $intrinsic;
+    public PHPLLVM\TargetData $targetData;
 
     public ?PHPLLVM\Value\Function_ $main = null;
     public ?PHPLLVM\Value\Function_ $initFunc = null;
@@ -49,6 +51,8 @@ class Context {
     private static int $stringConstantCounter = 0;
     private ?string $debugFile = null;
 
+    public Helper $helper;
+
     public Scope $scope;
     private array $exports = [];
     public Runtime $runtime;
@@ -66,7 +70,9 @@ class Context {
         $this->llvm->initializeNative();
         $this->context = $this->llvm->contextCreate();
         $this->module = $this->context->moduleCreateWithName('main');
+        $this->targetData = $this->module->getModuleDataLayout();
         $this->builder = $this->context->builderCreate();
+        $this->intrinsic = $this->module->intrinsic($this->builder);
 
         $this->attributes = [
             'alwaysinline' => $this->context->createEnumAttribute($this->context->getEnumAttributeKindForName('alwaysinline'), 0),
@@ -77,9 +83,10 @@ class Context {
         ];
 
         $this->analyzer = new Analyzer;
+        $this->helper = new Helper($this);
         
         $this->refcount = new Builtin\Refcount($this, $loadType);
-        $this->memory = new Builtin\MemoryManager($this, $loadType);
+        $this->memory = new Builtin\MemoryManager\Native($this, $loadType);
         $this->output = new Builtin\Output($this, $loadType);
         $this->type = new Builtin\Type($this, $loadType);
         $this->internal = new Builtin\Internal($this, $loadType);
@@ -163,9 +170,10 @@ class Context {
     public function compileInPlace() {
         if (is_null($this->result)) {
             $this->compileCommon();
+            $this->llvm->linkInMCJit();
 
             $this->result = new Result(
-                $this->module->createJITCompiler(3),
+                $this->module->createJITCompiler(0),
                 $this->loadType
             );
             foreach ($this->exports as $export) {
@@ -272,6 +280,7 @@ class Context {
             case 'const char':
                 return $this->context->int8Type();
             case 'char':
+            case 'int8':
                 return $this->context->int8Type();
             case 'int32':
             case 'int':
@@ -280,9 +289,9 @@ class Context {
             case 'int64':
             case 'long long':
             case 'unsigned long long':
-                return $this->context->int64Type();
             case 'size_t':
-                return $this->module->getModuleDataLayout()->intPointerType();
+                return $this->context->int64Type();
+                //return $this->module->getModuleDataLayout()->intPointerType();
             case 'int1':
             case 'bool':
                 return $this->context->int1Type();
@@ -335,6 +344,7 @@ class Context {
     public function constantStringFromString(string $string): PHPLLVM\Value {
         if (!isset($this->stringConstantMap[$string])) {
             $global = $this->module->addGlobal($this->type->string->pointer, 'string_const_' . count($this->stringConstantMap));
+            $global->setInitializer($this->type->string->pointer->constNull());
             $oldBuilder = $this->builder;
             $this->builder = $this->context->builderCreate();
             $this->builder->positionAtEnd($this->initBlock);
@@ -345,7 +355,7 @@ class Context {
                 true
             );
             $this->builder->positionAtEnd($this->shutdownBlock);
-            $this->builder->free($global);
+            $this->memory->free($this->builder->load($global));
             $this->builder = $oldBuilder;
             $this->stringConstantMap[$string] = $global;
         }
