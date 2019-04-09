@@ -21,7 +21,7 @@ class Native extends MemoryManager
     {
         parent::register();
         $fntype___cfcd208495d565ef66e7dff9f98764da = $this->context->context->functionType(
-            $this->context->getTypeFromString('void*'),
+            $this->context->getTypeFromString('int8*'),
             false,
             $this->context->getTypeFromString('size_t')
         );
@@ -36,9 +36,9 @@ class Native extends MemoryManager
         );
 
         $fntype___cfcd208495d565ef66e7dff9f98764da = $this->context->context->functionType(
-            $this->context->getTypeFromString('void*'),
+            $this->context->getTypeFromString('int8*'),
             false,
-            $this->context->getTypeFromString('void*'),
+            $this->context->getTypeFromString('int8*'),
             $this->context->getTypeFromString('size_t')
         );
         $fn___cfcd208495d565ef66e7dff9f98764da = $this->context->module->addFunction(
@@ -54,7 +54,7 @@ class Native extends MemoryManager
         $fntype___cfcd208495d565ef66e7dff9f98764da = $this->context->context->functionType(
             $this->context->getTypeFromString('void'),
             false,
-            $this->context->getTypeFromString('void*')
+            $this->context->getTypeFromString('int8*')
         );
         $fn___cfcd208495d565ef66e7dff9f98764da = $this->context->module->addFunction(
             'free',

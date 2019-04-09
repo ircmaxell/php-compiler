@@ -33,6 +33,9 @@ class Context {
     public ?PHPLLVM\Value\Function_ $initFunc = null;
     public ?PHPLLVM\Value\Function_ $shutdownFunc = null;
 
+    public array $functions = [];
+    public array $functionProxies = [];
+    public array $functionReturnType = [];
     public array $functionScope = [];
     private array $typeMap = [];
     public array $structFieldMap = [];
@@ -162,9 +165,13 @@ class Context {
             $this->builder->returnVoid();
         }
         $this->compileCommon();
+
+
         $engine = $this->module->createExecutionEngine();
         $machine = $engine->getTargetMachine();
-        $machine->emitToFile($this->module, $file, $machine::CODEGEN_FILE_TYPE_OBJECT);
+        $machine->emitToFile($this->module, $file . '.o', $machine::CODEGEN_FILE_TYPE_OBJECT);
+        exec('clang-4.0  ' . escapeshellarg($file . '.o') . ' -o ' . escapeshellarg($file));
+        unlink($file . '.o');
     }
 
     public function compileInPlace() {

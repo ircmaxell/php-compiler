@@ -17,7 +17,7 @@ class Scope {
     public int $classId = 0;
     public \SplObjectStorage $blockStorage;
     public \SplObjectStorage $variables;
-    public ?PHPLLVM\Value $toCall = null;
+    public ?Call $toCall = null;
     public array $args = [];
 
     public function __construct() {

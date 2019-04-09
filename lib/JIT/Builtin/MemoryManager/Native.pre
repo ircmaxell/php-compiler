@@ -16,9 +16,9 @@ class Native extends MemoryManager {
     public function register(): void {
         parent::register();
         declare {
-            function malloc(size_t): void*;
-            function realloc(void*, size_t): void*;
-            function free(void*): void;            
+            function malloc(size_t): int8*;
+            function realloc(int8*, size_t): int8*;
+            function free(int8*): void;            
         }
     } 
 

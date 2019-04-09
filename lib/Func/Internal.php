@@ -15,8 +15,9 @@ use PHPCompiler\Frame;
 use PHPCompiler\VM\Context;
 use PHPCompiler\VM\Variable;
 use PHPCompiler\JIT;
+use PHPCompiler\JIT\Call;
 
-abstract class Internal extends Func implements Handler {
+abstract class Internal extends Func implements Handler, Call {
 
     public function __construct(string $name = null) {
         if (is_null($name)) {
@@ -29,7 +30,5 @@ abstract class Internal extends Func implements Handler {
     public function getFrame(Context $context, ?Frame $frame = null): Frame {
         return new Frame($this, null, null);
     }
-
-    public function jit(JIT $jit): void;
 
 }

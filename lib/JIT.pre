@@ -58,7 +58,7 @@ class JIT {
             // No need to do anything, already compiled
             return;
         } elseif ($func instanceof CoreFunc\Internal) {
-            $this->context->functions[strtolower($func->getName())] = $func->jit($this);
+            $this->context->functionProxies[strtolower($func->getName())] = $func;
             return;
         }
         throw new \LogicException("Unknown func type encountered: " . get_class($func));
@@ -100,6 +100,8 @@ class JIT {
                 throw new \LogicException("Non-typed functions not implemented yet");
             }
             $returnType = $this->context->getTypeFromString($callbackType);
+            $this->context->functionReturnType[strtolower($internalName)] = $callbackType;
+
             $callbackType .= '(*)(';
             $callbackSep = '';
             foreach ($block->func->params as $idx => $param) {
@@ -284,13 +286,21 @@ class JIT {
                     $this->assignOperand(
                         $block->getOperand($op->arg1),
                         $this->context->helper->binaryOp(
-                            $op->type,
+                            $op,
                             $this->context->getVariableFromOp($block->getOperand($op->arg2)),
                             $this->context->getVariableFromOp($block->getOperand($op->arg3))
                         )
                     );
                     break;
-                // case OpCode::TYPE_UNARY_MINUS:
+                case OpCode::TYPE_UNARY_MINUS:
+                    $this->assignOperand(
+                        $block->getOperand($op->arg1),
+                        $this->context->helper->unaryOp(
+                            $op,
+                            $this->context->getVariableFromOp($block->getOperand($op->arg2)),
+                        )
+                    );
+                    break;
                 // case OpCode::TYPE_CASE:
                 case OpCode::TYPE_JUMP:
                     $newBlock = $this->compileBlockInternal($func, $op->block1, ...$args);
@@ -333,30 +343,30 @@ class JIT {
                         throw new \LogicException("Variable function calls not yet supported");
                     }
                     $lcname = strtolower($nameOp->value);
-                    if (!isset($this->context->functions[$lcname])) {
+                    if (isset($this->context->functions[$lcname])) {
+                        $this->context->scope->toCall = new JIT\Call\Native(
+                            $this->context->functions[$lcname],
+                            $nameOp->value
+                        );
+                    } elseif (isset($this->context->functionProxies[$lcname])) {
+                        $this->context->scope->toCall = $this->context->functionProxies[$lcname];
+                    } else {
                         throw new \RuntimeException("Call to undefined function $lcname");
                     }
-                    $this->context->scope->toCall = $this->context->functions[$lcname];
                     $this->context->scope->args = [];
                     break;
                 case OpCode::TYPE_ARG_SEND:
-                    $this->context->scope->args[] = $this->context->helper->loadValue($this->context->getVariableFromOp($block->getOperand($op->arg1)));
+                    $this->context->scope->args[] = $this->context->getVariableFromOp($block->getOperand($op->arg1));
                     break;
                 case OpCode::TYPE_FUNCCALL_EXEC_NORETURN:
                     if (is_null($this->context->scope->toCall)) {
                         // short circuit
                         break;
                     }
-                    $this->context->builder->call(
-                        $this->context->scope->toCall,
-                        ... $this->context->scope->args
-                    );
+                    $this->context->scope->toCall->call($this->context, ...$this->context->scope->args);
                     break;
                 case OpCode::TYPE_FUNCCALL_EXEC_RETURN:
-                    $result = $this->context->builder->call(
-                        $this->context->scope->toCall,
-                        ... $this->context->scope->args
-                    );
+                    $result = $this->context->scope->toCall->call($this->context, ...$this->context->scope->args);
                     $this->assignOperandValue($block->getOperand($op->arg1), $result);
                     break;
                 // case OpCode::TYPE_DECLARE_CLASS:
@@ -388,7 +398,6 @@ class JIT {
                 //     );
                 //     break;
                 default:
-                var_dump($block);
                     throw new \LogicException("Unknown JIT opcode: ". $op->getType());
             }
         }

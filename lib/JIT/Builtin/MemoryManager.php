@@ -22,7 +22,7 @@ abstract class MemoryManager extends Builtin
     public function register(): void
     {
         $fntype___cfcd208495d565ef66e7dff9f98764da = $this->context->context->functionType(
-            $this->context->getTypeFromString('void*'),
+            $this->context->getTypeFromString('int8*'),
             false,
             $this->context->getTypeFromString('size_t')
         );
@@ -41,9 +41,9 @@ abstract class MemoryManager extends Builtin
         );
 
         $fntype___cfcd208495d565ef66e7dff9f98764da = $this->context->context->functionType(
-            $this->context->getTypeFromString('void*'),
+            $this->context->getTypeFromString('int8*'),
             false,
-            $this->context->getTypeFromString('void*'),
+            $this->context->getTypeFromString('int8*'),
             $this->context->getTypeFromString('size_t')
         );
         $fn___cfcd208495d565ef66e7dff9f98764da = $this->context->module->addFunction(
@@ -63,7 +63,7 @@ abstract class MemoryManager extends Builtin
         $fntype___cfcd208495d565ef66e7dff9f98764da = $this->context->context->functionType(
             $this->context->getTypeFromString('void'),
             false,
-            $this->context->getTypeFromString('void*')
+            $this->context->getTypeFromString('int8*')
         );
         $fn___cfcd208495d565ef66e7dff9f98764da = $this->context->module->addFunction(
             '__mm__free',
@@ -172,7 +172,7 @@ abstract class MemoryManager extends Builtin
         );
         $void = $this->context->builder->pointerCast(
             $value,
-            $this->context->getTypeFromString('void*')
+            $this->context->getTypeFromString('int8*')
         );
         $ptr = $this->context->builder->call(
             $this->context->lookupFunction('__mm__realloc'),
@@ -190,7 +190,7 @@ abstract class MemoryManager extends Builtin
     {
         $void = $this->context->builder->pointerCast(
             $value,
-            $this->context->getTypeFromString('void*')
+            $this->context->getTypeFromString('int8*')
         );
         $this->context->builder->call(
             $this->context->lookupFunction('__mm__free'),

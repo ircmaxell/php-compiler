@@ -152,19 +152,18 @@ Checkout the committed [`demo.debug.c`](demo.debug.c) and [`demo.reproduce.c`](d
 
 # Performance
 
-So, is this thing any fast? Well, let's look at the internal benchmarks. You can run them yourself with `php bench.php`, and it'll give you the following output (running 5 iterations of each test, and averaging the time):
-
+So, is this thing any fast? Well, let's look at the internal benchmarks. You can run them yourself with `php bench.php`, and it'll give you the following output (running 5 iterations of each test, and averaging the time).
 
 | Test Name          |            7.3 (s)| 7.3.NO.OPCACHE (s)|            7.4 (s)| 7.4.NO.OPCACHE (s)|          8.JIT (s)|        8.NOJIT (s)| bin/jit.php (s) | bin/compile.php (s) | compiled time (s) |
 |--------------------|-------------------|-------------------|-------------------|-------------------|-------------------|-------------------|-----------------|---------------------|-------------------|
-|          Ack(3,10) |            1.1706 |            1.9168 |            1.1752 |            1.9196 |            0.6796 |            1.1634 |          0.5025 |              0.2939 |            0.2127 |
-|           Ack(3,8) |            0.0866 |            0.1057 |            0.0973 |            0.1215 |            0.0534 |            0.0853 |          0.3053 |              0.2943 |            0.0148 |
-|           Ack(3,9) |            0.3053 |            0.3709 |            0.3018 |            0.3730 |            0.1776 |            0.3010 |          0.3458 |              0.2937 |            0.0540 |
-|       array_access |            2.5903 |            2.5624 |            2.5958 |            2.6941 |            1.6697 |            2.6075 |          0.5495 |              0.2936 |            0.2685 |
-|           fibo(30) |            0.0747 |            0.1016 |            0.0760 |            0.1035 |            0.0429 |            0.0743 |          0.3065 |              0.2946 |            0.0110 |
-|         mandelbrot |            0.0441 |            0.1348 |            0.0434 |            0.1090 |            0.0323 |            0.0440 |          0.3186 |              0.3075 |            0.0146 |
-|             simple |            0.0557 |            0.0786 |            0.0650 |            0.0866 |            0.0391 |            0.0673 |          0.3094 |              0.2988 |            0.0120 |
+|          Ack(3,10) |            1.1755 |            1.8759 |            1.1745 |            1.9215 |            0.6838 |            1.1649 |          0.3693 |              0.2000 |            0.1524 |
+|           Ack(3,8) |            0.0876 |            0.1012 |            0.0924 |            0.1035 |            0.0552 |            0.0853 |          0.1694 |              0.2107 |            0.0110 |
+|           Ack(3,9) |            0.3160 |            0.5450 |            0.3332 |            0.4631 |            0.1901 |            0.3213 |          0.2397 |              0.2286 |            0.0393 |
+|           fibo(30) |            0.0812 |            0.0922 |            0.0836 |            0.0956 |            0.0447 |            0.0784 |          0.2014 |              0.2369 |            0.0091 |
+|         mandelbrot |            0.0454 |            0.1303 |            0.0457 |            0.1094 |            0.0294 |            0.0459 |          0.2001 |              0.2479 |            0.0142 |
+|             simple |            0.0567 |            0.0798 |            0.0565 |            0.0906 |            0.0275 |            0.0591 |          0.1755 |              0.2113 |            0.0114 |
 
+This is after the port to using LLVM under the hood. So the port to LLVM appears to have been well worth it, even just from a performance standpoint.
 
 To run the benchmarks yourself, you need to pass a series of ENV vars for each PHP version you want to test. For example, the above chart is generated with::
 
@@ -172,9 +171,9 @@ To run the benchmarks yourself, you need to pass a series of ENV vars for each P
 me@local:~$  PHP_7_3=php-7.3 PHP_7_4=php-7.4 PHP_8_JIT=php-8-jit PHP_8_NOJIT=php-8-nojit PHP_7_3_NO_OPCACHE="php-7.3 -dopcache.enable=0" PHP_7_4_NO_OPCACHE="php-7.4 -dopcache.enable=0" php bench.php
 ```
 
-Without opcache doing optimizations, the `bin/jit.php` is actually able to hang up with ack(3,9) and mandelbrot for 7.3 and 7.4. It's even able to hang with PHP 8's experimental JIT compiler for ack(3,9). 
+Without opcache doing optimizations, the `bin/jit.php` is actually able to get close to native PHP with ack(3,9) and mandelbrot (without opcache) for 7.3 and 7.4. It's even able to hang with PHP 8's experimental JIT compiler for ack(3,9). For ack(3,10) it's able to be the fastest execution method.  
 
-Most other tests are actually WAY slower with the `bin/jit.php` compiler. That's because the test itself is slower than the baseline time to parse and compile a file (about 0.12 seconds right now).
+Most other tests are actually WAY slower with the `bin/jit.php` compiler. That's because the test itself is slower than the baseline time to parse and compile a file (about 0.2 seconds right now).
 
 And note that this is running the compiler on top of PHP. At some point, the goal is to get the compiler to compile itself, hopefully cutting the time to compile down by at least a few hundred percent.
 

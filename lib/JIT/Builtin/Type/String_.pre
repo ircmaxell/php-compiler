@@ -99,11 +99,11 @@ class String_ extends Type {
 
                 $test = $newSize > $oldSize;
                 if ($test) {
-                    $char = gep $char $oldSize;
+                    $char = &$char[$oldSize];
                     $diff = $newSize - $oldSize;
                     memset $char 0 $diff;    
                 } else {
-                    $char = gep $char $newSize;
+                    $char = &$char[$newSize];
                     $end = (int64) 1;
                     memset $char 0 $end;
                 }
@@ -136,18 +136,7 @@ class String_ extends Type {
         \gcc_jit_rvalue_ptr $length,
         bool $isConstant = false
     ): void {
-        $this->context->helper->assign(
-            $block,
-            $dest,
-            $this->context->helper->call(
-                '__string__alloc',
-                $length
-            )
-        );
-        if ($isConstant) {
-            // disable refcount
-            $this->context->refcount->disableRefcount($block, $dest->asRValue());
-        }
+        die("Not implemented");
     }
 
     public function init(
@@ -237,7 +226,8 @@ class String_ extends Type {
             $char = &$destValue->value;
             $leftChar = &$leftVar->value;
             memcpy $char $leftChar $leftSize;
-            $char = gep $char $leftSize;
+
+            $char = &$char[$leftSize];
             $rightChar = &$rightVar->value;
             memcpy $char $rightChar $rightSize;
         }

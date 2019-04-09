@@ -408,18 +408,7 @@ class String_ extends Type {
         \gcc_jit_rvalue_ptr $length,
         bool $isConstant = false
     ): void {
-        $this->context->helper->assign(
-            $block,
-            $dest,
-            $this->context->helper->call(
-                '__string__alloc',
-                $length
-            )
-        );
-        if ($isConstant) {
-            // disable refcount
-            $this->context->refcount->disableRefcount($block, $dest->asRValue());
-        }
+        die("Not implemented");
     }
 
     public function init(

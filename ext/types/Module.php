@@ -9,7 +9,7 @@ class Module extends ModuleAbstract {
 
     public function getFunctions(): array {
         return [
-            //new strlen,
+            new strlen,
             // new is_type('is_int', Variable::TYPE_INTEGER),
             // new is_type('is_integer', Variable::TYPE_INTEGER),
             // new is_type('is_long', Variable::TYPE_INTEGER),

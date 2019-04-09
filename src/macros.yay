@@ -146,13 +146,14 @@ $(macro :unsafe :recursive) {
                 chain(token('&'), T_VARIABLE as field_deref_ref_var, token(T_OBJECT_OPERATOR), label() as field_deref_ref_field) as field_deref_ref,
                 chain(T_VARIABLE as field_extract_var, token('.'), label() as field_extract_field) as field_extract,
                 chain(token('&'), T_VARIABLE as field_extract_ref_var, token('.'), label() as field_extract_ref_field) as field_extract_ref,
+                chain(T_VARIABLE as gep_load_var, token('['), T_VARIABLE as gep_load_offset, token(']')) as gep_load,
+                chain(token('&'), T_VARIABLE as gep_var, token('['), T_VARIABLE as gep_offset, token(']')) as gep,
                 chain(buffer('load'), T_VARIABLE as load_var) as load,
                 chain(buffer('typeof'), T_VARIABLE as typeof_var) as typeof,
                 chain(buffer('sizeof'), T_VARIABLE as sizeof_var) as sizeof,
                 chain(buffer('sizeof'), ctype() as sizeoftype_type) as sizeoftype,
                 chain(buffer('malloc'), ctype() as malloc_type, optional(T_VARIABLE as malloc_extra)) as malloc,
                 chain(buffer('realloc'), T_VARIABLE as realloc_var, T_VARIABLE as realloc_extra) as realloc,
-                chain(buffer('gep'), T_VARIABLE as gep_var, T_VARIABLE as gep_offset) as gep,
                 chain(llvmidentifier() as call_func, token('('), ls(T_VARIABLE as call_arg, token(',')) as call_args, token(')')) as call,
                 chain(T_VARIABLE as binary_left, either(
                     token('&') as binary_and,
@@ -427,6 +428,15 @@ $(macro :unsafe :recursive) {
                         //$this->context->context->int32Type()->constInt(0, false),
                         $(gep_offset)
                     );
+                })
+
+                $(gep_load ? ... {
+                    $(result) = $this->context->builder->load($this->context->builder->gep(
+                        $(gep_load_var),
+                        //$this->context->context->int32Type()->constInt(0, false),
+                        //$this->context->context->int32Type()->constInt(0, false),
+                        $(gep_load_offset)
+                    ));
                 })
 
                 $(malloc ? ... {
