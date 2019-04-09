@@ -259,6 +259,14 @@ class JIT {
                                 printf($fmt, $argValue);
                             }
                             break;
+                        case Variable::TYPE_NATIVE_BOOL:
+                            compile {
+                                if ($argValue) {
+                                    $fmt = "1";
+                                    printf($fmt);
+                                }
+                            }
+                            break;
                         default: 
                             throw new \LogicException("Echo for type $arg->type not implemented");
                     }

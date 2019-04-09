@@ -289,6 +289,33 @@ class JIT {
                 );
     
                             break;
+                        case Variable::TYPE_NATIVE_BOOL:
+                            $bool = $this->context->castToBool($argValue);
+                $prev = $this->context->builder->getInsertBlock();
+                $ifBlock = $prev->insertBasicBlock('ifBlock');
+                $prev->moveBefore($ifBlock);
+                
+                $endBlock[] = $tmp = $ifBlock->insertBasicBlock('endBlock');
+                    $this->context->builder->branchIf($bool, $ifBlock, $tmp);
+                
+                $this->context->builder->positionAtEnd($ifBlock);
+                { $fmt = $this->context->builder->pointerCast(
+                        $this->context->constantFromString("1"),
+                        $this->context->getTypeFromString('char*')
+                    );
+    $this->context->builder->call(
+                    $this->context->lookupFunction('printf') , 
+                    $fmt
+                    
+                );
+    }
+                if ($this->context->builder->getInsertBlock()->getTerminator() === null) {
+                    $this->context->builder->branch(end($endBlock));
+                }
+                
+                $this->context->builder->positionAtEnd(array_pop($endBlock));
+    
+                            break;
                         default: 
                             throw new \LogicException("Echo for type $arg->type not implemented");
                     }

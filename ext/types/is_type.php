@@ -9,14 +9,15 @@
 
 namespace PHPCompiler\ext\types;
 
-use PHPCompiler\Func\Internal\JITInlined;
+use PHPCompiler\Func\Internal;
 use PHPCompiler\Frame;
 use PHPCompiler\VM\Variable;
+use PHPCompiler\JIT\Context;
 use PHPCompiler\JIT\Variable as JITVariable;
-use PHPCompiler\JIT;
-use PHPCompiler\JIT\Func as JITFunc;
 
-class is_type extends JITInlined {
+use PHPLLVM\Value;
+
+class is_type extends Internal {
 
     private int $type;
 
@@ -35,26 +36,22 @@ class is_type extends JITInlined {
         }
     }
 
-    public function call(\gcc_jit_rvalue_ptr ... $args): \gcc_jit_rvalue_ptr {
+    public Context $context;
+
+    public function call(Context $context, JITVariable ... $args): Value {
+        $this->context = $context;
         if (count($args) !== 1) {
             throw new \LogicException('Too few args passed to ' . $this->name . '()');
         }
-        $type = $this->jit->context->getStringFromType(\gcc_jit_rvalue_get_type($args[0]));
-        switch ($type) {
-            case 'long long':
-                return $this->jit->context->constantFromBool($this->type === Variable::TYPE_INTEGER);
-            case '__string__*':
-                return $this->jit->context->constantFromBool($this->type === Variable::TYPE_STRING);
-            case '__value__':
-                return \gcc_jit_context_new_comparison(
-                    $this->jit->context->context,
-                    $this->jit->context->location(),
-                    \GCC_JIT_COMPARISON_EQ,
-                    $this->jit->context->type->value->readType($args[0]),
-                    $this->jit->context->constantFromInteger(JITVariable::fromVMVariable($this->type), 'unsigned char')
-                );
+        switch ($args[0]->type) {
+            case JITVariable::TYPE_NATIVE_LONG:
+                return $this->context->constantFromBool($this->type === Variable::TYPE_INTEGER);
+            case JITVariable::TYPE_NATIVE_DOUBLE:
+                return $this->context->constantFromBool($this->type === Variable::TYPE_FLOAT);
+            case JITVariable::TYPE_STRING:
+                return $this->context->constantFromBool($this->type === Variable::TYPE_STRING);
             default:
-                throw new \LogicException('Non-implemented type handled for ' . $this->name . '(): ' . $type);
+                throw new \LogicException('Non-implemented type handled for ' . $this->name . '(): ' . JITVariable::getStringType($args[0]->type));
         }
     }
 
