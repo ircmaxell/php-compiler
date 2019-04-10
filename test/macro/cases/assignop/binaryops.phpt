@@ -40,7 +40,6 @@ compile {
 --EXPECTF--
 <?php
 
-%s
 $__right = $this->context->builder->intCast($right, $left->typeOf());
 $result = $this->context->builder->addNoUnsignedWrap($left, $__right);
 $__right = $this->context->builder->intCast($right, $left->typeOf());

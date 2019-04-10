@@ -96,14 +96,12 @@ $(macro) {
             $this->context->registerType($$(stringify($(struct_name))), $struct);
             $this->context->registerType($$(stringify($(struct_name))) . '*', $struct->pointerType(0));
             $this->context->registerType($$(stringify($(struct_name))) . '**', $struct->pointerType(0)->pointerType(0));
-
             $struct->setBody(
                 false $(fields ? { , }) // packed
                 $(fields ... ( , ) {
                 $this->context->getTypeFromString($$(stringify($(field_type))))
                 })
             );
-            
             $this->context->structFieldMap[$$(stringify($(struct_name)))] = [
                 $(fields ... (, ) i {
                     $$(stringify($$(unvar($(field_name))))) => $(i)
@@ -135,7 +133,6 @@ $(macro) {
     $this->context->builder->clearInsertionPosition();
 }
 
-// First, expand statements
 $(macro :unsafe :recursive) {
     $(optional(buffer('unsigned')) as unsigned) compile {
         $(repeat(either(
@@ -597,12 +594,11 @@ $(macro :unsafe :recursive) {
 
             $(gep_store ? ... {
                 $this->context->builder->store($(gep_store_value), $this->context->builder->gep(
-                        $(gep_store_var),
-                        //$this->context->context->int32Type()->constInt(0, false),
-                        //$this->context->context->int32Type()->constInt(0, false),
-                        $(gep_store_offset)
-                    ));
-                })
+                    $(gep_store_var),
+                    //$this->context->context->int32Type()->constInt(0, false),
+                    //$this->context->context->int32Type()->constInt(0, false),
+                    $(gep_store_offset)
+                ));
             })
 
             $(free ? ... {
@@ -625,4 +621,3 @@ $(macro :unsafe :recursive) {
         })
     })
 }
-

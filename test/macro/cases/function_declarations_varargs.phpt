@@ -14,7 +14,6 @@ declare {
 --EXPECTF--
 <?php
 
-%s
 $fntype___0 = $this->context->context->functionType(
     $this->context->getTypeFromString('int32'),
     true , 

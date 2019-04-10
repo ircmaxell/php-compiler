@@ -36,7 +36,6 @@ class Value extends Type {
             $this->context->registerType('__value__', $struct___cfcd208495d565ef66e7dff9f98764da);
             $this->context->registerType('__value__' . '*', $struct___cfcd208495d565ef66e7dff9f98764da->pointerType(0));
             $this->context->registerType('__value__' . '**', $struct___cfcd208495d565ef66e7dff9f98764da->pointerType(0)->pointerType(0));
-
             $struct___cfcd208495d565ef66e7dff9f98764da->setBody(
                 false ,  // packed
                 $this->context->getTypeFromString('__ref__')
@@ -44,7 +43,6 @@ class Value extends Type {
                 , $this->context->getTypeFromString('int8[8]')
                 
             );
-            
             $this->context->structFieldMap['__value__'] = [
                 'ref' => 0
                 , 'type' => 1

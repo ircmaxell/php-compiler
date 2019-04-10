@@ -49,14 +49,12 @@ class Refcount extends Builtin {
             $this->context->registerType('__ref__', $struct___cfcd208495d565ef66e7dff9f98764da);
             $this->context->registerType('__ref__' . '*', $struct___cfcd208495d565ef66e7dff9f98764da->pointerType(0));
             $this->context->registerType('__ref__' . '**', $struct___cfcd208495d565ef66e7dff9f98764da->pointerType(0)->pointerType(0));
-
             $struct___cfcd208495d565ef66e7dff9f98764da->setBody(
                 false ,  // packed
                 $this->context->getTypeFromString('int32')
                 , $this->context->getTypeFromString('int32')
                 
             );
-            
             $this->context->structFieldMap['__ref__'] = [
                 'refcount' => 0
                 , 'typeinfo' => 1
@@ -72,13 +70,11 @@ class Refcount extends Builtin {
             $this->context->registerType('__ref__virtual', $struct___cfcd208495d565ef66e7dff9f98764da);
             $this->context->registerType('__ref__virtual' . '*', $struct___cfcd208495d565ef66e7dff9f98764da->pointerType(0));
             $this->context->registerType('__ref__virtual' . '**', $struct___cfcd208495d565ef66e7dff9f98764da->pointerType(0)->pointerType(0));
-
             $struct___cfcd208495d565ef66e7dff9f98764da->setBody(
                 false ,  // packed
                 $this->context->getTypeFromString('__ref__')
                 
             );
-            
             $this->context->structFieldMap['__ref__virtual'] = [
                 'ref' => 0
                 

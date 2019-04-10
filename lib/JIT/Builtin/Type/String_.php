@@ -37,7 +37,6 @@ class String_ extends Type {
             $this->context->registerType('__string__', $struct___cfcd208495d565ef66e7dff9f98764da);
             $this->context->registerType('__string__' . '*', $struct___cfcd208495d565ef66e7dff9f98764da->pointerType(0));
             $this->context->registerType('__string__' . '**', $struct___cfcd208495d565ef66e7dff9f98764da->pointerType(0)->pointerType(0));
-
             $struct___cfcd208495d565ef66e7dff9f98764da->setBody(
                 false ,  // packed
                 $this->context->getTypeFromString('__ref__')
@@ -45,7 +44,6 @@ class String_ extends Type {
                 , $this->context->getTypeFromString('int8')
                 
             );
-            
             $this->context->structFieldMap['__string__'] = [
                 'ref' => 0
                 , 'length' => 1
