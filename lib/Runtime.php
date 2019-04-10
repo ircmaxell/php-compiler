@@ -165,7 +165,7 @@ class Runtime {
     }
 
     public function run(?Block $block) {
-        return $this->vm->run($block, $this->vmContext);
+        return $this->vm->run($block);
     }
 
 }
