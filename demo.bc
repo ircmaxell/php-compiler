@@ -1,0 +1,385 @@
+; ModuleID = 'main'
+source_filename = "main"
+
+%__string__ = type <{ %__ref__, i64, i8 }>
+%__ref__ = type <{ i32, i32 }>
+%__ref__virtual = type <{ %__ref__ }>
+
+@string_const_0 = global %__string__* null
+@0 = global [1 x i8] zeroinitializer
+@string_const_1 = global %__string__* null
+@"Hello World\0A" = global [13 x i8] c"Hello World\0A\00"
+@"%.*s" = global [5 x i8] c"%.*s\00"
+
+; Function Attrs: alwaysinline
+define void @__ref__init(i32, %__ref__virtual*) #0 {
+main:
+  %2 = getelementptr inbounds %__ref__virtual, %__ref__virtual* %1, i32 0, i32 0
+  %3 = load %__ref__, %__ref__* %2
+  %4 = insertvalue %__ref__ %3, i32 0, 0
+  %5 = insertvalue %__ref__ %3, i32 %0, 1
+  ret void
+}
+
+; Function Attrs: alwaysinline
+define void @__ref__addref(%__ref__virtual*) #0 {
+main:
+  %1 = icmp eq %__ref__virtual* %0, null
+  br i1 %1, label %ifBlock, label %endBlock
+
+endBlock:                                         ; preds = %main
+  %2 = getelementptr inbounds %__ref__virtual, %__ref__virtual* %0, i32 0, i32 0
+  %3 = load %__ref__, %__ref__* %2
+  %4 = extractvalue %__ref__ %3, 1
+  %5 = and i32 %4, 1
+  %6 = icmp ne i32 %5, 0
+  br i1 %6, label %ifBlock1, label %endBlock2
+
+endBlock2:                                        ; preds = %ifBlock1, %endBlock
+  ret void
+
+ifBlock1:                                         ; preds = %endBlock
+  %7 = extractvalue %__ref__ %3, 0
+  %8 = add i32 %7, 1
+  %9 = insertvalue %__ref__ %3, i32 %8, 0
+  br label %endBlock2
+
+ifBlock:                                          ; preds = %main
+  ret void
+}
+
+; Function Attrs: alwaysinline
+define void @__ref__delref(%__ref__virtual*) #0 {
+main:
+  %1 = icmp eq %__ref__virtual* %0, null
+  br i1 %1, label %ifBlock, label %endBlock
+
+endBlock:                                         ; preds = %main
+  %2 = getelementptr inbounds %__ref__virtual, %__ref__virtual* %0, i32 0, i32 0
+  %3 = load %__ref__, %__ref__* %2
+  %4 = extractvalue %__ref__ %3, 1
+  %5 = and i32 %4, 1
+  %6 = icmp ne i32 %5, 0
+  br i1 %6, label %ifBlock1, label %endBlock2
+
+endBlock2:                                        ; preds = %endBlock4, %endBlock
+  ret void
+
+ifBlock1:                                         ; preds = %endBlock
+  %7 = extractvalue %__ref__ %3, 0
+  %8 = sub i32 %7, 1
+  %9 = insertvalue %__ref__ %3, i32 %8, 0
+  %10 = icmp sle i32 %8, 0
+  br i1 %10, label %ifBlock3, label %endBlock4
+
+endBlock4:                                        ; preds = %ifBlock3, %ifBlock1
+  br label %endBlock2
+
+ifBlock3:                                         ; preds = %ifBlock1
+  %11 = bitcast %__ref__virtual* %0 to i8*
+  call void @__mm__free(i8* %11)
+  br label %endBlock4
+
+ifBlock:                                          ; preds = %main
+  ret void
+}
+
+; Function Attrs: alwaysinline
+define void @__ref__separate(%__ref__virtual**) #0 {
+main:
+  %1 = load %__ref__virtual*, %__ref__virtual** %0
+  %2 = icmp eq %__ref__virtual* %1, null
+  br i1 %2, label %ifBlock, label %endBlock
+
+endBlock:                                         ; preds = %main
+  %3 = getelementptr inbounds %__ref__virtual, %__ref__virtual* %1, i32 0, i32 0
+  %4 = load %__ref__, %__ref__* %3
+  %5 = extractvalue %__ref__ %4, 1
+  %6 = and i32 %5, 1
+  %7 = icmp ne i32 %6, 0
+  br i1 %7, label %ifBlock1, label %endBlock2
+
+endBlock2:                                        ; preds = %endBlock4, %endBlock
+  ret void
+
+ifBlock1:                                         ; preds = %endBlock
+  %8 = extractvalue %__ref__ %4, 0
+  %9 = icmp sgt i32 %8, 1
+  br i1 %9, label %ifBlock3, label %endBlock4
+
+endBlock4:                                        ; preds = %ifBlock3, %ifBlock1
+  br label %endBlock2
+
+ifBlock3:                                         ; preds = %ifBlock1
+  call void @__ref__separate_ex(%__ref__virtual** %0, i32 %5)
+  br label %endBlock4
+
+ifBlock:                                          ; preds = %main
+  ret void
+}
+
+; Function Attrs: alwaysinline
+define void @__ref__separate_ex(%__ref__virtual**, i32) #0 {
+main:
+  %2 = load %__ref__virtual*, %__ref__virtual** %0
+  call void @__ref__delref(%__ref__virtual* %2)
+  %3 = getelementptr inbounds %__ref__virtual, %__ref__virtual* %2, i32 0, i32 0
+  %4 = load %__ref__, %__ref__* %3
+  %5 = and i32 %1, 1020
+  %6 = icmp eq i32 %5, 4
+  br i1 %6, label %ifBlock, label %endBlock
+
+endBlock:                                         ; preds = %ifBlock, %main
+  ret void
+
+ifBlock:                                          ; preds = %main
+  %7 = bitcast %__ref__virtual* %2 to %__string__*
+  %8 = call %__string__* @__string__separate(%__string__* %7)
+  %9 = bitcast %__string__* %8 to %__ref__virtual*
+  store %__ref__virtual* %9, %__ref__virtual** %0
+  br label %endBlock
+}
+
+; Function Attrs: alwaysinline
+define i8* @__mm__malloc(i64) #0 {
+main:
+  %1 = call i8* @malloc(i64 %0)
+  ret i8* %1
+}
+
+; Function Attrs: alwaysinline
+define i8* @__mm__realloc(i8*, i64) #0 {
+main:
+  %2 = call i8* @realloc(i8* %0, i64 %1)
+  ret i8* %2
+}
+
+; Function Attrs: alwaysinline
+define void @__mm__free(i8*) #0 {
+main:
+  call void @free(i8* %0)
+  ret void
+}
+
+declare i8* @malloc(i64)
+
+declare i8* @realloc(i8*, i64)
+
+declare void @free(i8*)
+
+declare i32 @printf(i8* nocapture readonly, ...)
+
+declare i32 @sprintf(i8*, i8* nocapture readonly, ...)
+
+declare i32 @snprintf(i8*, i64, i8* nocapture readonly, ...)
+
+; Function Attrs: alwaysinline
+define i64 @__string__strlen(%__string__*) #0 {
+main:
+  %1 = getelementptr inbounds %__string__, %__string__* %0, i32 0, i32 1
+  %2 = load i64, i64* %1
+  ret i64 %2
+}
+
+; Function Attrs: alwaysinline
+define %__string__* @__string__alloc(i64) #0 {
+main:
+  %1 = add nsw i64 %0, 1
+  %2 = add nuw i64 ptrtoint (%__string__* getelementptr (%__string__, %__string__* null, i32 1) to i64), %0
+  %3 = call i8* @__mm__malloc(i64 %2)
+  %4 = bitcast i8* %3 to %__string__*
+  %5 = getelementptr inbounds %__string__, %__string__* %4, i32 0, i32 1
+  store i64 %0, i64* %5
+  %6 = getelementptr inbounds %__string__, %__string__* %4, i32 0, i32 2
+  call void @llvm.memset.p0i8.i64(i8* %6, i8 0, i64 %1, i32 0, i1 false)
+  %7 = bitcast %__string__* %4 to %__ref__virtual*
+  call void @__ref__init(i32 5, %__ref__virtual* %7)
+  ret %__string__* %4
+}
+
+; Function Attrs: alwaysinline
+define void @__string__realloc(%__string__**, i64) #0 {
+main:
+  %2 = bitcast %__string__** %0 to %__ref__virtual**
+  call void @__ref__separate(%__ref__virtual** %2)
+  %3 = load %__string__*, %__string__** %0
+  %4 = icmp eq %__string__* %3, null
+  br i1 %4, label %ifBlock, label %endBlock
+
+endBlock:                                         ; preds = %main
+  %5 = getelementptr inbounds %__string__, %__string__* %3, i32 0, i32 1
+  %6 = load i64, i64* %5
+  %7 = add nuw i64 ptrtoint (%__string__* getelementptr (%__string__, %__string__* null, i32 1) to i64), %1
+  %8 = bitcast %__string__* %3 to i8*
+  %9 = call i8* @__mm__realloc(i8* %8, i64 %7)
+  %10 = bitcast i8* %9 to %__string__*
+  %11 = getelementptr inbounds %__string__, %__string__* %10, i32 0, i32 1
+  store i64 %1, i64* %11
+  %12 = getelementptr inbounds %__string__, %__string__* %10, i32 0, i32 2
+  %13 = icmp sgt i64 %1, %6
+  br i1 %13, label %ifBlock1, label %endBlock2
+
+endBlock2:                                        ; preds = %ifBlock1, %endBlock
+  ret void
+
+ifBlock1:                                         ; preds = %endBlock
+  %14 = getelementptr i8, i8* %12, i64 %6
+  %15 = sub nsw i64 %1, %6
+  call void @llvm.memset.p0i8.i64(i8* %14, i8 0, i64 %15, i32 0, i1 false)
+  br label %endBlock2
+
+ifBlock:                                          ; preds = %main
+  %16 = call %__string__* @__string__alloc(i64 %1)
+  store %__string__* %16, %__string__** %0
+  ret void
+}
+
+; Function Attrs: alwaysinline
+define %__string__* @__string__init(i64, i8* nocapture readonly) #0 {
+main:
+  %2 = call %__string__* @__string__alloc(i64 %0)
+  %3 = getelementptr inbounds %__string__, %__string__* %2, i32 0, i32 2
+  call void @llvm.memcpy.p0i8.p0i8.i64(i8* %3, i8* %1, i64 %0, i32 0, i1 false)
+  ret %__string__* %2
+}
+
+; Function Attrs: alwaysinline
+define %__string__* @__string__separate(%__string__*) #0 {
+main:
+  %1 = getelementptr inbounds %__string__, %__string__* %0, i32 0, i32 1
+  %2 = load i64, i64* %1
+  %3 = call %__string__* @__string__alloc(i64 %2)
+  %4 = getelementptr inbounds %__string__, %__string__* %0, i32 0, i32 2
+  %5 = getelementptr inbounds %__string__, %__string__* %3, i32 0, i32 2
+  %6 = add nsw i64 %2, 1
+  call void @llvm.memcpy.p0i8.p0i8.i64(i8* %5, i8* %4, i64 %6, i32 0, i1 false)
+  ret %__string__* %3
+}
+
+; Function Attrs: argmemonly nounwind
+declare void @llvm.memset.p0i8.i64(i8* nocapture writeonly, i8, i64, i32, i1) #1
+
+; Function Attrs: argmemonly nounwind
+declare void @llvm.memcpy.p0i8.p0i8.i64(i8* nocapture writeonly, i8* nocapture readonly, i64, i32, i1) #1
+
+define void @__init__() {
+main:
+  %0 = call %__string__* @__string__init(i64 0, i8* getelementptr inbounds ([1 x i8], [1 x i8]* @0, i32 0, i32 0))
+  store %__string__* %0, %__string__** @string_const_0
+  %1 = bitcast %__string__* %0 to %__ref__virtual*
+  %2 = getelementptr inbounds %__ref__virtual, %__ref__virtual* %1, i32 0, i32 0
+  %3 = load %__ref__, %__ref__* %2
+  %4 = extractvalue %__ref__ %3, 1
+  %5 = and i32 %4, -2
+  %6 = insertvalue %__ref__ %3, i32 %5, 1
+  %7 = call %__string__* @__string__init(i64 12, i8* getelementptr inbounds ([13 x i8], [13 x i8]* @"Hello World\0A", i32 0, i32 0))
+  store %__string__* %7, %__string__** @string_const_1
+  %8 = bitcast %__string__* %7 to %__ref__virtual*
+  %9 = getelementptr inbounds %__ref__virtual, %__ref__virtual* %8, i32 0, i32 0
+  %10 = load %__ref__, %__ref__* %9
+  %11 = extractvalue %__ref__ %10, 1
+  %12 = and i32 %11, -2
+  %13 = insertvalue %__ref__ %10, i32 %12, 1
+  ret void
+}
+
+define void @__shutdown__() {
+main:
+  %0 = load %__string__*, %__string__** @string_const_0
+  %1 = bitcast %__string__* %0 to i8*
+  call void @__mm__free(i8* %1)
+  %2 = load %__string__*, %__string__** @string_const_1
+  %3 = bitcast %__string__* %2 to i8*
+  call void @__mm__free(i8* %3)
+  ret void
+}
+
+define %__string__* @str_repeat(%__string__*, i64) {
+block_1:
+  %2 = alloca %__string__*
+  store %__string__* null, %__string__** %2
+  %3 = alloca i64
+  %4 = alloca i64
+  %5 = alloca i1
+  %6 = alloca %__string__*
+  store %__string__* null, %__string__** %6
+  %7 = alloca %__string__*
+  store %__string__* null, %__string__** %7
+  %8 = alloca i64
+  %9 = bitcast %__string__** %6 to %__ref__virtual*
+  call void @__ref__delref(%__ref__virtual* %9)
+  store %__string__* %0, %__string__** %6
+  %10 = bitcast %__string__** %6 to %__ref__virtual*
+  call void @__ref__addref(%__ref__virtual* %10)
+  store i64 %1, i64* %4
+  %11 = load %__string__*, %__string__** @string_const_0
+  %12 = bitcast %__string__** %2 to %__ref__virtual*
+  call void @__ref__delref(%__ref__virtual* %12)
+  store %__string__* %11, %__string__** %2
+  %13 = bitcast %__string__** %2 to %__ref__virtual*
+  call void @__ref__addref(%__ref__virtual* %13)
+  store i64 0, i64* %3
+  br label %block_2
+
+block_2:                                          ; preds = %block_1, %block_4
+  %14 = load i64, i64* %3
+  %15 = load i64, i64* %4
+  %16 = icmp slt i64 %14, %15
+  store i1 %16, i1* %5
+  %17 = load i1, i1* %5
+  br i1 %17, label %block_3, label %block_5
+
+block_3:                                          ; preds = %block_2
+  %18 = load %__string__*, %__string__** %2
+  %19 = load %__string__*, %__string__** %6
+  %20 = getelementptr inbounds %__string__, %__string__* %18, i32 0, i32 1
+  %21 = load i64, i64* %20
+  %22 = getelementptr inbounds %__string__, %__string__* %19, i32 0, i32 1
+  %23 = load i64, i64* %22
+  %24 = add nuw i64 %21, %23
+  call void @__string__realloc(%__string__** %2, i64 %24)
+  %25 = load %__string__*, %__string__** %2
+  %26 = getelementptr inbounds %__string__, %__string__* %25, i32 0, i32 1
+  store i64 %24, i64* %26
+  %27 = getelementptr inbounds %__string__, %__string__* %25, i32 0, i32 2
+  %28 = getelementptr inbounds %__string__, %__string__* %18, i32 0, i32 2
+  call void @llvm.memcpy.p0i8.p0i8.i64(i8* %27, i8* %28, i64 %21, i32 0, i1 false)
+  %29 = getelementptr i8, i8* %27, i64 %21
+  %30 = getelementptr inbounds %__string__, %__string__* %19, i32 0, i32 2
+  call void @llvm.memcpy.p0i8.p0i8.i64(i8* %29, i8* %30, i64 %23, i32 0, i1 false)
+  store %__string__* %25, %__string__** %2
+  br label %block_4
+
+block_4:                                          ; preds = %block_3
+  %31 = load i64, i64* %3
+  %32 = add nsw i64 %31, 1
+  store i64 %32, i64* %8
+  %33 = load i64, i64* %8
+  store i64 %33, i64* %3
+  br label %block_2
+
+block_5:                                          ; preds = %block_2
+  %34 = bitcast %__string__** %2 to %__ref__virtual*
+  call void @__ref__addref(%__ref__virtual* %34)
+  %35 = load %__string__*, %__string__** %2
+  %36 = bitcast %__string__** %2 to %__ref__virtual*
+  call void @__ref__delref(%__ref__virtual* %36)
+  %37 = bitcast %__string__** %6 to %__ref__virtual*
+  call void @__ref__delref(%__ref__virtual* %37)
+  %38 = bitcast %__string__** %7 to %__ref__virtual*
+  call void @__ref__delref(%__ref__virtual* %38)
+  ret %__string__* %35
+}
+
+define void @internal_1() {
+block_6:
+  %0 = load %__string__*, %__string__** @string_const_1
+  %1 = getelementptr inbounds %__string__, %__string__* %0, i32 0, i32 1
+  %2 = load i64, i64* %1
+  %3 = getelementptr inbounds %__string__, %__string__* %0, i32 0, i32 2
+  %4 = call i32 (i8*, ...) @printf(i8* getelementptr inbounds ([5 x i8], [5 x i8]* @"%.*s", i32 0, i32 0), i64 %2, i8* %3)
+  ret void
+}
+
+attributes #0 = { alwaysinline }
+attributes #1 = { argmemonly nounwind }

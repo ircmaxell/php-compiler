@@ -171,6 +171,9 @@ class Context {
 
         $engine = $this->module->createExecutionEngine();
         $machine = $engine->getTargetMachine();
+        if (!is_null($this->debugFile)) {
+            $machine->emitToFile($this->module, $this->debugFile . '.s', $machine::CODEGEN_FILE_TYPE_ASM);
+        }
         $machine->emitToFile($this->module, $file . '.o', $machine::CODEGEN_FILE_TYPE_OBJECT);
         exec('clang-4.0  ' . escapeshellarg($file . '.o') . ' -o ' . escapeshellarg($file));
         unlink($file . '.o');
@@ -179,10 +182,13 @@ class Context {
     public function compileInPlace() {
         if (is_null($this->result)) {
             $this->compileCommon();
-            $this->llvm->linkInMCJit();
-
+            $engine = $this->module->createJITCompiler(0);
+            if (!is_null($this->debugFile)) {
+                $machine = $engine->getTargetMachine();
+                $machine->emitToFile($this->module, $this->debugFile . '.s', $machine::CODEGEN_FILE_TYPE_ASM);
+            }
             $this->result = new Result(
-                $this->module->createJITCompiler(0),
+                $engine,
                 $this->loadType
             );
             foreach ($this->exports as $export) {
@@ -203,9 +209,7 @@ class Context {
         if (!is_null($this->debugFile)) {
             $this->module->printToFile($this->debugFile . '.bc');
         }
-
-        $this->module->verify($this->module::VERIFY_ACTION_THROW, $message);
-        
+        $this->module->verify($this->module::VERIFY_ACTION_THROW, $message);   
     }
 
     public function setDebugFile(string $file): void {
