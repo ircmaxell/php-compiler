@@ -42,9 +42,8 @@ final class Variable {
     public ?int $typeConstraint = null;
     public ?string $classConstraint = null; 
 
-    public function __construct(int $type = self::TYPE_NULL, bool $boolval=false) {
+    public function __construct(int $type = self::TYPE_NULL) {
         $this->type = $type;
-	$this->bool = $boolval;
     }
 
     public static function mapFromType(Type $type): int {
