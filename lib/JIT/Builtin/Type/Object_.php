@@ -342,7 +342,6 @@ class Object_ extends Type {
                     $propset[2],
                     Variable::KIND_VARIABLE,
                     $prop->asRValue(),
-                    $prop
                 );
             }
         }
