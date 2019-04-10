@@ -24,3 +24,6 @@ foreach ($it as $dir) {
     }
 }
 
+echo "Updating demo files\n";
+
+exec(escapeshellcmd(PHP_BINARY) . ' ' . escapeshellarg(__DIR__ . '/bin/jit.php') . ' -y ' . escapeshellarg(__DIR__ . '/demo.php'));
