@@ -34,11 +34,11 @@ class Context {
                 return new Variable(Variable::TYPE_NULL);
             case 'false':
                 $var = new Variable(Variable::TYPE_BOOLEAN);
-                $var->bool = false;
+		$var->bool(false);
                 return $var;
             case 'true':
                 $var = new Variable(Variable::TYPE_BOOLEAN);
-                $var->bool = true;
+		$var->bool(true);
                 return $var;
         }
         if (isset($this->constants[$name])) {

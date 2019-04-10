@@ -17,7 +17,6 @@ return [
 		'PhanUndeclaredClassMethod',
 		'PhanTypeMismatchProperty',
 		'PhanTypeExpectedObjectPropAccessButGotNull',
-		'PhanAccessPropertyPrivate',
 		'PhanUnreferencedUseNormal',
 		'PhanTypeMismatchDimFetchNullable',
 		'PhanTypeMismatchReturn',
