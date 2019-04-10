@@ -380,7 +380,7 @@ class Context {
     ) {
         assert(!$this->scope->variables->contains($op));
         $this->scope->variables[$op] = Variable::fromOp($this, $func, $basicBlock, $block, $op);
-        $this->scope->variables[$op]->initialize($basicBlock);
+        $this->scope->variables[$op]->initialize();
     }
 
     public function setVariableOp(Operand $op, Variable $var) {
