@@ -19,7 +19,8 @@
     "require-dev": {
         "phpunit/phpunit": "^8.0",
         "friendsofphp/php-cs-fixer": "*",
-        "pre/plugin": "^0.11.5"
+        "pre/plugin": "^0.11.5",
+        "phan/phan": "dev-master"
     },
     "minimum-stability": "dev",
     "autoload": {
