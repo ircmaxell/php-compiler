@@ -275,6 +275,11 @@ restart:
                         $ht->add($key->toString(), $frame->scope[$op->arg2]);
                     }
                     break;
+                case OpCode::TYPE_BOOLEAN_NOT:
+		    $value = !($frame->scope[$op->arg2]->toBool());
+		    $dst = $frame->scope[$op->arg1];
+		    $dst->bool($value);
+                    break;
                 default:
                     throw new \LogicException("VM OpCode Not Implemented: " . $op->getType());
             }
