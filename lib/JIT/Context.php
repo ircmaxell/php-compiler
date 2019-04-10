@@ -240,6 +240,7 @@ class Context {
             case 'long long':
             case 'int32':
             case 'int64':
+            case 'size_t':
                 return $this->builder->icmp($this->builder::INT_NE, $value, $type->constInt(0, false));
         }
         throw new \LogicException("Unknown bool cast from type: " . $this->getStringFromType($type));
