@@ -3,12 +3,6 @@
 # This file is generated, changes you make will be lost.
 # Make your changes in /home/ircmaxell/Workspace/PHP-Compiler/PHP-Compiler/ext/types/strlen.pre instead.
 
-// First, expand statements
-)
-}
-
-
-
 /*
  * This file is part of PHP-Compiler, a PHP CFG Compiler for PHP code
  *
@@ -53,14 +47,7 @@ class strlen extends Internal {
                     $result = $this->context->builder->load(
                         $this->context->builder->structGep($argValue, $offset)
                     );
-
-            
-
-            
-
-            
-
-        
+    
                 return $result;
         }
         throw new \LogicException('Non-implemented type handled: ' . $args[0]->type);

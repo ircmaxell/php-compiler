@@ -10,7 +10,7 @@ if ($a) {
 	echo "False\n";
 }
 
-$a = !$a
+$a = !$a;
 echo $a ? "True\n" : "False\n";
 --EXPECT--
 True
