@@ -219,6 +219,19 @@ class JIT {
                 //         throw new \LogicException('Hash tables not implemented yet');
                 //     }
                 //     break;
+                case OpCode::TYPE_BOOLEAN_NOT:
+                    $from = $this->context->getVariableFromOp($block->getOperand($op->arg2));
+                    if ($from->type === Variable::TYPE_NATIVE_BOOL) {
+                        $value = $this->context->helper->loadValue($from);
+                    } else {
+                        $value = $this->context->castToBool($this->context->helper->loadValue($from));
+                    }
+                    compile {
+                        $result = $value ^ 1;
+                    }
+
+                    $this->assignOperandValue($block->getOperand($op->arg1), $result);
+                    break;
                 case OpCode::TYPE_CONCAT:
                     if (!$this->context->hasVariableOp($block->getOperand($op->arg1))) {
                         // don't bother with constant operations
@@ -228,6 +241,20 @@ class JIT {
                     $left = $this->context->getVariableFromOp($block->getOperand($op->arg2));
                     $right = $this->context->getVariableFromOp($block->getOperand($op->arg3));
                     $this->context->type->string->concat($result, $left, $right);
+                    break;
+                case OpCode::TYPE_CONST_FETCH:
+                    $value = null;
+                    if (!is_null($op->arg3)) {
+                        // try NS constant fetch
+                        $value = $this->context->constantFetch($block->getOperand($op->arg3));
+                    }
+                    if (is_null($value)) {
+                        $value = $this->context->constantFetch($block->getOperand($op->arg2));
+                    }
+                    if (is_null($value)) {
+                        throw new \RuntimeException('Unknown constant fetch');
+                    }
+                    $this->assignOperand($block->getOperand($op->arg1), $value);
                     break;
                 case OpCode::TYPE_CAST_BOOL:
                     $value = $this->context->getVariableFromOp($block->getOperand($op->arg2));

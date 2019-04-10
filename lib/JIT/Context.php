@@ -13,6 +13,7 @@ use PHPCfg\Operand;
 use PHPCompiler\Runtime;
 use PHPCompiler\Handler;
 use PHPCompiler\Block;
+use PHPCompiler\VM\Variable as VMVariable;
 use PHPCompiler\Handler\Builtins;
 use PHPTypes\Type;
 
@@ -33,6 +34,7 @@ class Context {
     public ?PHPLLVM\Value\Function_ $initFunc = null;
     public ?PHPLLVM\Value\Function_ $shutdownFunc = null;
 
+    public array $constants = [];
     public array $functions = [];
     public array $functionProxies = [];
     public array $functionReturnType = [];
@@ -428,6 +430,53 @@ class Context {
         foreach ($block->orig->deadOperands as $op) {
             $this->scope->variables[$op]->free($basicBlock);
         }
+    }
+
+    public function constantFetch(Operand $op): ?Variable {
+        if ($op instanceof Operand\Literal) {
+            $name = $op->value;
+        } else {
+            throw new \LogicException("Variable constant fetch not supported yet");
+        }
+        if (!isset($this->constants[$name])) {
+            $phpVar = $this->runtime->vmContext->constantFetch($name);
+            if (is_null($phpVar)) {
+                return null;
+            }
+            // convert to PHP variable
+            switch ($phpVar->type) {
+                case VMVariable::TYPE_INTEGER:
+                    $type = $this->getTypeFromString('int64');
+                    $global = $this->module->addGlobal($type, $name);
+                    $global->setInitializer($type->constInt($phpVar->toInt(), false));
+                    $this->constants[$name] = [Variable::TYPE_NATIVE_LONG, $global];
+                    break;
+                case VMVariable::TYPE_FLOAT:
+                    $type = $this->getTypeFromString('double');
+                    $global = $this->module->addGlobal($type, $name);
+                    $global->setInitializer($type->constReal($phpVar->toFloat()));
+                    $this->constants[$name] = [Variable::TYPE_NATIVE_DOUBLE, $global];
+                    break;
+                case VMVariable::TYPE_BOOLEAN:
+                    $type = $this->getTypeFromString('int1');
+                    $global = $this->module->addGlobal($type, $name);
+                    $global->setInitializer($type->constInt($phpVar->toBool() ? 1 : 0, false));
+                    $this->constants[$name] = [Variable::TYPE_NATIVE_BOOL, $global];
+                    break;
+                case VMVariable::TYPE_STRING:
+                    $global = $this->context->constantStringFromString($phpVar->toString());
+                    $this->constants[$name] = [Variable::TYPE_STRING, $global];
+                    break;
+                default:
+                    throw new \LogicException("Non-implemented constant fetch type: " . $phpVar->type);
+            }       
+        }
+        return new Variable(
+            $this,
+            $this->constants[$name][0],
+            Variable::KIND_VALUE,
+            $this->builder->load($this->constants[$name][1])
+        );
     }
 
 }
