@@ -180,23 +180,23 @@ class Refcount extends Builtin {
     }
 
     public function addref(PHPLLVM\Value $value): void {
-        $value = $this->context->builder->bitcast($value, $this->pointer);
         compile {
-            __ref__addref($value);
+            $virtual = (__ref__virtual*) $value;
+            __ref__addref($virtual);
         }
     }
 
     public function delref(PHPLLVM\Value $value): void {
-        $value = $this->context->builder->bitcast($value, $this->pointer);
         compile {
-            __ref__delref($value);
+            $virtual = (__ref__virtual*) $value;
+            __ref__delref($virtual);
         }
     }
 
     public function separate(PHPLLVM\Value $value): void {
-        $value = $this->context->builder->pointerCast($value, $this->doublePointer);
         compile {
-            __ref__separate($value);
+            $virtual = (__ref__virtual**) $value;
+            __ref__separate($virtual);
         }
     }
 }

@@ -606,12 +606,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/FriendsOfPHP/PHP-CS-Fixer.git",
-                "reference": "b7a20c7228a2b7f9ed34017b2a651ac8f92ae9b3"
+                "reference": "6226e98fbf1a984e37c5474528cc172ef502acf4"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/FriendsOfPHP/PHP-CS-Fixer/zipball/b7a20c7228a2b7f9ed34017b2a651ac8f92ae9b3",
-                "reference": "b7a20c7228a2b7f9ed34017b2a651ac8f92ae9b3",
+                "url": "https://api.github.com/repos/FriendsOfPHP/PHP-CS-Fixer/zipball/6226e98fbf1a984e37c5474528cc172ef502acf4",
+                "reference": "6226e98fbf1a984e37c5474528cc172ef502acf4",
                 "shasum": ""
             },
             "require": {
@@ -691,7 +691,7 @@
                 }
             ],
             "description": "A tool to automatically fix PHP code style",
-            "time": "2019-04-05T14:59:37+00:00"
+            "time": "2019-04-10T06:26:40+00:00"
         },
         {
             "name": "microsoft/tolerant-php-parser",
@@ -2364,12 +2364,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/console.git",
-                "reference": "425c2023f6bdde287df2f32bef68845757827998"
+                "reference": "47b78954bea981abeccfed88eef3a9a57c15ca4d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/console/zipball/425c2023f6bdde287df2f32bef68845757827998",
-                "reference": "425c2023f6bdde287df2f32bef68845757827998",
+                "url": "https://api.github.com/repos/symfony/console/zipball/47b78954bea981abeccfed88eef3a9a57c15ca4d",
+                "reference": "47b78954bea981abeccfed88eef3a9a57c15ca4d",
                 "shasum": ""
             },
             "require": {
@@ -2431,7 +2431,7 @@
             ],
             "description": "Symfony Console Component",
             "homepage": "https://symfony.com",
-            "time": "2019-04-08T15:52:58+00:00"
+            "time": "2019-04-09T18:49:00+00:00"
         },
         {
             "name": "symfony/contracts",

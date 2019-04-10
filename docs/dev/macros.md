@@ -22,7 +22,7 @@ declare {
 
 The first thing that may look weird, is that fields are prefixed with dollar signs just like PHP. Of course we just need to make it slightly more "weird".
 
-Second, the types are directly pulled from LLVM, and most single-token types are supported (including pointers).
+Second, the types are any string type that's known by the system. See [types.md](types.md) for more info.
 
 ### Function declaration
 

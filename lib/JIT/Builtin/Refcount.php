@@ -1097,7 +1097,17 @@ class Refcount extends Builtin {
     }
 
     public function addref(PHPLLVM\Value $value): void {
-        $value = $this->context->builder->bitcast($value, $this->pointer);
+        $virtual = $this->context->builder->pointerCast(
+                        $value, 
+                        $this->context->getTypeFromString('__ref__virtual*')
+                    );
+
+            
+
+            
+
+            
+
         
 
             
@@ -1106,7 +1116,7 @@ class Refcount extends Builtin {
 
             $this->context->builder->call(
                     $this->context->lookupFunction('__ref__addref') , 
-                    $value
+                    $virtual
                     
                 );
             
@@ -1115,7 +1125,17 @@ class Refcount extends Builtin {
     }
 
     public function delref(PHPLLVM\Value $value): void {
-        $value = $this->context->builder->bitcast($value, $this->pointer);
+        $virtual = $this->context->builder->pointerCast(
+                        $value, 
+                        $this->context->getTypeFromString('__ref__virtual*')
+                    );
+
+            
+
+            
+
+            
+
         
 
             
@@ -1124,7 +1144,7 @@ class Refcount extends Builtin {
 
             $this->context->builder->call(
                     $this->context->lookupFunction('__ref__delref') , 
-                    $value
+                    $virtual
                     
                 );
             
@@ -1133,7 +1153,17 @@ class Refcount extends Builtin {
     }
 
     public function separate(PHPLLVM\Value $value): void {
-        $value = $this->context->builder->pointerCast($value, $this->doublePointer);
+        $virtual = $this->context->builder->pointerCast(
+                        $value, 
+                        $this->context->getTypeFromString('__ref__virtual**')
+                    );
+
+            
+
+            
+
+            
+
         
 
             
@@ -1142,7 +1172,7 @@ class Refcount extends Builtin {
 
             $this->context->builder->call(
                     $this->context->lookupFunction('__ref__separate') , 
-                    $value
+                    $virtual
                     
                 );
             

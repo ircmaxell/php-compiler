@@ -273,7 +273,7 @@ class JIT {
                     if ($op->type === OpCode::TYPE_PRINT) {
                         $this->assignOperand(
                             $block->getOperand($op->arg1),
-                            new Variable($this->context, Variable::TYPE_NATIVE_LONG, Variable::KIND_VALUE, $this->context->constantFromInteger(1), null)
+                            new Variable($this->context, Variable::TYPE_NATIVE_LONG, Variable::KIND_VALUE, $this->context->constantFromInteger(1))
                         );
                     }
                     break;
