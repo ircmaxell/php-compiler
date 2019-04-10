@@ -161,10 +161,10 @@ restart:
                     $value = null;
                     if (!is_null($op->arg3)) {
                         // try NS constant fetch
-                        $value = $this->context->constantFetch($frame->scope[$op->arg3]->toString()->value);
+                        $value = $this->context->constantFetch($frame->scope[$op->arg3]->toString());
                     }
                     if (is_null($value)) {
-                        $value = $this->context->constantFetch($frame->scope[$op->arg2]->toString()->value);
+                        $value = $this->context->constantFetch($frame->scope[$op->arg2]->toString());
                     }
                     if (is_null($value)) {
                         return $this->raise('Unknown constant fetch', $frame);
