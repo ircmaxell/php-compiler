@@ -350,7 +350,7 @@ restart:
                 return $self->float === ((float) $other->integer);
             default:
                 if ($self->type === self::TYPE_INDIRECT) {
-                    $self = $self->indrect;
+                    $self = $self->indirect;
                     goto restart;
                 } elseif ($other->type === self::TYPE_INDIRECT) {
                     $other = $other->indirect;
