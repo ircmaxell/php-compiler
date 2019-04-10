@@ -92,15 +92,18 @@ $(macro) {
 
         $(struct ? ... {
             $struct = $this->context->context->namedStructType($$(stringify($(struct_name))));
+            // declare first so recursive structs are possible :)
+            $this->context->registerType($$(stringify($(struct_name))), $struct);
+            $this->context->registerType($$(stringify($(struct_name))) . '*', $struct->pointerType(0));
+            $this->context->registerType($$(stringify($(struct_name))) . '**', $struct->pointerType(0)->pointerType(0));
+
             $struct->setBody(
                 false $(fields ? { , }) // packed
                 $(fields ... ( , ) {
                 $this->context->getTypeFromString($$(stringify($(field_type))))
                 })
             );
-            $this->context->registerType($$(stringify($(struct_name))), $struct);
-            $this->context->registerType($$(stringify($(struct_name))) . '*', $struct->pointerType(0));
-            $this->context->registerType($$(stringify($(struct_name))) . '**', $struct->pointerType(0)->pointerType(0));
+            
             $this->context->structFieldMap[$$(stringify($(struct_name)))] = [
                 $(fields ... (, ) i {
                     $$(stringify($$(unvar($(field_name))))) => $(i)
@@ -140,7 +143,7 @@ $(macro :unsafe :recursive) {
                 chain(T_VARIABLE as nullcheck_var, token(T_IS_EQUAL), buffer('null')) as nullcheck,
                 chain(T_CONSTANT_ENCAPSED_STRING as conststr_value) as conststr,
                 chain(token('('), T_STRING as cast_type, token(')'), T_VARIABLE as cast_value) as cast,
-                chain(token('('), T_STRING as constcast_type, token(')'), expression() as constcast_value) as constcast,
+                chain(token('('), T_STRING as constcast_type, token(')'), expression() as expr) as constcast,
                 chain(token('('), ctype() as ptrcast_type, token(')'), T_VARIABLE as ptrcast_value) as ptrcast,
                 chain(T_VARIABLE as field_deref_var, token(T_OBJECT_OPERATOR), label() as field_deref_field) as field_deref,
                 chain(token('&'), T_VARIABLE as field_deref_ref_var, token(T_OBJECT_OPERATOR), label() as field_deref_ref_field) as field_deref_ref,
@@ -177,9 +180,11 @@ $(macro :unsafe :recursive) {
             chain(T_VARIABLE as inc_result, token(T_INC), token(';')) as inc,
             chain(T_VARIABLE as dec_result, token(T_DEC), token(';')) as dec,
             chain(token(T_IF), token('('), T_VARIABLE as cond, token(')'), token('{'), layer() as if_stmts, token('}'), optional(chain(token(T_ELSE), token('{'), layer() as else_stmts, token('}')))) as if_stmt,
+            chain(token(T_SWITCH), T_VARIABLE as switch_cond, token('{'), optional(repeat(chain(token(T_CASE), either(T_LNUMBER as switch_case_number, expression()) as switch_case_value, token('{'), layer() as switch_case_block, token('}'))) as switch_cases), token(T_DEFAULT), token('{'), layer() as switch_default_block, token('}'), token('}')) as switch_,
             chain(T_VARIABLE as field_deref_write_result, token(T_OBJECT_OPERATOR), T_STRING as field_deref_write_field, token('='), T_VARIABLE as field_deref_write_value, token(';')) as field_deref_write,
             chain(T_VARIABLE as const_field_assign_var, token('.'), label() as const_field_assign_field, token('='), T_LNUMBER as const_field_assign_value, token(';')) as const_field_assign,
             chain(T_VARIABLE as field_assign_var, token('.'), label() as field_assign_field, token('='), T_VARIABLE as field_assign_value, token(';')) as field_assign,
+            chain(T_VARIABLE as gep_store_var, token('['), T_VARIABLE as gep_store_offset, token(']'), token('='), T_VARIABLE as gep_store_value, token(';')) as gep_store,
             chain(buffer('store'), T_VARIABLE as store_value, T_VARIABLE as store_pointer, token(';')) as store,
             chain(buffer('dump'), T_VARIABLE as dump_var, token(';')) as dump,
             chain(buffer('free'), T_VARIABLE as free_var, token(';')) as free,
@@ -228,7 +233,7 @@ $(macro :unsafe :recursive) {
                 })
 
                 $(constcast ? ... {
-                    $(result) = $this->context->getTypeFromString($$(stringify($(constcast_type))))->constInt($(constcast_value), false);
+                    $(result) = $this->context->getTypeFromString($$(stringify($(constcast_type))))->constInt($(expr), false);
                 })
 
                 $(ptrcast ? ... {
@@ -479,6 +484,39 @@ $(macro :unsafe :recursive) {
                 $(dec_result) = $this->context->builder->sub($(dec_result), $(dec_result)->typeOf()->constInt(1, false));
             })
 
+            $(switch_ ? ... {
+                $__switches[] = $__switch = new \StdClass;
+                $__switch->type = $(switch_cond)->typeOf();
+                $__prev = $this->context->builder->getInsertBlock();
+                $__switch->default = $__prev->insertBasicBlock('default');
+                $__prev->moveBefore($__switch->default);
+                $__switch->end = $__switch->default->insertBasicBlock('end');
+                $__switch->numCases = 0;
+                $(switch_cases ... {
+                    $__switch->numCases++;
+                })
+                $this->context->builder->branchSwitch($(switch_cond), $__switch->default, $__switch->numCases);
+                $(switch_cases ... i {
+                    $__case = end($__switches)->default->insertBasicBlock('case_' . $(i));
+                    $this->context->builder->positionAtEnd($__case);
+                    $$(expand( { compile {
+                        $(switch_case_block)
+                    } }))
+                    if ($this->context->builder->getInsertBlock()->getTerminator() === null) {
+                        $this->context->builder->branch(end($__switches)->end);
+                    }
+                })
+                $this->context->builder->positionAtEnd(end($__switches)->default);
+                $$(expand( { compile {
+                    $(switch_default_block)
+                } }))
+                if ($this->context->builder->getInsertBlock()->getTerminator() === null) {
+                    $this->context->builder->branch(end($__switches)->end);
+                }
+                $this->context->builder->positionAtEnd(end($__switches)->end);
+                array_pop($__switches);
+            })
+
             $(if_stmt ? ... {
                 $bool = $this->context->castToBool($(cond));
                 $prev = $this->context->builder->getInsertBlock();
@@ -555,6 +593,16 @@ $(macro :unsafe :recursive) {
 
             $(store ? ... {
                 $this->context->builder->store($(store_value), $(store_pointer));
+            })
+
+            $(gep_store ? ... {
+                $this->context->builder->store($(gep_store_value), $this->context->builder->gep(
+                        $(gep_store_var),
+                        //$this->context->context->int32Type()->constInt(0, false),
+                        //$this->context->context->int32Type()->constInt(0, false),
+                        $(gep_store_offset)
+                    ));
+                })
             })
 
             $(free ? ... {

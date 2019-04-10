@@ -1,0 +1,68 @@
+<?php
+
+/*
+ * This file is part of PHP-Compiler, a PHP CFG Compiler for PHP code
+ *
+ * @copyright 2015 Anthony Ferrara. All rights reserved
+ * @license MIT See LICENSE at the root of the project for more info
+ */
+
+namespace PHPCompiler\JIT\Builtin\Type;
+
+use PHPCompiler\JIT\Builtin\Type;
+use PHPCompiler\JIT\Builtin\Refcount;
+use PHPCompiler\JIT\Variable;
+
+use PHPLLVM;
+
+class Value extends Type {
+
+    public function register(): void {
+        declare {
+            struct __value__ {
+                __ref__ $ref;
+                int8 $type;
+                // NOTE: 8 bytes because that covers all needed types
+                int8[8] $value;
+            };
+        }
+    }
+
+    public function implement(): void {
+    }
+
+    public function initialize(): void {
+    }
+
+    public function castToLong(PHPLLVM\Value $value): Value {
+        compile {
+            $type = $value->type;
+            switch $type {
+                case Variable::TYPE_NATIVE_LONG {
+                    $ptr = &$value->value;
+                    $resultPtr = (int64*) $ptr;
+                    $offset = (int32) 0;
+                    $result = $ptr[$offset];
+                    return $result;
+                }
+                default {
+                    $result = (int64) 0;
+                    return $result;
+                }
+            }
+        }
+    }
+
+    public function writeLong(PHPLLVM\Value $value, int $value): void {
+        compile {
+            $type = (int8) Variable::TYPE_NATIVE_LONG;
+            $value->type = $type;
+            $ptr = &$value->value;
+            $resultPtr = (int64*) $ptr;
+            $offset = (int32) 0;
+            $result = (int64) $value;
+            $ptr[$offset] = $result;
+        }
+    }
+
+}

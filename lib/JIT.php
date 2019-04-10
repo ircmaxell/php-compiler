@@ -4,6 +4,11 @@
 # Make your changes in /home/ircmaxell/Workspace/PHP-Compiler/PHP-Compiler/lib/JIT.pre instead.
 
 // First, expand statements
+)
+}
+
+
+
 /*
  * This file is part of PHP-Compiler, a PHP CFG Compiler for PHP code
  *
@@ -248,46 +253,105 @@ class JIT {
                         $this->context->constantFromString("%.*s"),
                         $this->context->getTypeFromString('char*')
                     );
-    $offset = $this->context->structFieldMap[$argValue->typeOf()->getElementType()->getName()]['length'];
+
+            
+
+            
+
+            
+
+        $offset = $this->context->structFieldMap[$argValue->typeOf()->getElementType()->getName()]['length'];
                     $__str__length = $this->context->builder->load(
                         $this->context->builder->structGep($argValue, $offset)
                     );
-    $offset = $this->context->structFieldMap[$argValue->typeOf()->getElementType()->getName()]['value'];
+
+            
+
+            
+
+            
+
+        $offset = $this->context->structFieldMap[$argValue->typeOf()->getElementType()->getName()]['value'];
                     $__str__value = $this->context->builder->structGep($argValue, $offset);
-    $this->context->builder->call(
+
+            
+
+            
+
+            
+
+        
+
+            
+
+            
+
+            $this->context->builder->call(
                     $this->context->lookupFunction('printf') , 
                     $fmt
                     , $__str__length
                     , $__str__value
                     
                 );
-    
+            
+
+        
                             break;
                         case Variable::TYPE_NATIVE_LONG:
                             $fmt = $this->context->builder->pointerCast(
                         $this->context->constantFromString("%lld"),
                         $this->context->getTypeFromString('char*')
                     );
-    $this->context->builder->call(
+
+            
+
+            
+
+            
+
+        
+
+            
+
+            
+
+            $this->context->builder->call(
                     $this->context->lookupFunction('printf') , 
                     $fmt
                     , $argValue
                     
                 );
-    
+            
+
+        
                             break;
                         case Variable::TYPE_NATIVE_DOUBLE:
                             $fmt = $this->context->builder->pointerCast(
                         $this->context->constantFromString("%G"),
                         $this->context->getTypeFromString('char*')
                     );
-    $this->context->builder->call(
+
+            
+
+            
+
+            
+
+        
+
+            
+
+            
+
+            $this->context->builder->call(
                     $this->context->lookupFunction('printf') , 
                     $fmt
                     , $argValue
                     
                 );
-    
+            
+
+        
                             break;
                         case Variable::TYPE_NATIVE_BOOL:
                             $bool = $this->context->castToBool($argValue);
@@ -303,18 +367,40 @@ class JIT {
                         $this->context->constantFromString("1"),
                         $this->context->getTypeFromString('char*')
                     );
-    $this->context->builder->call(
+
+            
+
+            
+
+            
+
+        
+
+            
+
+            
+
+            $this->context->builder->call(
                     $this->context->lookupFunction('printf') , 
                     $fmt
                     
                 );
-    }
+            
+
+        }
                 if ($this->context->builder->getInsertBlock()->getTerminator() === null) {
                     $this->context->builder->branch(end($endBlock));
                 }
                 
                 $this->context->builder->positionAtEnd(array_pop($endBlock));
-    
+
+            
+
+            
+
+            
+
+        
                             break;
                         default: 
                             throw new \LogicException("Echo for type $arg->type not implemented");
@@ -381,7 +467,14 @@ class JIT {
                 case OpCode::TYPE_RETURN_VOID:
                     $this->context->freeDeadVariables($func, $basicBlock, $block);
                     $this->context->builder->returnVoid();
-    
+
+            
+
+            
+
+            
+
+        
                     return $origBasicBlock;
                 case OpCode::TYPE_RETURN:
                     $return = $this->context->getVariableFromOp($block->getOperand($op->arg1));
@@ -389,7 +482,14 @@ class JIT {
                     $retval = $this->context->helper->loadValue($return);
                     $this->context->freeDeadVariables($func, $basicBlock, $block);
                     $this->context->builder->returnValue($retval);
-    
+
+            
+
+            
+
+            
+
+        
                     return $origBasicBlock;
                 case OpCode::TYPE_FUNCDEF:
                     $nameOp = $block->getOperand($op->arg1);
