@@ -432,7 +432,7 @@ class Context {
         Block $block
     ): void {
         foreach ($block->orig->deadOperands as $op) {
-            $this->scope->variables[$op]->free($basicBlock);
+            $this->scope->variables[$op]->free();
         }
     }
 

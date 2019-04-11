@@ -1,7 +1,7 @@
 <?php
 
 # This file is generated, changes you make will be lost.
-# Make your changes in /home/ircmaxell/Workspace/PHP-Compiler/PHP-Compiler/lib/JIT/Builtin/Type/Value.pre instead.
+# Make your changes in /home/driusan/Code/php-compiler/lib/JIT/Builtin/Type/Value.pre instead.
 
 /*
  * This file is part of PHP-Compiler, a PHP CFG Compiler for PHP code
@@ -61,7 +61,7 @@ class Value extends Type
     {
     }
 
-    public function castToLong(PHPLLVM\Value $value): Value
+    public function castToLong(PHPLLVM\Value $value): void
     {
         $offset =
             $this->context->structFieldMap[
@@ -133,7 +133,7 @@ class Value extends Type
         array_pop($__switches);
     }
 
-    public function writeLong(PHPLLVM\Value $value, int $value): void
+    public function writeLong(PHPLLVM\Value $value, int $val): void
     {
         $type = $this->context
             ->getTypeFromString('int8')
@@ -165,12 +165,12 @@ class Value extends Type
             ->getTypeFromString('int32')
             ->constInt(0, false);
         $type = $this->context->getTypeFromString('int64');
-        if (!is_object($value)) {
-            $result = $type->constInt($value, false);
-        } elseif ($value->typeOf()->getWidth() >= $type->getWidth()) {
-            $result = $this->context->builder->truncOrBitCast($value, $type);
+        if (!is_object($val)) {
+            $result = $type->constInt($val, false);
+        } elseif ($val->typeOf()->getWidth() >= $type->getWidth()) {
+            $result = $this->context->builder->truncOrBitCast($val, $type);
         } else {
-            $result = $this->context->builder->zExtOrBitCast($value, $type);
+            $result = $this->context->builder->zExtOrBitCast($val, $type);
         }
         $this->context->builder->store(
             $result,

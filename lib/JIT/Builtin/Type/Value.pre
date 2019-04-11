@@ -34,7 +34,7 @@ class Value extends Type {
     public function initialize(): void {
     }
 
-    public function castToLong(PHPLLVM\Value $value): Value {
+    public function castToLong(PHPLLVM\Value $value): void {
         compile {
             $type = $value->type;
             switch $type {
@@ -53,14 +53,14 @@ class Value extends Type {
         }
     }
 
-    public function writeLong(PHPLLVM\Value $value, int $value): void {
+    public function writeLong(PHPLLVM\Value $value, int $val): void {
         compile {
             $type = (int8) Variable::TYPE_NATIVE_LONG;
             $value->type = $type;
             $ptr = &$value->value;
             $resultPtr = (int64*) $ptr;
             $offset = (int32) 0;
-            $result = (int64) $value;
+            $result = (int64) $val;
             $ptr[$offset] = $result;
         }
     }
