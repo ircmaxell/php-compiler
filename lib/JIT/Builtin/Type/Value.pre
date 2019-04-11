@@ -25,43 +25,158 @@ class Value extends Type {
                 // NOTE: 8 bytes because that covers all needed types
                 int8[8] $value;
             };
+            inline function __value__alloc(): __value__*;
+            inline function __value__toNumeric(__value__*): __value__*;
+            inline function __value__readLong(__value__*): int64;
+            inline function __value__writeLong(__value__*, int64): void;
+            inline function __value__readDouble(__value__*): double;
+            inline function __value__writeDouble(__value__*, double): void;
         }
     }
 
     public function implement(): void {
+        $this->implementValueAlloc();
+        $this->implementValueToNumeric();
+        $this->implementValueReadLong();
+        $this->implementValueWriteLong();
+        $this->implementValueReadDouble();
+        $this->implementValueWriteDouble();
     }
 
     public function initialize(): void {
     }
 
-    public function castToLong(PHPLLVM\Value $value): Value {
+    protected function implementValueAlloc(): void {
         compile {
-            $type = $value->type;
-            switch $type {
-                case Variable::TYPE_NATIVE_LONG {
-                    $ptr = &$value->value;
-                    $resultPtr = (int64*) $ptr;
-                    $offset = (int32) 0;
-                    $result = $ptr[$offset];
-                    return $result;
-                }
-                default {
-                    $result = (int64) 0;
-                    return $result;
-                }
+            function __value__alloc() {
+                $var = malloc __value__;
+                $ref = (__ref__virtual*) $var;
+                $typeinfo = (int32) Refcount::TYPE_INFO_TYPE_VALUE | Refcount::TYPE_INFO_REFCOUNTED;
+                __ref__init($typeinfo, $ref);
+                return $var;
             }
         }
     }
 
-    public function writeLong(PHPLLVM\Value $value, int $value): void {
+    protected function implementValueToNumeric(): void {
         compile {
-            $type = (int8) Variable::TYPE_NATIVE_LONG;
-            $value->type = $type;
-            $ptr = &$value->value;
-            $resultPtr = (int64*) $ptr;
-            $offset = (int32) 0;
-            $result = (int64) $value;
-            $ptr[$offset] = $result;
+            function __value__toNumeric($value) {
+                $type = $value->type;
+                switch $type {
+                    case Variable::TYPE_NATIVE_LONG {
+                        $var = (__ref__virtual*) $value;
+                        __ref__addref($var);
+                        return $value;
+                    }
+                    case Variable::TYPE_NATIVE_DOUBLE {
+                        $var = (__ref__virtual*) $value;
+                        __ref__addref($var);
+                        return $value;
+                    }
+                }
+                $var = __value__alloc();
+                $tmp = (int64) 0;
+                __value__writeLong($var, $tmp);
+                return $var;
+            }
+        }
+    }
+
+    protected function implementValueReadLong(): void {
+        compile {
+            function __value__readLong($value) {
+                $type = $value->type;
+                switch $type {
+                    case Variable::TYPE_NATIVE_LONG {
+                        $ptr = &$value->value;
+                        $resultPtr = (int64*) $ptr;
+                        $offset = (int32) 0;
+                        $result = $resultPtr[$offset];
+                        return $result;
+                    }
+                    case Variable::TYPE_NATIVE_DOUBLE {
+                        $ptr = &$value->value;
+                        $resultPtr = (double*) $ptr;
+                        $offset = (int32) 0;
+                        $result = $resultPtr[$offset];
+                        $return = (int64) $result;
+                        return $return;
+                    }
+                }
+                $result = (int64) 0;
+                return $result;
+            }
+        }
+    }
+
+    public function implementValueWriteLong(): void {
+        compile {
+            function __value__writeLong($value, $long) {
+                $type = (int8) Variable::TYPE_NATIVE_LONG;
+                $oldType = $value->type;
+                switch $oldType {
+                    case Variable::TYPE_STRING {
+                        $ptr = &$value->value;
+                        $strPtr = (__ref__virtual*) $ptr;
+                        __ref__delref($strPtr);
+                    }
+                }
+                $value->type = $type;
+                $ptr = &$value->value;
+                $resultPtr = (int64*) $ptr;
+                $offset = (int32) 0;
+                $resultPtr[$offset] = $long;
+                return;
+            }
+        }
+    }
+
+    protected function implementValueReadDouble(): void {
+        compile {
+            function __value__readDouble($value) {
+                $type = $value->type;
+                switch $type {
+                    case Variable::TYPE_NATIVE_LONG {
+                        $ptr = &$value->value;
+                        $resultPtr = (int64*) $ptr;
+                        $offset = (int32) 0;
+                        $result = $resultPtr[$offset];
+                        $return = (double) $result;
+                        return $return;
+                    }
+                    case Variable::TYPE_NATIVE_DOUBLE {
+                        $ptr = &$value->value;
+                        $resultPtr = (double*) $ptr;
+                        $offset = (int32) 0;
+                        $result = $resultPtr[$offset];
+                        return $result;
+                    }
+                }
+                $result = (double) 0.0;
+                return $result;
+            }
+        }
+    }
+
+    public function implementValueWriteDouble(): void {
+        compile {
+            function __value__writeDouble($value, $double) {
+                $type = (int8) Variable::TYPE_NATIVE_DOUBLE;
+                $oldType = $value->type;
+                switch $oldType {
+                    case Variable::TYPE_STRING {
+                        $ptr = &$value->value;
+                        $strPtr = (__ref__virtual*) $ptr;
+                        __ref__delref($strPtr);
+                    }
+                }
+                $value->type = $type;
+                $ptr = &$value->value;
+                $resultPtr = (double*) $ptr;
+                $offset = (int32) 0;
+                $resultPtr[$offset] = $double;
+                return;
+            }
         }
     }
 

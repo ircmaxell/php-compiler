@@ -54,12 +54,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/ircmaxell/php-llvm.git",
-                "reference": "a8a7104f201497f5c8275bdde8579f183492dea3"
+                "reference": "1fb9b63f3a01a6d460c74be0485297a7ad7fc3e5"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/ircmaxell/php-llvm/zipball/a8a7104f201497f5c8275bdde8579f183492dea3",
-                "reference": "a8a7104f201497f5c8275bdde8579f183492dea3",
+                "url": "https://api.github.com/repos/ircmaxell/php-llvm/zipball/1fb9b63f3a01a6d460c74be0485297a7ad7fc3e5",
+                "reference": "1fb9b63f3a01a6d460c74be0485297a7ad7fc3e5",
                 "shasum": ""
             },
             "require": {
@@ -90,7 +90,7 @@
                 }
             ],
             "description": "A lightweight abstraction around LLVM-C",
-            "time": "2019-04-08T22:00:17+00:00"
+            "time": "2019-04-11T00:18:51+00:00"
         },
         {
             "name": "ircmaxell/php-optimizer",
@@ -2678,12 +2678,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/options-resolver.git",
-                "reference": "60f8df525c804c66f6ea03fe121dc65b6f95a78e"
+                "reference": "80a310dfec6393bf99e3ceda62dab72bc9dcec5e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/options-resolver/zipball/60f8df525c804c66f6ea03fe121dc65b6f95a78e",
-                "reference": "60f8df525c804c66f6ea03fe121dc65b6f95a78e",
+                "url": "https://api.github.com/repos/symfony/options-resolver/zipball/80a310dfec6393bf99e3ceda62dab72bc9dcec5e",
+                "reference": "80a310dfec6393bf99e3ceda62dab72bc9dcec5e",
                 "shasum": ""
             },
             "require": {
@@ -2724,7 +2724,7 @@
                 "configuration",
                 "options"
             ],
-            "time": "2019-03-31T11:47:13+00:00"
+            "time": "2019-04-10T19:42:49+00:00"
         },
         {
             "name": "symfony/polyfill-ctype",
@@ -3021,12 +3021,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/process.git",
-                "reference": "483b38ff95689915ddc1feeed1cbce6422467b02"
+                "reference": "7ae5878b84fc3a41ad92848a23c30ed159a8ccb8"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/process/zipball/483b38ff95689915ddc1feeed1cbce6422467b02",
-                "reference": "483b38ff95689915ddc1feeed1cbce6422467b02",
+                "url": "https://api.github.com/repos/symfony/process/zipball/7ae5878b84fc3a41ad92848a23c30ed159a8ccb8",
+                "reference": "7ae5878b84fc3a41ad92848a23c30ed159a8ccb8",
                 "shasum": ""
             },
             "require": {
@@ -3062,7 +3062,7 @@
             ],
             "description": "Symfony Process Component",
             "homepage": "https://symfony.com",
-            "time": "2019-04-01T13:29:45+00:00"
+            "time": "2019-04-10T19:42:49+00:00"
         },
         {
             "name": "symfony/stopwatch",

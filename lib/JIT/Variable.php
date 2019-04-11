@@ -17,6 +17,7 @@ use PHPCompiler\VM\Variable as VMVariable;
 use PHPLLVM;
 
 final class Variable {
+    const TYPE_NULL = 0;
     const TYPE_NATIVE_LONG = 1;
     const TYPE_NATIVE_BOOL = 2;
     const TYPE_NATIVE_DOUBLE = 3;

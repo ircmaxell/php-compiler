@@ -113,10 +113,10 @@ $(macro) {
 
 $(macro) {
     compile {
-        function $(llvmidentifier() as name) ($(ls(
+        function $(llvmidentifier() as name) ($(optional(ls(
             T_VARIABLE as param,
             token(',')
-        ) as params)) {
+        )) as params)) {
             $(layer() as stmts)
         }
     }
@@ -139,9 +139,7 @@ $(macro :unsafe :recursive) {
             chain(T_VARIABLE as result, token('='), either(
                 chain(T_VARIABLE as nullcheck_var, token(T_IS_EQUAL), buffer('null')) as nullcheck,
                 chain(T_CONSTANT_ENCAPSED_STRING as conststr_value) as conststr,
-                chain(token('('), T_STRING as cast_type, token(')'), T_VARIABLE as cast_value) as cast,
-                chain(token('('), T_STRING as constcast_type, token(')'), expression() as expr) as constcast,
-                chain(token('('), ctype() as ptrcast_type, token(')'), T_VARIABLE as ptrcast_value) as ptrcast,
+                chain(either(chain(token('('), ctype() as cast_type, token(')')), T_DOUBLE_CAST as cast_double) as cast_to, expression() as expr) as cast,
                 chain(T_VARIABLE as field_deref_var, token(T_OBJECT_OPERATOR), label() as field_deref_field) as field_deref,
                 chain(token('&'), T_VARIABLE as field_deref_ref_var, token(T_OBJECT_OPERATOR), label() as field_deref_ref_field) as field_deref_ref,
                 chain(T_VARIABLE as field_extract_var, token('.'), label() as field_extract_field) as field_extract,
@@ -152,9 +150,10 @@ $(macro :unsafe :recursive) {
                 chain(buffer('typeof'), T_VARIABLE as typeof_var) as typeof,
                 chain(buffer('sizeof'), T_VARIABLE as sizeof_var) as sizeof,
                 chain(buffer('sizeof'), ctype() as sizeoftype_type) as sizeoftype,
+                chain(buffer('alloca'), ctype() as alloca_type) as alloca,
                 chain(buffer('malloc'), ctype() as malloc_type, optional(T_VARIABLE as malloc_extra)) as malloc,
                 chain(buffer('realloc'), T_VARIABLE as realloc_var, T_VARIABLE as realloc_extra) as realloc,
-                chain(llvmidentifier() as call_func, token('('), ls(T_VARIABLE as call_arg, token(',')) as call_args, token(')')) as call,
+                chain(llvmidentifier() as call_func, token('('), optional(ls(T_VARIABLE as call_arg, token(','))) as call_args, token(')')) as call,
                 chain(T_VARIABLE as binary_left, either(
                     token('&') as binary_and,
                     token('|') as binary_or,
@@ -177,7 +176,7 @@ $(macro :unsafe :recursive) {
             chain(T_VARIABLE as inc_result, token(T_INC), token(';')) as inc,
             chain(T_VARIABLE as dec_result, token(T_DEC), token(';')) as dec,
             chain(token(T_IF), token('('), T_VARIABLE as cond, token(')'), token('{'), layer() as if_stmts, token('}'), optional(chain(token(T_ELSE), token('{'), layer() as else_stmts, token('}')))) as if_stmt,
-            chain(token(T_SWITCH), T_VARIABLE as switch_cond, token('{'), optional(repeat(chain(token(T_CASE), either(T_LNUMBER as switch_case_number, expression()) as switch_case_value, token('{'), layer() as switch_case_block, token('}'))) as switch_cases), token(T_DEFAULT), token('{'), layer() as switch_default_block, token('}'), token('}')) as switch_,
+            chain(token(T_SWITCH), T_VARIABLE as switch_cond, token('{'), repeat(chain(token(T_CASE), expression(), token('{'), layer() as switch_case_block, token('}')) as switch_case) as switch_cases, optional(chain(token(T_DEFAULT), token('{'), layer() as switch_default_block, token('}'))), token('}')) as switch_,
             chain(T_VARIABLE as field_deref_write_result, token(T_OBJECT_OPERATOR), T_STRING as field_deref_write_field, token('='), T_VARIABLE as field_deref_write_value, token(';')) as field_deref_write,
             chain(T_VARIABLE as const_field_assign_var, token('.'), label() as const_field_assign_field, token('='), T_LNUMBER as const_field_assign_value, token(';')) as const_field_assign,
             chain(T_VARIABLE as field_assign_var, token('.'), label() as field_assign_field, token('='), T_VARIABLE as field_assign_value, token(';')) as field_assign,
@@ -215,30 +214,98 @@ $(macro :unsafe :recursive) {
                 })
 
                 $(cast ? ... {
-                    $type = $this->context->getTypeFromString($$(stringify($(cast_type))));
-                    if (!is_object($(cast_value))) {
-                        $(result) = $type->constInt($(cast_value), false);
-                    } elseif ($(cast_value)->typeOf()->getWidth() >= $type->getWidth()) {
-                        $(result) = $this->context->builder->truncOrBitCast($(cast_value), $type);
-                    } else {
-                        $(result) = $this->context->builder->zExtOrBitCast($(cast_value), $type);
+                    $(cast_to ... {
+                        $(cast_double ? {
+                            $__type = $this->context->context->doubleType();
+                        })
+                        $(cast_type ? {
+                            $__type = $this->context->getTypeFromString($$(stringify($(cast_type))));
+                        })
+                    })
+                    $__kind = $__type->getKind();
+                    $__value = $(expr);
+                    switch ($__kind) {
+                        case PHPLLVM\Type::KIND_INTEGER:
+                            if (!is_object($__value)) {
+                                $(result) = $__type->constInt($__value, false);
+                                break;
+                            }
+                            $__other_type = $__value->typeOf();
+                            switch ($__other_type->getKind()) {
+                                case PHPLLVM\Type::KIND_INTEGER:
+                                    if ($__other_type->getWidth() >= $__type->getWidth()) {
+                                        $(result) = $this->context->builder->truncOrBitCast($__value, $__type);
+                                    } else {
+                                        $(result) = $this->context->builder->zExtOrBitCast($__value, $__type);
+                                    }
+                                    break;
+                                case PHPLLVM\Type::KIND_DOUBLE:
+                                    $(unsigned ? {
+                                        $(result) = $this->context->builder->fpToUi($__value, $__type);
+                                    })
+                                    $(unsigned ! {
+                                        $(result) = $this->context->builder->fpToSi($__value, $__type);
+                                    })
+                                    break;
+                                case PHPLLVM\Type::KIND_ARRAY:
+                                case PHPLLVM\Type::KIND_POINTER:
+                                    $(result) = $this->context->builder->ptrToInt($__value, $__type);
+                                    break;
+                                default:
+                                    throw new \LogicException("Unknown how to handle type pair (int, " . $__other_type->toString() . ")");
+                            }
+                            break;
+                        case PHPLLVM\Type::KIND_DOUBLE:
+                            if (!is_object($__value)) {
+                                $(result) = $__type->constReal($(expr));
+                                break;
+                            }
+                            $__other_type = $__value->typeOf();
+                            switch ($__other_type->getKind()) {
+                                case PHPLLVM\Type::KIND_INTEGER:
+                                    $(unsigned ? {
+                                        $(result) = $this->context->builder->uiToFp($__value, $__type);
+                                    })
+                                    $(unsigned ! {
+                                        $(result) = $this->context->builder->siToFp($__value, $__type);
+                                    })
+                                    break;
+                                case PHPLLVM\Type::KIND_DOUBLE:
+                                    $(result) = $this->context->builder->fpCast($__value, $__type);
+                                    break;
+                                default:
+                                    throw new \LogicException("Unknown how to handle type pair (double, " . $__other_type->toString() . ")");
+                            }
+                            break;
+                        case PHPLLVM\Type::KIND_ARRAY:
+                        case PHPLLVM\Type::KIND_POINTER:
+                            if (!is_object($__value)) {
+                                // this is very likely very wrong...
+                                $(result) = $__type->constInt($__value, false);
+                                break;
+                            }
+                            $__other_type = $__value->typeOf();
+                            switch ($__other_type->getKind()) {
+                                case PHPLLVM\Type::KIND_INTEGER:
+                                    $(result) = $this->context->builder->intToPtr($__value, $__type);
+                                    break;
+                                case PHPLLVM\Type::KIND_ARRAY:
+                                case PHPLLVM\Type::KIND_POINTER:
+                                    $(result) = $this->context->builder->pointerCast($__value, $__type);
+                                    break;
+                                default:
+                                    throw new \LogicException("Unknown how to handle type pair (double, " . $__other_type->toString() . ")");
+                            }
+                            break;
+                        default:
+                            throw new \LogicException("Unsupported type cast: " . $__type->toString());
                     }
                 })
 
                 $(load ? ... {
                     $(result) = $this->context->builder->load($(load_var));
                 })
-
-                $(constcast ? ... {
-                    $(result) = $this->context->getTypeFromString($$(stringify($(constcast_type))))->constInt($(expr), false);
-                })
-
-                $(ptrcast ? ... {
-                    $(result) = $this->context->builder->pointerCast(
-                        $(ptrcast_value), 
-                        $this->context->getTypeFromString($$(stringify($(ptrcast_type))))
-                    );
-                })
+                
 
                 $(binary ? ... {
                     $(binary_op ... {
@@ -451,6 +518,11 @@ $(macro :unsafe :recursive) {
                     })
                 })
 
+                $(alloca ? ... {
+                    $type = $this->context->getTypeFromString($$(stringify($(alloca_type))));
+                    $(result) = $this->context->builder->alloca($type);
+                })
+
                 $(realloc ? ... {
                     $(result) = $this->context->memory->realloc($(realloc_var), $(realloc_extra));
                 })
@@ -488,30 +560,46 @@ $(macro :unsafe :recursive) {
                 $__switch->default = $__prev->insertBasicBlock('default');
                 $__prev->moveBefore($__switch->default);
                 $__switch->end = $__switch->default->insertBasicBlock('end');
+                $__switch->endIsUsed = false;
                 $__switch->numCases = 0;
                 $(switch_cases ... {
                     $__switch->numCases++;
                 })
-                $this->context->builder->branchSwitch($(switch_cond), $__switch->default, $__switch->numCases);
-                $(switch_cases ... i {
+                $__switch->switch = $this->context->builder->branchSwitch($(switch_cond), $__switch->default, $__switch->numCases);
+                $(switch_cases ... { $(switch_case ... i {
                     $__case = end($__switches)->default->insertBasicBlock('case_' . $(i));
                     $this->context->builder->positionAtEnd($__case);
-                    $$(expand( { compile {
+                    if (is_int($(expr))) {
+                        end($__switches)->switch->addCase(end($__switches)->type->constInt($(expr), false), $__case);
+                    } elseif ($(expr) instanceof PHPLLVM\Value) {
+                        end($__switches)->switch->addCase($(expr), $__case);
+                    } else {
+                        throw new \LogicException("Unknown type for switch case");
+                    }
+                    $$(expand( { $(unsigned) compile {
                         $(switch_case_block)
                     } }))
                     if ($this->context->builder->getInsertBlock()->getTerminator() === null) {
                         $this->context->builder->branch(end($__switches)->end);
+                        end($__switches)->endIsUsed = true;
                     }
-                })
+                })})
                 $this->context->builder->positionAtEnd(end($__switches)->default);
-                $$(expand( { compile {
-                    $(switch_default_block)
-                } }))
+                $(switch_default_block ? {
+                    $$(expand( { compile {
+                        $(switch_default_block)
+                    } }))
+                })
                 if ($this->context->builder->getInsertBlock()->getTerminator() === null) {
                     $this->context->builder->branch(end($__switches)->end);
+                    end($__switches)->endIsUsed = true;
                 }
-                $this->context->builder->positionAtEnd(end($__switches)->end);
-                array_pop($__switches);
+                $__switch = array_pop($__switches);
+                if ($__switch->endIsUsed) {
+                    $this->context->builder->positionAtEnd($__switch->end);
+                } else {
+                    $__switch->end->remove();
+                }
             })
 
             $(if_stmt ? ... {

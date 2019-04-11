@@ -169,10 +169,116 @@ abstract class MemoryManager extends Builtin
             $size,
             $__right
         );
-        $void = $this->context->builder->pointerCast(
-            $value,
-            $this->context->getTypeFromString('int8*')
-        );
+        $__type = $this->context->getTypeFromString('int8*');
+
+        $__kind = $__type->getKind();
+        $__value = $value;
+        switch ($__kind) {
+            case PHPLLVM\Type::KIND_INTEGER:
+                if (!is_object($__value)) {
+                    $void = $__type->constInt($__value, false);
+                    break;
+                }
+                $__other_type = $__value->typeOf();
+                switch ($__other_type->getKind()) {
+                    case PHPLLVM\Type::KIND_INTEGER:
+                        if ($__other_type->getWidth() >= $__type->getWidth()) {
+                            $void = $this->context->builder->truncOrBitCast(
+                                $__value,
+                                $__type
+                            );
+                        } else {
+                            $void = $this->context->builder->zExtOrBitCast(
+                                $__value,
+                                $__type
+                            );
+                        }
+                        break;
+                    case PHPLLVM\Type::KIND_DOUBLE:
+                        $void = $this->context->builder->fpToUi(
+                            $__value,
+                            $__type
+                        );
+
+                        break;
+                    case PHPLLVM\Type::KIND_ARRAY:
+                    case PHPLLVM\Type::KIND_POINTER:
+                        $void = $this->context->builder->ptrToInt(
+                            $__value,
+                            $__type
+                        );
+                        break;
+                    default:
+                        throw new \LogicException(
+                            "Unknown how to handle type pair (int, " .
+                                $__other_type->toString() .
+                                ")"
+                        );
+                }
+                break;
+            case PHPLLVM\Type::KIND_DOUBLE:
+                if (!is_object($__value)) {
+                    $void = $__type->constReal($value);
+                    break;
+                }
+                $__other_type = $__value->typeOf();
+                switch ($__other_type->getKind()) {
+                    case PHPLLVM\Type::KIND_INTEGER:
+                        $void = $this->context->builder->uiToFp(
+                            $__value,
+                            $__type
+                        );
+
+                        break;
+                    case PHPLLVM\Type::KIND_DOUBLE:
+                        $void = $this->context->builder->fpCast(
+                            $__value,
+                            $__type
+                        );
+                        break;
+                    default:
+                        throw new \LogicException(
+                            "Unknown how to handle type pair (double, " .
+                                $__other_type->toString() .
+                                ")"
+                        );
+                }
+                break;
+            case PHPLLVM\Type::KIND_ARRAY:
+            case PHPLLVM\Type::KIND_POINTER:
+                if (!is_object($__value)) {
+                    // this is very likely very wrong...
+                    $void = $__type->constInt($__value, false);
+                    break;
+                }
+                $__other_type = $__value->typeOf();
+                switch ($__other_type->getKind()) {
+                    case PHPLLVM\Type::KIND_INTEGER:
+                        $void = $this->context->builder->intToPtr(
+                            $__value,
+                            $__type
+                        );
+                        break;
+                    case PHPLLVM\Type::KIND_ARRAY:
+                    case PHPLLVM\Type::KIND_POINTER:
+                        $void = $this->context->builder->pointerCast(
+                            $__value,
+                            $__type
+                        );
+                        break;
+                    default:
+                        throw new \LogicException(
+                            "Unknown how to handle type pair (double, " .
+                                $__other_type->toString() .
+                                ")"
+                        );
+                }
+                break;
+            default:
+                throw new \LogicException(
+                    "Unsupported type cast: " . $__type->toString()
+                );
+        }
         $ptr = $this->context->builder->call(
             $this->context->lookupFunction('__mm__realloc'),
             $void,
@@ -187,10 +293,116 @@ abstract class MemoryManager extends Builtin
 
     public function free(PHPLLVM\Value $value): void
     {
-        $void = $this->context->builder->pointerCast(
-            $value,
-            $this->context->getTypeFromString('int8*')
-        );
+        $__type = $this->context->getTypeFromString('int8*');
+
+        $__kind = $__type->getKind();
+        $__value = $value;
+        switch ($__kind) {
+            case PHPLLVM\Type::KIND_INTEGER:
+                if (!is_object($__value)) {
+                    $void = $__type->constInt($__value, false);
+                    break;
+                }
+                $__other_type = $__value->typeOf();
+                switch ($__other_type->getKind()) {
+                    case PHPLLVM\Type::KIND_INTEGER:
+                        if ($__other_type->getWidth() >= $__type->getWidth()) {
+                            $void = $this->context->builder->truncOrBitCast(
+                                $__value,
+                                $__type
+                            );
+                        } else {
+                            $void = $this->context->builder->zExtOrBitCast(
+                                $__value,
+                                $__type
+                            );
+                        }
+                        break;
+                    case PHPLLVM\Type::KIND_DOUBLE:
+                        $void = $this->context->builder->fpToSi(
+                            $__value,
+                            $__type
+                        );
+
+                        break;
+                    case PHPLLVM\Type::KIND_ARRAY:
+                    case PHPLLVM\Type::KIND_POINTER:
+                        $void = $this->context->builder->ptrToInt(
+                            $__value,
+                            $__type
+                        );
+                        break;
+                    default:
+                        throw new \LogicException(
+                            "Unknown how to handle type pair (int, " .
+                                $__other_type->toString() .
+                                ")"
+                        );
+                }
+                break;
+            case PHPLLVM\Type::KIND_DOUBLE:
+                if (!is_object($__value)) {
+                    $void = $__type->constReal($value);
+                    break;
+                }
+                $__other_type = $__value->typeOf();
+                switch ($__other_type->getKind()) {
+                    case PHPLLVM\Type::KIND_INTEGER:
+                        $void = $this->context->builder->siToFp(
+                            $__value,
+                            $__type
+                        );
+
+                        break;
+                    case PHPLLVM\Type::KIND_DOUBLE:
+                        $void = $this->context->builder->fpCast(
+                            $__value,
+                            $__type
+                        );
+                        break;
+                    default:
+                        throw new \LogicException(
+                            "Unknown how to handle type pair (double, " .
+                                $__other_type->toString() .
+                                ")"
+                        );
+                }
+                break;
+            case PHPLLVM\Type::KIND_ARRAY:
+            case PHPLLVM\Type::KIND_POINTER:
+                if (!is_object($__value)) {
+                    // this is very likely very wrong...
+                    $void = $__type->constInt($__value, false);
+                    break;
+                }
+                $__other_type = $__value->typeOf();
+                switch ($__other_type->getKind()) {
+                    case PHPLLVM\Type::KIND_INTEGER:
+                        $void = $this->context->builder->intToPtr(
+                            $__value,
+                            $__type
+                        );
+                        break;
+                    case PHPLLVM\Type::KIND_ARRAY:
+                    case PHPLLVM\Type::KIND_POINTER:
+                        $void = $this->context->builder->pointerCast(
+                            $__value,
+                            $__type
+                        );
+                        break;
+                    default:
+                        throw new \LogicException(
+                            "Unknown how to handle type pair (double, " .
+                                $__other_type->toString() .
+                                ")"
+                        );
+                }
+                break;
+            default:
+                throw new \LogicException(
+                    "Unsupported type cast: " . $__type->toString()
+                );
+        }
         $this->context->builder->call(
             $this->context->lookupFunction('__mm__free'),
             $void
