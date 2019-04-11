@@ -4,3 +4,5 @@ result.*
 demo
 *.reproduce.c
 *.debug.c
+.phpunit.result.cache
+.php_cs.cache
