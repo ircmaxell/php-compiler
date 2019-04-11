@@ -1,5 +1,7 @@
+#!make
 
-PHP ?= php
+include .env
+export $(shell sed 's/=.*//' .env)
 
 .PHONY: benchmark
 benchmark: rebuild-changed
@@ -22,8 +24,8 @@ rebuild-changed:
 
 .PHONY: rebuild-examples
 rebuild-examples:
-	$(PHP) examples/rebuild.php
+	$(PHP) script/rebuild-examples.php
 
 .PHONY: fix
 fix:
-	PHP_CS_FIXER_IGNORE_ENV=true $(PHP) vendor/bin/php-cs-fixer fix --allow-risky=yes
+	$(PHP) vendor/bin/php-cs-fixer fix --allow-risky=yes

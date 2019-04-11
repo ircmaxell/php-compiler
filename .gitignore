@@ -6,3 +6,4 @@ demo
 *.debug.c
 .phpunit.result.cache
 .php_cs.cache
+.env

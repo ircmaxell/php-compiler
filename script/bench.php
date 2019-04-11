@@ -22,43 +22,51 @@ if (! isset($runtimes['7.4'])) {
     die("At least a PHP 7.4 runtime must be specified via PHP_7_4\n");
 }
 
-$it = new GlobIterator(__DIR__.'/benchmarks/*.php');
-$results = [];
+$it = new GlobIterator(__DIR__.'/../benchmarks/*.php');
+$testResults = [];
 
 echo 'Running '.ITERATIONS." iterations of each test, and averaging\n";
 foreach ($it as $file) {
     echo 'Running '.$file->getBasename('.php').":\n";
-    $results[$file->getBasename('.php')] = bench($file->getPathname(), $runtimes);
+    $testResults[$file->getBasename('.php')] = bench($file->getPathname(), $runtimes);
 }
 
 echo "All Tests Completed, Results: \n\n";
-echo '| Test Name          ';
+$results = '| Test Name          ';
 foreach ($runtimes as $name => $path) {
-    printf('| %14s (s)', $name);
+    $results .= sprintf('| %14s (s)', $name);
 }
-echo "| bin/jit.php (s) | bin/compile.php (s) | compiled time (s) |\n";
+$results .= "| bin/jit.php (s) | bin/compile.php (s) | compiled time (s) |\n";
 
-echo '|--------------------';
+$results .= '|--------------------';
 foreach ($runtimes as $name => $path) {
-    echo '|'.str_repeat('-', 19);
+    $results .= '|'.str_repeat('-', 19);
 }
-echo "|-----------------|---------------------|-------------------|\n";
-foreach ($results as $name => $resultset) {
-    printf('| %18s ', $name);
+$results .= "|-----------------|---------------------|-------------------|\n";
+foreach ($testResults as $name => $resultset) {
+    $results .= sprintf('| %18s ', $name);
     foreach ($runtimes as $name => $_) {
-        printf('|      %12.4f ', $resultset[$name]);
+        $results .= sprintf('|      %12.4f ', $resultset[$name]);
     }
-    printf('|    %12.4f ', $resultset['jit']);
-    printf('|        %12.4f ', $resultset['aotcompile']);
-    printf('|      %12.4f ', $resultset['aot']);
-    printf("|\n");
+    $results .= sprintf('|    %12.4f ', $resultset['jit']);
+    $results .= sprintf('|        %12.4f ', $resultset['aotcompile']);
+    $results .= sprintf('|      %12.4f ', $resultset['aot']);
+    $results .= sprintf("|\n");
 }
+
+$readme = file_get_contents(__DIR__.'/../benchmarks/README.md');
+
+$readme = preg_replace('((<!-- benchmark table start -->)(.*)(<!-- benchmark table end -->))ims', "\$1\n\n".$results."\n\$3", $readme);
+
+file_put_contents(__DIR__.'/../benchmarks/README.md', $readme);
+
+echo $results;
 
 function bench(string $file, array $runtimes)
 {
     echo "Testing each method:\n";
-    $result = trim(runDebug($runtimes['7.4'].' '.__DIR__.'/bin/jit.php', $file));
-    run($runtimes['7.4'].' '.__DIR__.'/bin/compile.php', $file);
+    $result = trim(runDebug($runtimes['7.4'].' '.__DIR__.'/../bin/jit.php', $file));
+    run($runtimes['7.4'].' '.__DIR__.'/../bin/compile.php', $file);
     $tmpResult = trim(runDebug(str_replace('.php', '', $file), ''));
     if ($result !== $tmpResult) {
         die("Failure for bin/compile.php, found \"${tmpResult}\" but expected \"${result}\"\n");
@@ -77,9 +85,9 @@ function bench(string $file, array $runtimes)
         run($binary, $file);
         $times[$name] = microtime(true);
     }
-    run($runtimes['7.4'].' '.__DIR__.'/bin/jit.php', $file);
+    run($runtimes['7.4'].' '.__DIR__.'/../bin/jit.php', $file);
     $times['jit'] = microtime(true);
-    run($runtimes['7.4'].' '.__DIR__.'/bin/compile.php', $file);
+    run($runtimes['7.4'].' '.__DIR__.'/../bin/compile.php', $file);
     $times['aotcompile'] = microtime(true);
     run(str_replace('.php', '', $file), '');
     $times['aot'] = microtime(true);

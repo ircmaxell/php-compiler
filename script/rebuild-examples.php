@@ -16,7 +16,7 @@ $benchmarks = <<<HERE
 |----------------------|-----------------|-----------------|-----------------|-----------------|-----------------|
 HERE;
 
-$it = new DirectoryIterator(__DIR__);
+$it = new DirectoryIterator(__DIR__.'/../examples/');
 foreach ($it as $file) {
     if ($file->isFile()) {
         continue;
@@ -33,11 +33,11 @@ foreach ($it as $file) {
     }
 }
 
-$readme = file_get_contents(__DIR__.'/README.md');
+$readme = file_get_contents(__DIR__.'/../examples/README.md');
 
 $readme = preg_replace('((<!-- benchmark table start -->)(.*)(<!-- benchmark table end -->))ims', "\$1\n\n".$benchmarks."\n\$3", $readme);
 
-file_put_contents(__DIR__.'/README.md', $readme);
+file_put_contents(__DIR__.'/../examples/README.md', $readme);
 
 echo "Done\n";
 
