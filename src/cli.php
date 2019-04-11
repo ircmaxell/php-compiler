@@ -1,8 +1,15 @@
 <?php
 
-use PHPCompiler\Backend\VM\Runtime;
+declare(strict_types=1);
 
-require __DIR__ . '/../vendor/autoload.php';
+/**
+ * This file is part of PHP-Compiler, a PHP CFG Compiler for PHP code
+ *
+ * @copyright 2015 Anthony Ferrara. All rights reserved
+ * @license MIT See LICENSE at the root of the project for more info
+ */
+
+require __DIR__.'/../vendor/autoload.php';
 
 ini_set('memory_limit', '-1');
 error_reporting(~0);
@@ -14,11 +21,12 @@ array_shift($opts);
 $execFile = '';
 $execCode = '';
 $options = [];
-while (!empty($opts)) {
+while (! empty($opts)) {
     $opt = array_shift($opts);
     switch ($opt) {
         case '-l':
             $options['-l'] = true;
+
             break;
         case '-y':
             if (empty($opts) || substr($opts[0], 0, 1) === '-') {
@@ -29,6 +37,7 @@ while (!empty($opts)) {
             } else {
                 $options['-y'] = array_shift($opts);
             }
+
             break;
         case '-o':
             if (empty($opts) || substr($opts[0], 0, 1) === '-') {
@@ -39,29 +48,31 @@ while (!empty($opts)) {
             } else {
                 $options['-o'] = array_shift($opts);
             }
+
             break;
         case '-r':
-            $execCode = '<?php ' . array_shift($opts);
+            $execCode = '<?php '.array_shift($opts);
             $execFile = 'Command line code';
+
             break;
         default:
-            if (!empty($opts)) {
-                die("Extra argument not understood: $opt\n");
+            if (! empty($opts)) {
+                die("Extra argument not understood: ${opt}\n");
             }
-            if (!empty($execCode)) {
+            if (! empty($execCode)) {
                 die("Unsupported argument combination leading to multiple executions\n");
             }
             if (substr($opt, 0, 1) === '-') {
                 if (strlen($opt) === 1) {
                     $execFile = '-';
-                    $execCode = stream_get_contents(STDIN);
+                    $execCode = stream_get_contents(\STDIN);
+
                     break;
-                } else {
-                    die("Unsupported bare argument $opt\n");
                 }
+                die("Unsupported bare argument ${opt}\n");
             }
-            if (!file_exists($opt)) {
-                die("Could not open file $opt\n");
+            if (! file_exists($opt)) {
+                die("Could not open file ${opt}\n");
             }
             $execCode = file_get_contents($opt);
             $execFile = $opt;
@@ -70,7 +81,7 @@ while (!empty($opts)) {
 
 if (empty($execCode)) {
     $execFile = '-';
-    $execCode = stream_get_contents(STDIN);
+    $execCode = stream_get_contents(\STDIN);
 }
 
 run($execFile, $execCode, $options);

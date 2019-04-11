@@ -4,13 +4,13 @@
 #teste
 #teste2
 <?php
-#ahahah
-#ahhfhf
+//ahahah
+//ahhfhf
 echo '#ola'; //?
 echo "\n";
-echo 'uhm # ah'; #ah?
+echo 'uhm # ah'; //ah?
 echo "\n";
-echo "e este, # hein?";
+echo 'e este, # hein?';
 echo "\n";
 ?>
 --EXPECT--

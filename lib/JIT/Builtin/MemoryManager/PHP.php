@@ -1,6 +1,8 @@
 <?php
 
-/*
+declare(strict_types=1);
+
+/**
  * This file is part of PHP-Compiler, a PHP CFG Compiler for PHP code
  *
  * @copyright 2015 Anthony Ferrara. All rights reserved
@@ -11,9 +13,10 @@ namespace PHPCompiler\JIT\Builtin\MemoryManager;
 
 use PHPCompiler\JIT\Builtin\MemoryManager;
 
-class PHP extends MemoryManager {
-
-    public function register(): void {
+class PHP extends MemoryManager
+{
+    public function register(): void
+    {
         parent::register();
         $this->context->helper->importFunction(
             '_efree',
@@ -37,44 +40,16 @@ class PHP extends MemoryManager {
             'size_t',
             ...$this->expandDebugDecl()
         );
-    } 
-    
-    private function expandDebugDecl(): array {
-        if (PHP_DEBUG) {
-            return [
-                'const char*',
-                'uint32_t',
-                'const char*',
-                'uint32_t',
-            ];
-        }
-        return [];
     }
 
-    private function expandDebugArgs(): array {
-        if (PHP_DEBUG) {
-            return [
-                $this->context->constantFromString('jit'), 
-                $this->context->helper->cast(
-                    $this->context->constantFromInteger(2),
-                    'uint32_t'
-                ), 
-                $this->context->constantFromString('jit'), 
-                $this->context->helper->cast(
-                    $this->context->constantFromInteger(2),
-                    'uint32_t'
-                ) 
-            ];
-        }
-        return [];
-    }
-
-    public function malloc(\gcc_jit_rvalue_ptr $size, \gcc_jit_type_ptr $type): \gcc_jit_rvalue_ptr {
+    public function malloc(\gcc_jit_rvalue_ptr $size, \gcc_jit_type_ptr $type): \gcc_jit_rvalue_ptr
+    {
         $void = $this->context->helper->call(
-            '_emalloc', 
-            $size, 
+            '_emalloc',
+            $size,
             ...$this->expandDebugArgs()
         );
+
         return \gcc_jit_context_new_cast(
             $this->context->context,
             null,
@@ -83,18 +58,20 @@ class PHP extends MemoryManager {
         );
     }
 
-    public function realloc(\gcc_jit_rvalue_ptr $ptr, \gcc_jit_rvalue_ptr $size, \gcc_jit_type_ptr $type): \gcc_jit_rvalue_ptr {
+    public function realloc(\gcc_jit_rvalue_ptr $ptr, \gcc_jit_rvalue_ptr $size, \gcc_jit_type_ptr $type): \gcc_jit_rvalue_ptr
+    {
         $void = $this->context->helper->call(
-            '_erealloc', 
+            '_erealloc',
             \gcc_jit_context_new_cast(
                 $this->context->context,
                 $this->context->location(),
                 $ptr,
                 $this->context->getTypeFromString('void*')
             ),
-            $size, 
+            $size,
             ...$this->expandDebugArgs()
         );
+
         return \gcc_jit_context_new_cast(
             $this->context->context,
             null,
@@ -110,11 +87,44 @@ class PHP extends MemoryManager {
         $this->context->helper->eval(
             $block,
             $this->context->helper->call(
-                '_efree', 
+                '_efree',
                 $this->context->helper->cast($ptr, 'void*'),
                 ...$this->expandDebugArgs()
             )
         );
     }
 
+    private function expandDebugDecl(): array
+    {
+        if (\PHP_DEBUG) {
+            return [
+                'const char*',
+                'uint32_t',
+                'const char*',
+                'uint32_t',
+            ];
+        }
+
+        return [];
+    }
+
+    private function expandDebugArgs(): array
+    {
+        if (\PHP_DEBUG) {
+            return [
+                $this->context->constantFromString('jit'),
+                $this->context->helper->cast(
+                    $this->context->constantFromInteger(2),
+                    'uint32_t'
+                ),
+                $this->context->constantFromString('jit'),
+                $this->context->helper->cast(
+                    $this->context->constantFromInteger(2),
+                    'uint32_t'
+                ),
+            ];
+        }
+
+        return [];
+    }
 }

@@ -9,6 +9,7 @@
 
 namespace PHPCompiler;
 
+use SplObjectStorage;
 use PHPCfg\Func as CfgFunc;
 use PHPCfg\Op;
 use PHPCfg\Block as CfgBlock;
@@ -20,8 +21,8 @@ use PHPCompiler\NativeType\NativeArray;
 
 class Compiler {
 
-    protected ?\SplObjectStorage $seen;
-    protected ?\SplObjectStorage $funcs;
+    protected ?SplObjectStorage $seen;
+    protected ?SplObjectStorage $funcs;
 
     public function compile(Script $script): ?Block {
         $this->seen = new \SplObjectStorage;

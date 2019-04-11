@@ -1,6 +1,8 @@
 <?php
 
-/*
+declare(strict_types=1);
+
+/**
  * This file is part of PHP-Compiler, a PHP CFG Compiler for PHP code
  *
  * @copyright 2015 Anthony Ferrara. All rights reserved
@@ -9,26 +11,25 @@
 
 namespace PHPCompiler\Func;
 
-use PHPCompiler\Handler;
-use PHPCompiler\Func;
 use PHPCompiler\Frame;
-use PHPCompiler\VM\Context;
-use PHPCompiler\VM\Variable;
-use PHPCompiler\JIT;
+use PHPCompiler\Func;
+use PHPCompiler\Handler;
 use PHPCompiler\JIT\Call;
+use PHPCompiler\VM\Context;
 
-abstract class Internal extends Func implements Handler, Call {
-
-    public function __construct(string $name = null) {
-        if (is_null($name)) {
+abstract class Internal extends Func implements Handler, Call
+{
+    public function __construct(string $name = null)
+    {
+        if (null === $name) {
             $parts = explode('\\', get_class($this));
             $name = end($parts);
         }
         parent::__construct($name);
     }
 
-    public function getFrame(Context $context, ?Frame $frame = null): Frame {
+    public function getFrame(Context $context, ?Frame $frame = null): Frame
+    {
         return new Frame($this, null, null);
     }
-
 }

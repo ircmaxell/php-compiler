@@ -1,6 +1,8 @@
 <?php
 
-/*
+declare(strict_types=1);
+
+/**
  * This file is part of PHP-Compiler, a PHP CFG Compiler for PHP code
  *
  * @copyright 2015 Anthony Ferrara. All rights reserved
@@ -9,8 +11,8 @@
 
 namespace PHPCompiler;
 
-interface Module {
-
+interface Module
+{
     public function getName(): string;
 
     public function getFunctions(): array;
@@ -18,5 +20,4 @@ interface Module {
     public function init(Runtime $runtime): void;
 
     public function shutdown(): void;
-
 }

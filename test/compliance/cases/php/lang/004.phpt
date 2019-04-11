@@ -2,11 +2,11 @@
 Simple If/Else Test
 --FILE--
 <?php
-$a=1;
-if($a==0) {
-    echo "bad";
+$a = 1;
+if ($a == 0) {
+    echo 'bad';
 } else {
-    echo "good";
+    echo 'good';
 }
 ?>
 --EXPECT--

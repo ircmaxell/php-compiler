@@ -1,6 +1,8 @@
 <?php
 
-/*
+declare(strict_types=1);
+
+/**
  * This file is part of PHP-Compiler, a PHP CFG Compiler for PHP code
  *
  * @copyright 2015 Anthony Ferrara. All rights reserved
@@ -13,14 +15,15 @@ use PHPCompiler\Block;
 use PHPCompiler\OpCode;
 use PHPCompiler\VM\Optimizer;
 
-
-class AssignOp extends Optimizer {
+class AssignOp extends Optimizer
+{
     const CANDIDATE_OPS = [
         OpCode::TYPE_CONCAT,
     ];
 
-    public function optimize(Block $block, ?\SplObjectStorage $seen = null) {
-        $seen = $seen ?? new \SplObjectStorage;
+    public function optimize(Block $block, ?\SplObjectStorage $seen = null): void
+    {
+        $seen = $seen ?? new \SplObjectStorage();
         if ($seen->contains($block)) {
             return;
         }
@@ -28,7 +31,7 @@ class AssignOp extends Optimizer {
         $prior = null;
         $toRemove = [];
         foreach ($block->opCodes as $key => $op) {
-            if ($op->type === OpCode::TYPE_ASSIGN && !\is_null($prior) && in_array($prior->type, self::CANDIDATE_OPS)) {
+            if ($op->type === OpCode::TYPE_ASSIGN && null !== $prior && in_array($prior->type, self::CANDIDATE_OPS, true)) {
                 // replace
                 $binaryOpResult = $block->getOperand($prior->arg1);
                 if (count($binaryOpResult->usages) === 1) {
@@ -45,20 +48,19 @@ class AssignOp extends Optimizer {
                 }
             }
             $prior = $op;
-            if (!is_null($op->block1)) {
+            if (null !== $op->block1) {
                 $this->optimize($op->block1, $seen);
             }
-            if (!is_null($op->block2)) {
+            if (null !== $op->block2) {
                 $this->optimize($op->block2, $seen);
             }
         }
 
-        if (!empty($toRemove)) {
+        if (! empty($toRemove)) {
             foreach ($toRemove as $key) {
                 unset($block->opCodes[$key]);
             }
             $block->opCodes = array_values($block->opCodes);
         }
     }
-
 }

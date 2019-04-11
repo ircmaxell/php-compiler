@@ -1,7 +1,15 @@
 <?php
 
-# This file is generated, changes you make will be lost.
-# Make your changes in /home/ircmaxell/Workspace/PHP-Compiler/PHP-Compiler/lib/JIT/Builtin/MemoryManager.pre instead.
+declare(strict_types=1);
+
+/**
+ * This file is part of PHP-Compiler, a PHP CFG Compiler for PHP code
+ *
+ * @copyright 2015 Anthony Ferrara. All rights reserved
+ * @license MIT See LICENSE at the root of the project for more info
+ */
+
+// Make your changes in /home/ircmaxell/Workspace/PHP-Compiler/PHP-Compiler/script/../lib/JIT/Builtin/MemoryManager.pre instead.
 
 /*
  * This file is part of PHP-Compiler, a PHP CFG Compiler for PHP code
@@ -9,7 +17,6 @@
  * @copyright 2015 Anthony Ferrara. All rights reserved
  * @license MIT See LICENSE at the root of the project for more info
  */
-
 namespace PHPCompiler\JIT\Builtin;
 
 use PHPCompiler\JIT\Builtin;
@@ -87,7 +94,7 @@ abstract class MemoryManager extends Builtin
             $type = $type->typeOf();
         } else {
             throw new \LogicException(
-                "Attempt to call sizeof on non-PHPLLVM type/value"
+                'Attempt to call sizeof on non-PHPLLVM type/value'
             );
         }
         $size = $this->context->builder->ptrToInt(
@@ -118,7 +125,7 @@ abstract class MemoryManager extends Builtin
             $type = $type->typeOf();
         } else {
             throw new \LogicException(
-                "Attempt to call sizeof on non-PHPLLVM type/value"
+                'Attempt to call sizeof on non-PHPLLVM type/value'
             );
         }
         $size = $this->context->builder->ptrToInt(
@@ -153,7 +160,7 @@ abstract class MemoryManager extends Builtin
             $type = $type->typeOf();
         } else {
             throw new \LogicException(
-                "Attempt to call sizeof on non-PHPLLVM type/value"
+                'Attempt to call sizeof on non-PHPLLVM type/value'
             );
         }
         $size = $this->context->builder->ptrToInt(
@@ -175,8 +182,9 @@ abstract class MemoryManager extends Builtin
         $__value = $value;
         switch ($__kind) {
             case PHPLLVM\Type::KIND_INTEGER:
-                if (!is_object($__value)) {
+                if (! is_object($__value)) {
                     $void = $__type->constInt($__value, false);
+
                     break;
                 }
                 $__other_type = $__value->typeOf();
@@ -193,6 +201,7 @@ abstract class MemoryManager extends Builtin
                                 $__type
                             );
                         }
+
                         break;
                     case PHPLLVM\Type::KIND_DOUBLE:
                         $void = $this->context->builder->fpToUi(
@@ -207,18 +216,21 @@ abstract class MemoryManager extends Builtin
                             $__value,
                             $__type
                         );
+
                         break;
                     default:
                         throw new \LogicException(
-                            "Unknown how to handle type pair (int, " .
-                                $__other_type->toString() .
-                                ")"
+                            'Unknown how to handle type pair (int, '.
+                                $__other_type->toString().
+                                ')'
                         );
                 }
+
                 break;
             case PHPLLVM\Type::KIND_DOUBLE:
-                if (!is_object($__value)) {
+                if (! is_object($__value)) {
                     $void = $__type->constReal($value);
+
                     break;
                 }
                 $__other_type = $__value->typeOf();
@@ -235,20 +247,23 @@ abstract class MemoryManager extends Builtin
                             $__value,
                             $__type
                         );
+
                         break;
                     default:
                         throw new \LogicException(
-                            "Unknown how to handle type pair (double, " .
-                                $__other_type->toString() .
-                                ")"
+                            'Unknown how to handle type pair (double, '.
+                                $__other_type->toString().
+                                ')'
                         );
                 }
+
                 break;
             case PHPLLVM\Type::KIND_ARRAY:
             case PHPLLVM\Type::KIND_POINTER:
-                if (!is_object($__value)) {
+                if (! is_object($__value)) {
                     // this is very likely very wrong...
                     $void = $__type->constInt($__value, false);
+
                     break;
                 }
                 $__other_type = $__value->typeOf();
@@ -258,6 +273,7 @@ abstract class MemoryManager extends Builtin
                             $__value,
                             $__type
                         );
+
                         break;
                     case PHPLLVM\Type::KIND_ARRAY:
                     case PHPLLVM\Type::KIND_POINTER:
@@ -265,18 +281,20 @@ abstract class MemoryManager extends Builtin
                             $__value,
                             $__type
                         );
+
                         break;
                     default:
                         throw new \LogicException(
-                            "Unknown how to handle type pair (double, " .
-                                $__other_type->toString() .
-                                ")"
+                            'Unknown how to handle type pair (double, '.
+                                $__other_type->toString().
+                                ')'
                         );
                 }
+
                 break;
             default:
                 throw new \LogicException(
-                    "Unsupported type cast: " . $__type->toString()
+                    'Unsupported type cast: '.$__type->toString()
                 );
         }
         $ptr = $this->context->builder->call(
@@ -299,8 +317,9 @@ abstract class MemoryManager extends Builtin
         $__value = $value;
         switch ($__kind) {
             case PHPLLVM\Type::KIND_INTEGER:
-                if (!is_object($__value)) {
+                if (! is_object($__value)) {
                     $void = $__type->constInt($__value, false);
+
                     break;
                 }
                 $__other_type = $__value->typeOf();
@@ -317,6 +336,7 @@ abstract class MemoryManager extends Builtin
                                 $__type
                             );
                         }
+
                         break;
                     case PHPLLVM\Type::KIND_DOUBLE:
                         $void = $this->context->builder->fpToSi(
@@ -331,18 +351,21 @@ abstract class MemoryManager extends Builtin
                             $__value,
                             $__type
                         );
+
                         break;
                     default:
                         throw new \LogicException(
-                            "Unknown how to handle type pair (int, " .
-                                $__other_type->toString() .
-                                ")"
+                            'Unknown how to handle type pair (int, '.
+                                $__other_type->toString().
+                                ')'
                         );
                 }
+
                 break;
             case PHPLLVM\Type::KIND_DOUBLE:
-                if (!is_object($__value)) {
+                if (! is_object($__value)) {
                     $void = $__type->constReal($value);
+
                     break;
                 }
                 $__other_type = $__value->typeOf();
@@ -359,20 +382,23 @@ abstract class MemoryManager extends Builtin
                             $__value,
                             $__type
                         );
+
                         break;
                     default:
                         throw new \LogicException(
-                            "Unknown how to handle type pair (double, " .
-                                $__other_type->toString() .
-                                ")"
+                            'Unknown how to handle type pair (double, '.
+                                $__other_type->toString().
+                                ')'
                         );
                 }
+
                 break;
             case PHPLLVM\Type::KIND_ARRAY:
             case PHPLLVM\Type::KIND_POINTER:
-                if (!is_object($__value)) {
+                if (! is_object($__value)) {
                     // this is very likely very wrong...
                     $void = $__type->constInt($__value, false);
+
                     break;
                 }
                 $__other_type = $__value->typeOf();
@@ -382,6 +408,7 @@ abstract class MemoryManager extends Builtin
                             $__value,
                             $__type
                         );
+
                         break;
                     case PHPLLVM\Type::KIND_ARRAY:
                     case PHPLLVM\Type::KIND_POINTER:
@@ -389,18 +416,20 @@ abstract class MemoryManager extends Builtin
                             $__value,
                             $__type
                         );
+
                         break;
                     default:
                         throw new \LogicException(
-                            "Unknown how to handle type pair (double, " .
-                                $__other_type->toString() .
-                                ")"
+                            'Unknown how to handle type pair (double, '.
+                                $__other_type->toString().
+                                ')'
                         );
                 }
+
                 break;
             default:
                 throw new \LogicException(
-                    "Unsupported type cast: " . $__type->toString()
+                    'Unsupported type cast: '.$__type->toString()
                 );
         }
         $this->context->builder->call(

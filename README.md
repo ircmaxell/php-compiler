@@ -149,7 +149,7 @@ me@local:~$ php bin/compile.php -y demo.php
 
 ```
 
-Checkout the committed [`demo.bc`](demo.bc) and [`demo.s`](demo.s) for more info...
+Checkout the [examples](examples/) folder.
 
 # Performance
 

@@ -1,18 +1,27 @@
 <?php
 
+declare(strict_types=1);
+
+/**
+ * This file is part of PHP-Compiler, a PHP CFG Compiler for PHP code
+ *
+ * @copyright 2015 Anthony Ferrara. All rights reserved
+ * @license MIT See LICENSE at the root of the project for more info
+ */
+
 namespace Yay {
 
     use function Pre\Plugin\addMacro;
 
     // ideally this would happen automatically, but whatever
-    addMacro(__DIR__ . '/macros.yay');
+    addMacro(__DIR__.'/macros.yay');
 
     function ctype(): Parser
     {
         return chain(
             llvmidentifier()->as('type'),
-            optional(repeat(either(token('*'), token(T_POW)))->as('ptr')),
-            optional(repeat(chain(token('['), token(T_LNUMBER)->as('arraySize'), token(']')))->as('array'))
+            optional(repeat(either(token('*'), token(\T_POW)))->as('ptr')),
+            optional(repeat(chain(token('['), token(\T_LNUMBER)->as('arraySize'), token(']')))->as('array'))
         );
     }
 
@@ -34,19 +43,21 @@ namespace Yay {
     }
 
 }
-
 namespace Yay\DSL\Expanders {
 
     use Yay\Token;
     use Yay\TokenStream;
 
-    function choose(TokenStream $ts): TokenStream {
+    function choose(TokenStream $ts): TokenStream
+    {
         $tok = $ts->current();
         $next = $ts->next();
-        throw new \LogicException("blah: " . $tok->dump() . ' - ' . $next->dump());
+
+        throw new \LogicException('blah: '.$tok->dump().' - '.$next->dump());
+
         return TokenStream::fromSequence(
             new Token(
-                T_CONSTANT_ENCAPSED_STRING, (string) $tok
+                \T_CONSTANT_ENCAPSED_STRING, (string) $tok
             )
         );
     }
