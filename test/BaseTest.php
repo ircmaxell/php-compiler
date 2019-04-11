@@ -129,13 +129,7 @@ abstract class BaseTest extends TestCase {
      * @dataProvider providePHPTests
      */
     public function testCases(string $name, string $code, array $sections): void {
-        if (!isset($_SERVER['_'])) {
-            $PHP = 'php';
-        } elseif ($_SERVER['_'][0] === '/') {
-            $PHP = $_SERVER['_'];
-        } else {
-            $PHP = realpath($_SERVER['PWD'] . '/' . $_SERVER['_']);
-        }
+        $PHP = escapeshellcmd(PHP_BINARY);
         $descriptorSepc = [
             0 => ['pipe', 'r'],
             1 => ['pipe', 'w'],

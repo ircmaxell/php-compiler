@@ -2,6 +2,12 @@
 
 require __DIR__ . '/vendor/autoload.php';
 
+$onlyChanged = false;
+
+if (isset($argv[1]) && $argv[1] === 'onlyChanged') {
+    $onlyChanged = true;
+}
+
 $it = new RecursiveIteratorIterator(
     new RecursiveDirectoryIterator(__DIR__, FilesystemIterator::CURRENT_AS_PATHNAME),
     RecursiveIteratorIterator::SELF_FIRST
@@ -20,7 +26,11 @@ foreach ($it as $dir) {
     }
     foreach (new GlobIterator($dir . '/*.pre', FilesystemIterator::CURRENT_AS_PATHNAME) as $file) {
         echo "Compiling $file\n";
-        Pre\Plugin\compile($file, preg_replace('(\.pre$)', '.php', $file));
+        $destination = preg_replace('(\.pre$)', '.php', $file);
+        if ($onlyChanged && filemtime($destination) >= filemtime($file)) {
+            continue;
+        }
+        Pre\Plugin\compile($file, $destination);
     }
 }
 
