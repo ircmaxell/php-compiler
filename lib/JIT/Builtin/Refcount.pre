@@ -40,11 +40,11 @@ class Refcount extends Builtin {
             struct __ref__virtual {
                 __ref__ $ref;
             };
-            inline function __ref__init(int32, __ref__virtual*): void;
-            inline function __ref__addref(__ref__virtual*): void;
-            inline function __ref__delref(__ref__virtual*): void;
-            inline function __ref__separate(__ref__virtual**): void;
-            inline function __ref__separate_ex(__ref__virtual**, int32): void;
+            static inline function __ref__init(int32, __ref__virtual*): void;
+            static inline function __ref__addref(__ref__virtual*): void;
+            static inline function __ref__delref(__ref__virtual*): void;
+            static inline function __ref__separate(__ref__virtual**): void;
+            static inline function __ref__separate_ex(__ref__virtual**, int32): void;
         }
         $this->struct = $this->context->getTypeFromString('__ref__');
         $this->virtualStruct = $this->context->getTypeFromString('__ref__virtual');

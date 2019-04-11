@@ -17,9 +17,9 @@ abstract class MemoryManager extends Builtin {
 
     public function register(): void {
         declare {
-            inline function __mm__malloc(size_t): int8*;
-            inline function __mm__realloc(int8*, size_t): int8*;
-            inline function __mm__free(int8*): void;
+            static inline function __mm__malloc(size_t): int8*;
+            static inline function __mm__realloc(int8*, size_t): int8*;
+            static inline function __mm__free(int8*): void;
         }
     }
 

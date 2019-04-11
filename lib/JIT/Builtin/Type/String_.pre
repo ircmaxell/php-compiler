@@ -25,11 +25,11 @@ class String_ extends Type {
                 int64 $length;
                 int8 $value;
             };
-            inline function __string__strlen(__string__*): int64;
-            inline function __string__alloc(int64): __string__*;
-            inline function __string__realloc(__string__**, int64): void;
-            inline function __string__init(int64, const char*): __string__*;
-            inline function __string__separate(__string__ *): __string__*;
+            static inline function __string__strlen(__string__*): int64;
+            static inline function __string__alloc(int64): __string__*;
+            static inline function __string__realloc(__string__**, int64): void;
+            static inline function __string__init(int64, const char*): __string__*;
+            static inline function __string__separate(__string__ *): __string__*;
         }
         $this->pointer = $this->context->getTypeFromString('__string__*');
     }
@@ -129,16 +129,6 @@ class String_ extends Type {
     public function initialize(): void {
     }
 
-    private static $constId = 0;
-    public function allocate(
-        \gcc_jit_block_ptr $block,
-        \gcc_jit_lvalue_ptr $dest, 
-        \gcc_jit_rvalue_ptr $length,
-        bool $isConstant = false
-    ): void {
-        die("Not implemented");
-    }
-
     public function init(
         PHPLLVM\Value $dest,
         PHPLLVM\Value $value,
@@ -154,22 +144,6 @@ class String_ extends Type {
             // disable refcount
             $this->context->refcount->disableRefcount($ptr);
         }
-    }
-
-    public function reallocate(
-        \gcc_jit_block_ptr $block,
-        \gcc_jit_lvalue_ptr $original, 
-        \gcc_jit_rvalue_ptr $length
-    ): void {
-        $this->context->helper->assign(
-            $block,
-            $original,
-            $this->context->helper->call(
-                '__string__realloc',
-                $original->asRValue(),
-                $length
-            )
-        );
     }
 
     public function isString(PHPLLVM\Value $value): bool {

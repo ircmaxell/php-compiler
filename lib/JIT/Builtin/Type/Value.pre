@@ -25,12 +25,18 @@ class Value extends Type {
                 // NOTE: 8 bytes because that covers all needed types
                 int8[8] $value;
             };
-            inline function __value__alloc(): __value__*;
-            inline function __value__toNumeric(__value__*): __value__*;
-            inline function __value__readLong(__value__*): int64;
-            inline function __value__writeLong(__value__*, int64): void;
-            inline function __value__readDouble(__value__*): double;
-            inline function __value__writeDouble(__value__*, double): void;
+            static inline function __value__alloc(): __value__*;
+            static inline function __value__valueDelref(__value__*): void;
+            static inline function __value__toNumeric(__value__*): __value__*;
+
+            static inline function __value__readLong(__value__*): int64;
+            static inline function __value__writeLong(__value__*, int64): void;
+
+            static inline function __value__readDouble(__value__*): double;
+            static inline function __value__writeDouble(__value__*, double): void;
+
+            static inline function __value__readString(__value__*): __string__*;
+            static inline function __value__writeString(__value__*, __string__*): void;
         }
     }
 
@@ -41,6 +47,7 @@ class Value extends Type {
         $this->implementValueWriteLong();
         $this->implementValueReadDouble();
         $this->implementValueWriteDouble();
+        $this->implementValueDelref();
     }
 
     public function initialize(): void {
@@ -54,6 +61,22 @@ class Value extends Type {
                 $typeinfo = (int32) Refcount::TYPE_INFO_TYPE_VALUE | Refcount::TYPE_INFO_REFCOUNTED;
                 __ref__init($typeinfo, $ref);
                 return $var;
+            }
+        }
+    }
+
+    protected function implementValueDelref(): void {
+        compile {
+            function __value__valueDelref($value) {
+                $oldType = $value->type;
+                $mask = (int8) Variable::IS_REFCOUNTED;
+                $isCounted = $oldType & $mask;
+                if ($isCounted) {
+                    $ptr = &$value->value;
+                    $virtual = (__ref__virtual*) $ptr;
+                    __ref__delref($virtual);
+                }
+                return;
             }
         }
     }
@@ -72,6 +95,12 @@ class Value extends Type {
                         $var = (__ref__virtual*) $value;
                         __ref__addref($var);
                         return $value;
+                    }
+                    case Variable::TYPE_VALUE {
+                        $var = &$value->value;
+                        $ptr = (__value__*) $var;
+                        $result = __value__toNumeric($ptr);
+                        return $result;
                     }
                 }
                 $var = __value__alloc();
@@ -102,6 +131,12 @@ class Value extends Type {
                         $return = (int64) $result;
                         return $return;
                     }
+                    case Variable::TYPE_VALUE {
+                        $var = &$value->value;
+                        $ptr = (__value__*) $var;
+                        $result = __value__readLong($ptr);
+                        return $result;
+                    }
                 }
                 $result = (int64) 0;
                 return $result;
@@ -112,15 +147,8 @@ class Value extends Type {
     public function implementValueWriteLong(): void {
         compile {
             function __value__writeLong($value, $long) {
+                __value__valueDelref($value);
                 $type = (int8) Variable::TYPE_NATIVE_LONG;
-                $oldType = $value->type;
-                switch $oldType {
-                    case Variable::TYPE_STRING {
-                        $ptr = &$value->value;
-                        $strPtr = (__ref__virtual*) $ptr;
-                        __ref__delref($strPtr);
-                    }
-                }
                 $value->type = $type;
                 $ptr = &$value->value;
                 $resultPtr = (int64*) $ptr;
@@ -151,6 +179,12 @@ class Value extends Type {
                         $result = $resultPtr[$offset];
                         return $result;
                     }
+                    case Variable::TYPE_VALUE {
+                        $var = &$value->value;
+                        $ptr = (__value__*) $var;
+                        $result = __value__readDouble($ptr);
+                        return $result;
+                    }
                 }
                 $result = (double) 0.0;
                 return $result;
@@ -161,20 +195,49 @@ class Value extends Type {
     public function implementValueWriteDouble(): void {
         compile {
             function __value__writeDouble($value, $double) {
+                __value__valueDelref($value);
                 $type = (int8) Variable::TYPE_NATIVE_DOUBLE;
-                $oldType = $value->type;
-                switch $oldType {
-                    case Variable::TYPE_STRING {
-                        $ptr = &$value->value;
-                        $strPtr = (__ref__virtual*) $ptr;
-                        __ref__delref($strPtr);
-                    }
-                }
                 $value->type = $type;
                 $ptr = &$value->value;
                 $resultPtr = (double*) $ptr;
                 $offset = (int32) 0;
                 $resultPtr[$offset] = $double;
+                return;
+            }
+        }
+    }
+
+    protected function implementValueReadString(): void {
+        compile {
+            function __value__readString($value) {
+                $type = $value->type;
+                switch $type {
+                    case Variable::TYPE_STRING {
+                        $ptr = &$value->value;
+                        $resultPtr = (__string__*) $ptr;
+                        return $resultPtr;
+                    }
+                    case Variable::TYPE_VALUE {
+                        $var = &$value->value;
+                        $ptr = (__value__*) $var;
+                        $result = __value__readString($ptr);
+                        return $result;
+                    }
+                    // Todo: handle other types
+                }
+                $result = (__string__*) null;
+                return $result;
+            }
+        }
+    }
+
+    public function implementValueWriteString(): void {
+        compile {
+            function __value__writeString($value, $string) {
+                __value__valueDelref($value);
+                $type = (int8) Variable::TYPE_STRING;
+                $value->type = $type;
+                $value->value = $string;
                 return;
             }
         }

@@ -23,7 +23,7 @@ final class Variable {
     const TYPE_NATIVE_DOUBLE = 3;
     const TYPE_STRING = 4 | self::IS_REFCOUNTED;
     const TYPE_OBJECT = 5 | self::IS_REFCOUNTED;
-    const TYPE_VALUE = 6;
+    const TYPE_VALUE = 6 | self::IS_REFCOUNTED;
     const TYPE_HASHTABLE = 7 | self::IS_REFCOUNTED;
 
     const TYPE_MAP = [

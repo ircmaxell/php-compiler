@@ -242,6 +242,7 @@ class Context {
             case 'bool':
             case 'int1':
                 return $value;
+            case 'int8':
             case 'unsigned int':
             case 'long long':
             case 'int32':

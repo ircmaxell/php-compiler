@@ -617,16 +617,6 @@ class String_ extends Type {
     public function initialize(): void {
     }
 
-    private static $constId = 0;
-    public function allocate(
-        \gcc_jit_block_ptr $block,
-        \gcc_jit_lvalue_ptr $dest, 
-        \gcc_jit_rvalue_ptr $length,
-        bool $isConstant = false
-    ): void {
-        die("Not implemented");
-    }
-
     public function init(
         PHPLLVM\Value $dest,
         PHPLLVM\Value $value,
@@ -720,22 +710,6 @@ class String_ extends Type {
             // disable refcount
             $this->context->refcount->disableRefcount($ptr);
         }
-    }
-
-    public function reallocate(
-        \gcc_jit_block_ptr $block,
-        \gcc_jit_lvalue_ptr $original, 
-        \gcc_jit_rvalue_ptr $length
-    ): void {
-        $this->context->helper->assign(
-            $block,
-            $original,
-            $this->context->helper->call(
-                '__string__realloc',
-                $original->asRValue(),
-                $length
-            )
-        );
     }
 
     public function isString(PHPLLVM\Value $value): bool {
