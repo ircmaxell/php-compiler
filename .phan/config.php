@@ -27,7 +27,6 @@ return [
 		'PhanParamTooFew',
 		'PhanUndeclaredConstant',
 		'PhanTypeExpectedObjectPropAccess',
-		'PhanParamTooMany',
 		'PhanUndeclaredTypeParameter',
 		'PhanUndeclaredProperty',
 		'PhanTypeNonVarPassByRef',
