@@ -1,15 +1,7 @@
 <?php
 
-declare(strict_types=1);
-
-/**
- * This file is part of PHP-Compiler, a PHP CFG Compiler for PHP code
- *
- * @copyright 2015 Anthony Ferrara. All rights reserved
- * @license MIT See LICENSE at the root of the project for more info
- */
-
-// Make your changes in /home/ircmaxell/Workspace/PHP-Compiler/PHP-Compiler/script/../lib/JIT/Builtin/MemoryManager.pre instead.
+# This file is generated, changes you make will be lost.
+# Make your changes in /home/driusan/Code/php-compiler/script/../lib/JIT/Builtin/MemoryManager.pre instead.
 
 /*
  * This file is part of PHP-Compiler, a PHP CFG Compiler for PHP code
@@ -17,14 +9,24 @@ declare(strict_types=1);
  * @copyright 2015 Anthony Ferrara. All rights reserved
  * @license MIT See LICENSE at the root of the project for more info
  */
+
 namespace PHPCompiler\JIT\Builtin;
 
 use PHPCompiler\JIT\Builtin;
+use PHPCompiler\JIT\Context;
 
 use PHPLLVM;
 
 abstract class MemoryManager extends Builtin
 {
+    public static function load(Context $context, int $loadtype): self
+    {
+        if ($loadtype === Builtin::LOAD_TYPE_STANDALONE) {
+            return new MemoryManager\Native($context, $loadtype);
+        }
+        return new MemoryManager\PHP($context, $loadtype);
+    }
+
     public function register(): void
     {
         $fntype___cfcd208495d565ef66e7dff9f98764da = $this->context->context->functionType(
