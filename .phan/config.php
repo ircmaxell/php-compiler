@@ -19,7 +19,6 @@ return [
 		'PhanTypeExpectedObjectPropAccessButGotNull',
 		'PhanUnreferencedUseNormal',
 		'PhanTypeMismatchDimFetchNullable',
-		'PhanTypeMismatchReturn',
 		'PhanUndeclaredMethod',
 		'PhanTypeMismatchArgument',
 		'PhanUndeclaredFunction',
