@@ -13,7 +13,6 @@ return [
 		'PhanTypeInvalidBitwiseBinaryOperator',
 		'PhanTypeObjectUnsetDeclaredProperty',
 		'PhanUnreferencedUseNormal',
-		'PhanUndeclaredVariable',
 		'PhanUndeclaredClassMethod',
 		'PhanTypeMismatchProperty',
 		'PhanTypeExpectedObjectPropAccessButGotNull',
