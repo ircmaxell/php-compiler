@@ -199,7 +199,7 @@ final class Variable {
                             $this->context, 
                             $type,
                             self::KIND_VALUE,
-                            $this->context->builder->siToFp($this->value)
+                            $this->context->builder->siToFp($this->value, $this->context->getTypeFromString('double'))
                         );
                     case self::TYPE_NATIVE_BOOL:
                         return new self(
@@ -219,7 +219,7 @@ final class Variable {
                             $this->context, 
                             $type,
                             self::KIND_VALUE,
-                            $this->context->builder->siToFp($this->value)
+                            $this->context->builder->siToFp($this->value, $this->context->getTypeFromString('double'))
                         );
                     case self::TYPE_NATIVE_LONG:
                         return new self(

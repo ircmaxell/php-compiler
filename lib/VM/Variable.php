@@ -515,7 +515,7 @@ restart:
                     $this->float *= -1.0;
                     return;
                 } else {
-                    $this->castFrom(self::NUMERIC($expr));
+                    $this->castFrom(self::NUMERIC, $expr);
                     goto restart;
                 }
                 break;

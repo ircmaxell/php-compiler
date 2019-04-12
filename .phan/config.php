@@ -22,7 +22,6 @@ return [
 		'PhanTypeMismatchArgument',
 		'PhanUndeclaredFunction',
 		'PhanUndeclaredStaticMethod',
-		'PhanParamTooFew',
 		'PhanUndeclaredConstant',
 		'PhanTypeExpectedObjectPropAccess',
 		'PhanUndeclaredTypeParameter',
