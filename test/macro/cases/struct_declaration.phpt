@@ -6,12 +6,12 @@ Test struct declarations
 declare {
     struct foo {
         int64 $bar;
-    };
+    }
 
     struct bar {
         foo $foo;
         foo* $foo_ptr;
-    };
+    }
 }
 
 

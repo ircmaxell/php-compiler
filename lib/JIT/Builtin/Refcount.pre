@@ -36,10 +36,10 @@ class Refcount extends Builtin {
             struct __ref__ {
                 int32 $refcount;
                 int32 $typeinfo;
-            };
+            }
             struct __ref__virtual {
                 __ref__ $ref;
-            };
+            }
             static inline function __ref__init(int32, __ref__virtual*): void;
             static inline function __ref__addref(__ref__virtual*): void;
             static inline function __ref__delref(__ref__virtual*): void;

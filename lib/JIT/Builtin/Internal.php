@@ -9,7 +9,7 @@ declare(strict_types=1);
  * @license MIT See LICENSE at the root of the project for more info
  */
 
-// Make your changes in /home/ircmaxell/Workspace/PHP-Compiler/PHP-Compiler/script/../lib/JIT/Builtin/Internal.pre instead.
+// Make your changes in /compiler/script/../lib/JIT/Builtin/Internal.pre instead.
 
 /*
  * This file is part of PHP-Compiler, a PHP CFG Compiler for PHP code

@@ -1,7 +1,7 @@
 <?php
 
 # This file is generated, changes you make will be lost.
-# Make your changes in /home/ircmaxell/Workspace/PHP-Compiler/PHP-Compiler/script/../lib/JIT/Builtin/Type/String_.pre instead.
+# Make your changes in /compiler/script/../lib/JIT/Builtin/Type/String_.pre instead.
 
 /*
  * This file is part of PHP-Compiler, a PHP CFG Compiler for PHP code
@@ -262,6 +262,9 @@ class String_ extends Type {
                                     $ref = $this->context->builder->intToPtr($__value, $__type);
                                     break;
                                 case PHPLLVM\Type::KIND_ARRAY:
+                                    $__tmp = $this->context->builder->bitCast($__value, $this->context->context->int64Type());
+                                    $ref = $this->context->builder->intToPtr($__tmp, $__type);
+                                    break;
                                 case PHPLLVM\Type::KIND_POINTER:
                                     $ref = $this->context->builder->pointerCast($__value, $__type);
                                     break;
@@ -337,6 +340,9 @@ class String_ extends Type {
                                     $typeinfo = $this->context->builder->intToPtr($__value, $__type);
                                     break;
                                 case PHPLLVM\Type::KIND_ARRAY:
+                                    $__tmp = $this->context->builder->bitCast($__value, $this->context->context->int64Type());
+                                    $typeinfo = $this->context->builder->intToPtr($__tmp, $__type);
+                                    break;
                                 case PHPLLVM\Type::KIND_POINTER:
                                     $typeinfo = $this->context->builder->pointerCast($__value, $__type);
                                     break;
@@ -450,6 +456,9 @@ class String_ extends Type {
                                     $refVirtual = $this->context->builder->intToPtr($__value, $__type);
                                     break;
                                 case PHPLLVM\Type::KIND_ARRAY:
+                                    $__tmp = $this->context->builder->bitCast($__value, $this->context->context->int64Type());
+                                    $refVirtual = $this->context->builder->intToPtr($__tmp, $__type);
+                                    break;
                                 case PHPLLVM\Type::KIND_POINTER:
                                     $refVirtual = $this->context->builder->pointerCast($__value, $__type);
                                     break;
@@ -688,6 +697,9 @@ class String_ extends Type {
                                     $value = $this->context->builder->intToPtr($__value, $__type);
                                     break;
                                 case PHPLLVM\Type::KIND_ARRAY:
+                                    $__tmp = $this->context->builder->bitCast($__value, $this->context->context->int64Type());
+                                    $value = $this->context->builder->intToPtr($__tmp, $__type);
+                                    break;
                                 case PHPLLVM\Type::KIND_POINTER:
                                     $value = $this->context->builder->pointerCast($__value, $__type);
                                     break;

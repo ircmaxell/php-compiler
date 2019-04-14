@@ -1,7 +1,7 @@
 <?php
 
 # This file is generated, changes you make will be lost.
-# Make your changes in /home/ircmaxell/Workspace/PHP-Compiler/PHP-Compiler/script/../lib/JIT/Builtin/Refcount.pre instead.
+# Make your changes in /compiler/script/../lib/JIT/Builtin/Refcount.pre instead.
 
 /*
  * This file is part of PHP-Compiler, a PHP CFG Compiler for PHP code
@@ -302,6 +302,9 @@ class Refcount extends Builtin {
                                     $refMask = $this->context->builder->intToPtr($__value, $__type);
                                     break;
                                 case PHPLLVM\Type::KIND_ARRAY:
+                                    $__tmp = $this->context->builder->bitCast($__value, $this->context->context->int64Type());
+                                    $refMask = $this->context->builder->intToPtr($__tmp, $__type);
+                                    break;
                                 case PHPLLVM\Type::KIND_POINTER:
                                     $refMask = $this->context->builder->pointerCast($__value, $__type);
                                     break;
@@ -441,6 +444,9 @@ class Refcount extends Builtin {
                                     $refMask = $this->context->builder->intToPtr($__value, $__type);
                                     break;
                                 case PHPLLVM\Type::KIND_ARRAY:
+                                    $__tmp = $this->context->builder->bitCast($__value, $this->context->context->int64Type());
+                                    $refMask = $this->context->builder->intToPtr($__tmp, $__type);
+                                    break;
                                 case PHPLLVM\Type::KIND_POINTER:
                                     $refMask = $this->context->builder->pointerCast($__value, $__type);
                                     break;
@@ -624,6 +630,9 @@ class Refcount extends Builtin {
                                     $refMask = $this->context->builder->intToPtr($__value, $__type);
                                     break;
                                 case PHPLLVM\Type::KIND_ARRAY:
+                                    $__tmp = $this->context->builder->bitCast($__value, $this->context->context->int64Type());
+                                    $refMask = $this->context->builder->intToPtr($__tmp, $__type);
+                                    break;
                                 case PHPLLVM\Type::KIND_POINTER:
                                     $refMask = $this->context->builder->pointerCast($__value, $__type);
                                     break;
@@ -791,6 +800,9 @@ class Refcount extends Builtin {
                                     $typeMask = $this->context->builder->intToPtr($__value, $__type);
                                     break;
                                 case PHPLLVM\Type::KIND_ARRAY:
+                                    $__tmp = $this->context->builder->bitCast($__value, $this->context->context->int64Type());
+                                    $typeMask = $this->context->builder->intToPtr($__tmp, $__type);
+                                    break;
                                 case PHPLLVM\Type::KIND_POINTER:
                                     $typeMask = $this->context->builder->pointerCast($__value, $__type);
                                     break;
@@ -872,6 +884,9 @@ class Refcount extends Builtin {
                                     $stringType = $this->context->builder->intToPtr($__value, $__type);
                                     break;
                                 case PHPLLVM\Type::KIND_ARRAY:
+                                    $__tmp = $this->context->builder->bitCast($__value, $this->context->context->int64Type());
+                                    $stringType = $this->context->builder->intToPtr($__tmp, $__type);
+                                    break;
                                 case PHPLLVM\Type::KIND_POINTER:
                                     $stringType = $this->context->builder->pointerCast($__value, $__type);
                                     break;
@@ -986,6 +1001,9 @@ class Refcount extends Builtin {
                                     $string = $this->context->builder->intToPtr($__value, $__type);
                                     break;
                                 case PHPLLVM\Type::KIND_ARRAY:
+                                    $__tmp = $this->context->builder->bitCast($__value, $this->context->context->int64Type());
+                                    $string = $this->context->builder->intToPtr($__tmp, $__type);
+                                    break;
                                 case PHPLLVM\Type::KIND_POINTER:
                                     $string = $this->context->builder->pointerCast($__value, $__type);
                                     break;
@@ -1066,6 +1084,9 @@ class Refcount extends Builtin {
                                     $result = $this->context->builder->intToPtr($__value, $__type);
                                     break;
                                 case PHPLLVM\Type::KIND_ARRAY:
+                                    $__tmp = $this->context->builder->bitCast($__value, $this->context->context->int64Type());
+                                    $result = $this->context->builder->intToPtr($__tmp, $__type);
+                                    break;
                                 case PHPLLVM\Type::KIND_POINTER:
                                     $result = $this->context->builder->pointerCast($__value, $__type);
                                     break;
@@ -1154,6 +1175,9 @@ class Refcount extends Builtin {
                                     $virtual = $this->context->builder->intToPtr($__value, $__type);
                                     break;
                                 case PHPLLVM\Type::KIND_ARRAY:
+                                    $__tmp = $this->context->builder->bitCast($__value, $this->context->context->int64Type());
+                                    $virtual = $this->context->builder->intToPtr($__tmp, $__type);
+                                    break;
                                 case PHPLLVM\Type::KIND_POINTER:
                                     $virtual = $this->context->builder->pointerCast($__value, $__type);
                                     break;
@@ -1235,6 +1259,9 @@ class Refcount extends Builtin {
                                     $notRefc = $this->context->builder->intToPtr($__value, $__type);
                                     break;
                                 case PHPLLVM\Type::KIND_ARRAY:
+                                    $__tmp = $this->context->builder->bitCast($__value, $this->context->context->int64Type());
+                                    $notRefc = $this->context->builder->intToPtr($__tmp, $__type);
+                                    break;
                                 case PHPLLVM\Type::KIND_POINTER:
                                     $notRefc = $this->context->builder->pointerCast($__value, $__type);
                                     break;
@@ -1326,6 +1353,9 @@ class Refcount extends Builtin {
                                     $typeinfo = $this->context->builder->intToPtr($__value, $__type);
                                     break;
                                 case PHPLLVM\Type::KIND_ARRAY:
+                                    $__tmp = $this->context->builder->bitCast($__value, $this->context->context->int64Type());
+                                    $typeinfo = $this->context->builder->intToPtr($__tmp, $__type);
+                                    break;
                                 case PHPLLVM\Type::KIND_POINTER:
                                     $typeinfo = $this->context->builder->pointerCast($__value, $__type);
                                     break;
@@ -1411,6 +1441,9 @@ class Refcount extends Builtin {
                                     $virtual = $this->context->builder->intToPtr($__value, $__type);
                                     break;
                                 case PHPLLVM\Type::KIND_ARRAY:
+                                    $__tmp = $this->context->builder->bitCast($__value, $this->context->context->int64Type());
+                                    $virtual = $this->context->builder->intToPtr($__tmp, $__type);
+                                    break;
                                 case PHPLLVM\Type::KIND_POINTER:
                                     $virtual = $this->context->builder->pointerCast($__value, $__type);
                                     break;
@@ -1495,6 +1528,9 @@ class Refcount extends Builtin {
                                     $virtual = $this->context->builder->intToPtr($__value, $__type);
                                     break;
                                 case PHPLLVM\Type::KIND_ARRAY:
+                                    $__tmp = $this->context->builder->bitCast($__value, $this->context->context->int64Type());
+                                    $virtual = $this->context->builder->intToPtr($__tmp, $__type);
+                                    break;
                                 case PHPLLVM\Type::KIND_POINTER:
                                     $virtual = $this->context->builder->pointerCast($__value, $__type);
                                     break;
@@ -1579,6 +1615,9 @@ class Refcount extends Builtin {
                                     $virtual = $this->context->builder->intToPtr($__value, $__type);
                                     break;
                                 case PHPLLVM\Type::KIND_ARRAY:
+                                    $__tmp = $this->context->builder->bitCast($__value, $this->context->context->int64Type());
+                                    $virtual = $this->context->builder->intToPtr($__tmp, $__type);
+                                    break;
                                 case PHPLLVM\Type::KIND_POINTER:
                                     $virtual = $this->context->builder->pointerCast($__value, $__type);
                                     break;

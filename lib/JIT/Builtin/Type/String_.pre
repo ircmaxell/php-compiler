@@ -24,7 +24,7 @@ class String_ extends Type {
                 __ref__ $ref;
                 int64 $length;
                 int8 $value;
-            };
+            }
             static inline function __string__strlen(__string__*): int64;
             static inline function __string__alloc(int64): __string__*;
             static inline function __string__realloc(__string__**, int64): void;

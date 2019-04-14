@@ -41,8 +41,7 @@ $(macro) {
                 repeat(
                     chain(ctype() as field_type, T_VARIABLE as field_name, token(';'))
                 ) as fields,
-                token('}'),
-                token(';')
+                token('}')
             ) as struct
         )) as decls)
     }
@@ -290,6 +289,9 @@ $(macro :unsafe :recursive) {
                                     $(result) = $this->context->builder->intToPtr($__value, $__type);
                                     break;
                                 case PHPLLVM\Type::KIND_ARRAY:
+                                    $__tmp = $this->context->builder->bitCast($__value, $this->context->context->int64Type());
+                                    $(result) = $this->context->builder->intToPtr($__tmp, $__type);
+                                    break;
                                 case PHPLLVM\Type::KIND_POINTER:
                                     $(result) = $this->context->builder->pointerCast($__value, $__type);
                                     break;

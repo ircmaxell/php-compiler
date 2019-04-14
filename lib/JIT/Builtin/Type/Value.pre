@@ -20,12 +20,14 @@ class Value extends Type {
     public function register(): void {
         declare {
             struct __value__ {
-                __ref__ $ref;
                 int8 $type;
                 // NOTE: 8 bytes because that covers all needed types
                 int8[8] $value;
-            };
-            static inline function __value__alloc(): __value__*;
+            }
+            struct __value__value {
+                __ref__ $ref;
+                __value__ $value;
+            }
             static inline function __value__valueDelref(__value__*): void;
             static inline function __value__toNumeric(__value__*): __value__*;
 
@@ -41,28 +43,15 @@ class Value extends Type {
     }
 
     public function implement(): void {
-        $this->implementValueAlloc();
-        $this->implementValueToNumeric();
-        $this->implementValueReadLong();
-        $this->implementValueWriteLong();
-        $this->implementValueReadDouble();
-        $this->implementValueWriteDouble();
-        $this->implementValueDelref();
+        // $this->implementValueToNumeric();
+        // $this->implementValueReadLong();
+        // $this->implementValueWriteLong();
+        // $this->implementValueReadDouble();
+        // $this->implementValueWriteDouble();
+        // $this->implementValueDelref();
     }
 
     public function initialize(): void {
-    }
-
-    protected function implementValueAlloc(): void {
-        compile {
-            function __value__alloc() {
-                $var = malloc __value__;
-                $ref = (__ref__virtual*) $var;
-                $typeinfo = (int32) Refcount::TYPE_INFO_TYPE_VALUE | Refcount::TYPE_INFO_REFCOUNTED;
-                __ref__init($typeinfo, $ref);
-                return $var;
-            }
-        }
     }
 
     protected function implementValueDelref(): void {
@@ -97,13 +86,19 @@ class Value extends Type {
                         return $value;
                     }
                     case Variable::TYPE_VALUE {
-                        $var = &$value->value;
-                        $ptr = (__value__*) $var;
-                        $result = __value__toNumeric($ptr);
+                        $var = $value->value;
+                        $ptr = (__value__value*) $var;
+                        $num = &$ptr->value;
+                        $result = __value__toNumeric($num);
+                        $test = $result == $num;
+                        if ($test) {
+                            $virtual = (__ref__virtual*) $var;
+                            __ref__addref($virtual);
+                        }
                         return $result;
                     }
                 }
-                $var = __value__alloc();
+                $var = alloca __value__;
                 $tmp = (int64) 0;
                 __value__writeLong($var, $tmp);
                 return $var;
@@ -132,9 +127,10 @@ class Value extends Type {
                         return $return;
                     }
                     case Variable::TYPE_VALUE {
-                        $var = &$value->value;
-                        $ptr = (__value__*) $var;
-                        $result = __value__readLong($ptr);
+                        $var = $value->value;
+                        $ptr = (__value__value*) $var;
+                        $varPtr = &$var->value;
+                        $result = __value__readLong($varPtr);
                         return $result;
                     }
                 }
@@ -180,9 +176,10 @@ class Value extends Type {
                         return $result;
                     }
                     case Variable::TYPE_VALUE {
-                        $var = &$value->value;
-                        $ptr = (__value__*) $var;
-                        $result = __value__readDouble($ptr);
+                        $var = $value->value;
+                        $ptr = (__value__value*) $var;
+                        $varPtr = &$ptr->value;
+                        $result = __value__readDouble($varPtr);
                         return $result;
                     }
                 }
@@ -219,8 +216,9 @@ class Value extends Type {
                     }
                     case Variable::TYPE_VALUE {
                         $var = &$value->value;
-                        $ptr = (__value__*) $var;
-                        $result = __value__readString($ptr);
+                        $ptr = (__value__value*) $var;
+                        $varPtr = $var->value;
+                        $result = __value__readString($varPtr);
                         return $result;
                     }
                     // Todo: handle other types

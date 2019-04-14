@@ -12,8 +12,9 @@ declare(strict_types=1);
 const ITERATIONS = 5;
 
 $runtimes = [];
+
 foreach ($_ENV as $key => $value) {
-    if (substr($key, 0, 4) === 'PHP_') {
+    if (substr($key, 0, 4) === 'PHP_' && is_executable($value)) {
         $runtimes[str_replace('_', '.', substr($key, 4))] = $value;
     }
 }

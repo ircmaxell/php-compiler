@@ -13,14 +13,36 @@ Install PHP 7.4, being sure to enable the FFI extension, OpenSSL extension, mbst
 Also, you need to install the system dependency `llvm-4.0`. On Ubuntu:
 
 ```console
-me@local:~$ sudo apt-get install llvm-4.0-dev
+me@local:~$ sudo apt-get install llvm-4.0-dev clang-4.0
 ```
 
 Then run `composer install`.
 
-## Building
+## Using docker
 
-To use any of the build tools (dev work), you'll need to copy the `.env.dist` to `.env` and set at least `PHP` to be a PHP-7.4 executable. To support benchmarks, you need both `PHP`, and `PHP_7_4` set to the same executable, and you can add any versions you want to compare to.
+This project comes with one working and one non-working (yet) Dockerfile. The makefile uses a reasonably old version of Ubuntu (16.04), and once FFIMe is fixed for newer versions of glibc, it will switch to use 18.04 (or newer).
+
+To build, use make:
+
+```console
+me@local:~$ make build
+```
+
+This will take a while (upwards of 10 minutes likely). It will install an Ubuntu container with a custom compile of PHP-7.4 and everything you need to get up and running. It will also composer install all dependencies as well as run the pre-processor. Once it's done, you can run tests:
+
+```console
+me@local:~$ make test
+```
+
+This will execute all unit tests inside the container.
+
+To run your own code or play with the compiler, you can open a shell using `make shell`:
+
+```console
+me@local:~$ make shell
+root@662c59ae4527:/compiler# php bin/jit.php -r 'echo "Hello World\n";'
+Hello World
+```
 
 # Running Code
 
