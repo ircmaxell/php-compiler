@@ -79,7 +79,7 @@ class Block {
         }
     }
 
-    public function findSlot(Operand $op, Frame $frame): Variable {
+    public function findSlot(Operand $op, Frame $frame): ?Variable {
         if (!$this->scope->contains($op)) {
             // check PHI vars
             if (!is_null($frame->parent)) {

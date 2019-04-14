@@ -63,6 +63,9 @@ class Result {
             FFI::addr($code),
             FFI::sizeof($cb)
         );
+
+	// Phan isn't smart enough to realize that $cb is an address of a callable.
+	//@phan-suppress-next-line PhanTypeMismatchReturn
         return $cb;
     }
 }

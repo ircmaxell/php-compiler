@@ -110,15 +110,15 @@ final class HashTable {
     }
 
     public function addIndex(int $index, Variable $data): ?Variable {
-        return $this->addOrUpdate($hash, null, $data, self::ADD);
+        return $this->addOrUpdate($index, null, $data, self::ADD);
     }
 
     public function addNewIndex(int $index, Variable $data): ?Variable {
-        return $this->addOrUpdate($hash, null, $data, self::ADD | self::ADD_NEW);
+        return $this->addOrUpdate($index, null, $data, self::ADD | self::ADD_NEW);
     }
 
     public function updateIndex(int $index, Variable $data): ?Variable {
-        return $this->addOrUpdate($hash, null, $data, self::UPDATE);
+        return $this->addOrUpdate($index, null, $data, self::UPDATE);
     }
 
     public function updateIndirectIndex(int $index, Variable $data): ?Variable {
