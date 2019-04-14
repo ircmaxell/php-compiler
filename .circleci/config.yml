@@ -1,0 +1,10 @@
+version: 2
+
+jobs:
+        build:
+                machine: true
+                steps:
+                        - checkout
+                        - run: make docker-build
+                        - run: make build
+                        - run: make test
