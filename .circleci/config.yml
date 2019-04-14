@@ -7,4 +7,5 @@ jobs:
                         - checkout
                         - run: make docker-build
                         - run: make build
+                        - run: make phan
                         - run: make test
