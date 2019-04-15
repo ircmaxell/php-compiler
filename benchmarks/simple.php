@@ -13,21 +13,21 @@ function simple(): void
 {
     $a = 0;
     for ($i = 0; $i < 1000000; ++$i) {
-        $a++;
+        ++$a;
     }
     $thisisanotherlongname = 0;
     for ($thisisalongname = 0; $thisisalongname < 1000000; ++$thisisalongname) {
-        $thisisanotherlongname++;
+        ++$thisisanotherlongname;
     }
 }
-/**/
+
 function simplecall(): void
 {
     for ($i = 0; $i < 1000000; ++$i) {
         strlen('hallo');
     }
 }
-/**/
+
 function hallo(string $a): void
 {
 }
@@ -37,7 +37,7 @@ function simpleucall(): void
         hallo('hallo');
     }
 }
-/**/
+
 function simpleudcall(): void
 {
     for ($i = 0; $i < 1000000; ++$i) {

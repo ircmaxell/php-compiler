@@ -54,12 +54,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/ircmaxell/php-llvm.git",
-                "reference": "1fb9b63f3a01a6d460c74be0485297a7ad7fc3e5"
+                "reference": "7c14fe931537fdcb1d8ddf99b773ff8676ad72b0"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/ircmaxell/php-llvm/zipball/1fb9b63f3a01a6d460c74be0485297a7ad7fc3e5",
-                "reference": "1fb9b63f3a01a6d460c74be0485297a7ad7fc3e5",
+                "url": "https://api.github.com/repos/ircmaxell/php-llvm/zipball/7c14fe931537fdcb1d8ddf99b773ff8676ad72b0",
+                "reference": "7c14fe931537fdcb1d8ddf99b773ff8676ad72b0",
                 "shasum": ""
             },
             "require": {
@@ -74,10 +74,7 @@
             "autoload": {
                 "psr-4": {
                     "PHPLLVM\\": "lib/"
-                },
-                "files": [
-                    "ffi/llvm4.php"
-                ]
+                }
             },
             "notification-url": "https://packagist.org/downloads/",
             "license": [
@@ -90,7 +87,7 @@
                 }
             ],
             "description": "A lightweight abstraction around LLVM-C",
-            "time": "2019-04-11T00:18:51+00:00"
+            "time": "2019-04-15T02:24:04+00:00"
         },
         {
             "name": "ircmaxell/php-optimizer",
@@ -275,20 +272,19 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/composer/semver.git",
-                "reference": "881d02ba9b552e6dc19a90b2a470663ea93dd0e8"
+                "reference": "37e4db276f38376a63ea67e96b09571d74312779"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/composer/semver/zipball/881d02ba9b552e6dc19a90b2a470663ea93dd0e8",
-                "reference": "881d02ba9b552e6dc19a90b2a470663ea93dd0e8",
+                "url": "https://api.github.com/repos/composer/semver/zipball/37e4db276f38376a63ea67e96b09571d74312779",
+                "reference": "37e4db276f38376a63ea67e96b09571d74312779",
                 "shasum": ""
             },
             "require": {
                 "php": "^5.3.2 || ^7.0"
             },
             "require-dev": {
-                "phpunit/phpunit": "^4.5 || ^5.0.5",
-                "phpunit/phpunit-mock-objects": "2.3.0 || ^3.0"
+                "phpunit/phpunit": "^4.5 || ^5.0.5"
             },
             "type": "library",
             "extra": {
@@ -329,7 +325,7 @@
                 "validation",
                 "versioning"
             ],
-            "time": "2019-04-05T13:28:08+00:00"
+            "time": "2019-04-14T09:35:30+00:00"
         },
         {
             "name": "composer/xdebug-handler",
@@ -606,12 +602,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/FriendsOfPHP/PHP-CS-Fixer.git",
-                "reference": "6226e98fbf1a984e37c5474528cc172ef502acf4"
+                "reference": "e9d66a580baf74a19c72b0457db5329a193f313c"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/FriendsOfPHP/PHP-CS-Fixer/zipball/6226e98fbf1a984e37c5474528cc172ef502acf4",
-                "reference": "6226e98fbf1a984e37c5474528cc172ef502acf4",
+                "url": "https://api.github.com/repos/FriendsOfPHP/PHP-CS-Fixer/zipball/e9d66a580baf74a19c72b0457db5329a193f313c",
+                "reference": "e9d66a580baf74a19c72b0457db5329a193f313c",
                 "shasum": ""
             },
             "require": {
@@ -639,10 +635,10 @@
                 "mikey179/vfsstream": "^1.6",
                 "php-coveralls/php-coveralls": "^2.1",
                 "php-cs-fixer/accessible-object": "^1.0",
-                "php-cs-fixer/phpunit-constraint-isidenticalstring": "^1.0.1",
-                "php-cs-fixer/phpunit-constraint-xmlmatchesxsd": "^1.0.1",
+                "php-cs-fixer/phpunit-constraint-isidenticalstring": "^1.1",
+                "php-cs-fixer/phpunit-constraint-xmlmatchesxsd": "^1.1",
                 "phpunit/phpunit": "^5.7.27 || ^6.5.8 || ^7.1",
-                "phpunitgoodpractices/traits": "^1.5.1",
+                "phpunitgoodpractices/traits": "^1.8",
                 "symfony/phpunit-bridge": "^4.0"
             },
             "suggest": {
@@ -691,7 +687,7 @@
                 }
             ],
             "description": "A tool to automatically fix PHP code style",
-            "time": "2019-04-10T06:26:40+00:00"
+            "time": "2019-04-15T09:15:25+00:00"
         },
         {
             "name": "microsoft/tolerant-php-parser",
@@ -872,12 +868,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/phan/phan.git",
-                "reference": "acb54d0c8b081e28be83803e3b831aa75d9b882c"
+                "reference": "31b47302e73dcfeb0c502a13aef515fb4715d403"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phan/phan/zipball/acb54d0c8b081e28be83803e3b831aa75d9b882c",
-                "reference": "acb54d0c8b081e28be83803e3b831aa75d9b882c",
+                "url": "https://api.github.com/repos/phan/phan/zipball/31b47302e73dcfeb0c502a13aef515fb4715d403",
+                "reference": "31b47302e73dcfeb0c502a13aef515fb4715d403",
                 "shasum": ""
             },
             "require": {
@@ -889,7 +885,8 @@
                 "microsoft/tolerant-php-parser": "0.0.17",
                 "php": "^7.0.0",
                 "sabre/event": "^5.0",
-                "symfony/console": "^2.3|^3.0|~4.0"
+                "symfony/console": "^2.3|^3.0|~4.0",
+                "symfony/polyfill-mbstring": "^1.11.0"
             },
             "require-dev": {
                 "brianium/paratest": "^1.1",
@@ -932,7 +929,7 @@
                 "php",
                 "static"
             ],
-            "time": "2019-04-09T23:20:10+00:00"
+            "time": "2019-04-13T15:19:21+00:00"
         },
         {
             "name": "phar-io/manifest",
@@ -1560,12 +1557,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/sebastianbergmann/phpunit.git",
-                "reference": "893a342763f454e029579b6a5175cd8c4a408168"
+                "reference": "7602ff48472ed4f4a0d37348e37e39ade3fee5cf"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sebastianbergmann/phpunit/zipball/893a342763f454e029579b6a5175cd8c4a408168",
-                "reference": "893a342763f454e029579b6a5175cd8c4a408168",
+                "url": "https://api.github.com/repos/sebastianbergmann/phpunit/zipball/7602ff48472ed4f4a0d37348e37e39ade3fee5cf",
+                "reference": "7602ff48472ed4f4a0d37348e37e39ade3fee5cf",
                 "shasum": ""
             },
             "require": {
@@ -1634,7 +1631,7 @@
                 "testing",
                 "xunit"
             ],
-            "time": "2019-04-08T16:09:04+00:00"
+            "time": "2019-04-15T07:12:41+00:00"
         },
         {
             "name": "pre/plugin",
