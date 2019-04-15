@@ -289,9 +289,9 @@ $(macro :unsafe :recursive) {
                                     $(result) = $this->context->builder->intToPtr($__value, $__type);
                                     break;
                                 case PHPLLVM\Type::KIND_ARRAY:
-                                    $__tmp = $this->context->builder->bitCast($__value, $this->context->context->int64Type());
-                                    $(result) = $this->context->builder->intToPtr($__tmp, $__type);
-                                    break;
+                                    // $__tmp = $this->context->builder->($__value, $this->context->context->int64Type());
+                                    // $(result) = $this->context->builder->intToPtr($__tmp, $__type);
+                                    // break;
                                 case PHPLLVM\Type::KIND_POINTER:
                                     $(result) = $this->context->builder->pointerCast($__value, $__type);
                                     break;

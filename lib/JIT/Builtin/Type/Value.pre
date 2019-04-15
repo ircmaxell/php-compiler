@@ -43,12 +43,12 @@ class Value extends Type {
     }
 
     public function implement(): void {
-        // $this->implementValueToNumeric();
-        // $this->implementValueReadLong();
-        // $this->implementValueWriteLong();
-        // $this->implementValueReadDouble();
-        // $this->implementValueWriteDouble();
-        // $this->implementValueDelref();
+        $this->implementValueToNumeric();
+        $this->implementValueReadLong();
+        $this->implementValueWriteLong();
+        $this->implementValueReadDouble();
+        $this->implementValueWriteDouble();
+        $this->implementValueDelref();
     }
 
     public function initialize(): void {
@@ -86,7 +86,7 @@ class Value extends Type {
                         return $value;
                     }
                     case Variable::TYPE_VALUE {
-                        $var = $value->value;
+                        $var = &$value->value;
                         $ptr = (__value__value*) $var;
                         $num = &$ptr->value;
                         $result = __value__toNumeric($num);
@@ -127,9 +127,9 @@ class Value extends Type {
                         return $return;
                     }
                     case Variable::TYPE_VALUE {
-                        $var = $value->value;
+                        $var = &$value->value;
                         $ptr = (__value__value*) $var;
-                        $varPtr = &$var->value;
+                        $varPtr = &$ptr->value;
                         $result = __value__readLong($varPtr);
                         return $result;
                     }
@@ -176,7 +176,7 @@ class Value extends Type {
                         return $result;
                     }
                     case Variable::TYPE_VALUE {
-                        $var = $value->value;
+                        $var = &$value->value;
                         $ptr = (__value__value*) $var;
                         $varPtr = &$ptr->value;
                         $result = __value__readDouble($varPtr);

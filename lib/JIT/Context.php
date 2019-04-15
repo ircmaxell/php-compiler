@@ -266,11 +266,6 @@ class Context {
     }
 
     public function getStringFromType(PHPLLVM\Type $type): string {
-        foreach ($this->typeMap as $name => $ptr) {
-            if ($type->toString() === $ptr->toString()) {
-                return $name;
-            }
-        }
         // else, try to figure it out:
         switch ($type->getKind()) {
             case PHPLLVM\Type::KIND_DOUBLE:
@@ -279,6 +274,11 @@ class Context {
                 return 'int' . $this->llvm->lib->LLVMGetIntTypeWidth($type->type);
             case PHPLLVM\Type::KIND_POINTER:
                 return $this->getStringFromType($type->getElementType()) . '*';
+        }
+        foreach ($this->typeMap as $name => $ptr) {
+            if ($type->toString() === $ptr->toString()) {
+                return $name;
+            }
         }
         var_dump($type->getKind());
         return 'unknown';

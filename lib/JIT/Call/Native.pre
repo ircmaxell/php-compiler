@@ -1,8 +1,5 @@
 <?php
 
-# This file is generated, changes you make will be lost.
-# Make your changes in /compiler/lib/JIT/Call/Native.pre instead.
-
 /*
  * This file is part of PHP-Compiler, a PHP CFG Compiler for PHP code
  *
@@ -51,12 +48,9 @@ class Native implements Call {
                     case Variable::TYPE_STRING:
                         return $value;
                     case Variable::TYPE_VALUE:
-                        $str = $this->context->builder->call(
-                        $this->context->lookupFunction('__value__readString') , 
-                        $value
-                        
-                    );
-    
+                        compile {
+                            $str = __value__readString($value);
+                        }
                         return $str;
                 }
                 break;
@@ -71,17 +65,30 @@ class Native implements Call {
                     case Variable::TYPE_NATIVE_LONG:
                         return $value;
                     case Variable::TYPE_VALUE:
-                        $int = $this->context->builder->call(
-                        $this->context->lookupFunction('__value__readLong') , 
-                        $value
-                        
-                    );
-    
+                        compile {
+                            $int = __value__readLong($value);
+                        }
                         return $int;
                 }
+                break;
+            case 'double':
+                switch ($arg->type) {
+                    case Variable::TYPE_NATIVE_DOUBLE:
+                        return $value;
+                    case Variable::TYPE_NATIVE_LONG:
+                        compile {
+                            $double = (double) $value;
+                        }
+                        return $double;
+                    case Variable::TYPE_VALUE:
+                        compile {
+                            $double = __value__readDouble($value);
+                        }
+                        return $double;
+                }
+                break;
         }
-        throw new \LogicException("Unsupported cast for arg type $typeName from {$arg->type}");
-        return $context->helper->loadValue($arg);
+        throw new \LogicException("Unsupported cast for arg type $typeName from " . Variable::getStringType($arg->type));
     }
 
 }

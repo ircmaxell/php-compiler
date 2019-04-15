@@ -1,7 +1,7 @@
 <?php
 
 # This file is generated, changes you make will be lost.
-# Make your changes in /compiler/script/../lib/JIT.pre instead.
+# Make your changes in /compiler/lib/JIT.pre instead.
 
 /*
  * This file is part of PHP-Compiler, a PHP CFG Compiler for PHP code
@@ -127,11 +127,13 @@ class JIT {
             $returnType = $this->context->getTypeFromString('void');
         }
 
+        $isVarArgs = false;
+
         $func = $this->context->module->addFunction(
             $internalName,
             $this->context->context->functionType(
                 $returnType,
-                false,
+                $isVarArgs,
                 ...$args
             )
         );
@@ -141,7 +143,13 @@ class JIT {
         }
 
         if (!is_null($funcName)) {
-            $this->context->functions[strtolower($funcName)] = $func;
+            $lcname = strtolower($funcName);
+            $this->context->functions[$lcname] = $func;
+            if ($isVarArgs) {
+                $this->context->functionProxies[$lcname] = new JIT\Call\Vararg($func, $funcName, $args, count($args));
+            } else {
+                $this->context->functionProxies[$lcname] = new JIT\Call\Native($func, $funcName, $args);
+            }
         }
 
         $this->queue[] = [$func, $block, $argVars];
@@ -435,12 +443,7 @@ class JIT {
                         throw new \LogicException("Variable function calls not yet supported");
                     }
                     $lcname = strtolower($nameOp->value);
-                    if (isset($this->context->functions[$lcname])) {
-                        $this->context->scope->toCall = new JIT\Call\Native(
-                            $this->context->functions[$lcname],
-                            $nameOp->value
-                        );
-                    } elseif (isset($this->context->functionProxies[$lcname])) {
+                    if (isset($this->context->functionProxies[$lcname])) {
                         $this->context->scope->toCall = $this->context->functionProxies[$lcname];
                     } else {
                         throw new \RuntimeException("Call to undefined function $lcname");
