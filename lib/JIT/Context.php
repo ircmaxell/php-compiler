@@ -262,7 +262,7 @@ class Context {
         if (isset($map[$type->type])) {
             return $this->getTypeFromString($map[$type->type]);
         }
-        throw new \LogicException("Unsupported Type::TYPE: " . $type->toString());
+        return $this->getTypeFromString('__value__');
     }
 
     public function getStringFromType(PHPLLVM\Type $type): string {

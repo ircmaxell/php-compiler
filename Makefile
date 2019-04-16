@@ -6,7 +6,7 @@ composer-install:
 
 .PHONY: shell
 shell:
-	docker run -it -v $(shell pwd):/compiler php-compiler-16-04 /bin/bash
+	docker run -it --cap-add=SYS_PTRACE --security-opt seccomp=unconfined -v $(shell pwd):/compiler php-compiler-16-04 /bin/bash
 
 .PHONY: docker-build
 docker-build:
@@ -17,15 +17,7 @@ benchmark: rebuild-changed
 	docker run -v $(shell pwd):/compiler php-compiler-16-04 php script/bench.php
 
 .PHONY: build
-build: docker-build composer-install rebuild fix test rebuild-examples
-
-.PHONY: phan
-phan:
-	docker run -v $(shell pwd):/compiler php-compiler-16-04 php vendor/bin/phan
-
-.PHONY: test
-test: rebuild-changed
-	docker run -v $(shell pwd):/compiler php-compiler-16-04 php vendor/bin/phpunit
+build: docker-build composer-install rebuild rebuild-examples
 
 .PHONY: rebuild
 rebuild:
@@ -43,3 +35,10 @@ rebuild-examples:
 fix:
 	docker run -v $(shell pwd):/compiler php-compiler-16-04 php vendor/bin/php-cs-fixer fix --allow-risky=yes
 
+.PHONY: phan
+phan:
+	docker run -v $(shell pwd):/compiler php-compiler-16-04 php vendor/bin/phan
+
+.PHONY: test
+test: rebuild-changed
+	docker run -v $(shell pwd):/compiler php-compiler-16-04 php vendor/bin/phpunit

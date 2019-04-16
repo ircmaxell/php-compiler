@@ -1,7 +1,7 @@
 <?php
 
 # This file is generated, changes you make will be lost.
-# Make your changes in /compiler/lib/JIT.pre instead.
+# Make your changes in /compiler/script/../lib/JIT.pre instead.
 
 /*
  * This file is part of PHP-Compiler, a PHP CFG Compiler for PHP code
@@ -100,7 +100,7 @@ class JIT {
                         throw new \LogicException("Non-void return types not supported yet");
                 }
             } else {
-                throw new \LogicException("Non-typed functions not implemented yet");
+                $callbackType = '__value__';
             }
             $returnType = $this->context->getTypeFromString($callbackType);
             $this->context->functionReturnType[strtolower($internalName)] = $callbackType;
@@ -283,7 +283,15 @@ class JIT {
                     $argOffset = $op->type === OpCode::TYPE_ECHO ? $op->arg1 : $op->arg2;
                     $arg = $this->context->getVariableFromOp($block->getOperand($argOffset));
                     $argValue = $this->context->helper->loadValue($arg);
-                    switch ($arg->type) {                            
+                    switch ($arg->type) {
+                        case Variable::TYPE_VALUE:
+                            $ptr = $this->context->builder->call(
+                        $this->context->lookupFunction('__value__readString') , 
+                        $argValue
+                        
+                    );
+    
+                            // Fall through intentional                
                         case Variable::TYPE_STRING:            
                             $fmt = $this->context->builder->pointerCast(
                         $this->context->constantFromString("%.*s"),
@@ -357,6 +365,7 @@ class JIT {
                 $this->context->builder->positionAtEnd(array_pop($endBlock));
     
                             break;
+
                         default: 
                             throw new \LogicException("Echo for type $arg->type not implemented");
                     }
