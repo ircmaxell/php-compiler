@@ -1,17 +1,10 @@
 FROM ircmaxell/php-compiler:16.04-dev
 
-WORKDIR ../
+COPY ./ /compiler
 
-RUN curl -L https://github.com/ircmaxell/php-compiler/archive/master.zip -o master.zip && \
-    unzip master.zip && \
-    mv php-compiler-master/* compiler/
-
-WORKDIR compiler
+WORKDIR /compiler
 
 RUN php /composer.phar install --no-ansi --no-dev --no-interaction --no-progress --no-scripts --optimize-autoloader
-
-# Needed to initialize PRE
-RUN php vendor/autoload.php
 
 ENTRYPOINT ["php", "/compiler/bin/jit.php"]
 
