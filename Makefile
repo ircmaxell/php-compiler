@@ -4,6 +4,10 @@
 composer-install:
 	docker run -v $(shell pwd):/compiler ircmaxell/php-compiler:16.04-dev php /composer.phar install --no-ansi --no-interaction --no-progress
 
+.PHONY: composer-update
+composer-update:
+	docker run -v $(shell pwd):/compiler ircmaxell/php-compiler:16.04-dev php /composer.phar update --no-ansi --no-interaction --no-progress
+
 .PHONY: shell
 shell:
 	docker run -it --cap-add=SYS_PTRACE --security-opt seccomp=unconfined -v $(shell pwd):/compiler ircmaxell/php-compiler:16.04-dev /bin/bash

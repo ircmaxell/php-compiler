@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "36e4d3473f721133107be19ba904bf4b",
+    "content-hash": "b32fcadf0267ff6cdafcf5a56684d414",
     "packages": [
         {
             "name": "ircmaxell/php-cfg",
@@ -868,12 +868,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/phan/phan.git",
-                "reference": "31b47302e73dcfeb0c502a13aef515fb4715d403"
+                "reference": "72ea5937c5ecf4daf1e528ec584fe4738b33f2b3"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phan/phan/zipball/31b47302e73dcfeb0c502a13aef515fb4715d403",
-                "reference": "31b47302e73dcfeb0c502a13aef515fb4715d403",
+                "url": "https://api.github.com/repos/phan/phan/zipball/72ea5937c5ecf4daf1e528ec584fe4738b33f2b3",
+                "reference": "72ea5937c5ecf4daf1e528ec584fe4738b33f2b3",
                 "shasum": ""
             },
             "require": {
@@ -929,7 +929,7 @@
                 "php",
                 "static"
             ],
-            "time": "2019-04-13T15:19:21+00:00"
+            "time": "2019-04-15T18:03:11+00:00"
         },
         {
             "name": "phar-io/manifest",
@@ -1635,16 +1635,16 @@
         },
         {
             "name": "pre/plugin",
-            "version": "0.11.5",
+            "version": "dev-master",
             "source": {
                 "type": "git",
                 "url": "https://github.com/preprocess/pre-plugin.git",
-                "reference": "1e0368122ed5395faaac33bdd4b09b3ced713561"
+                "reference": "f58a4ed8ccb664b4932a97cd62355dc67da92c52"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/preprocess/pre-plugin/zipball/1e0368122ed5395faaac33bdd4b09b3ced713561",
-                "reference": "1e0368122ed5395faaac33bdd4b09b3ced713561",
+                "url": "https://api.github.com/repos/preprocess/pre-plugin/zipball/f58a4ed8ccb664b4932a97cd62355dc67da92c52",
+                "reference": "f58a4ed8ccb664b4932a97cd62355dc67da92c52",
                 "shasum": ""
             },
             "require": {
@@ -1677,7 +1677,7 @@
             "license": [
                 "MIT"
             ],
-            "time": "2019-01-20T10:57:28+00:00"
+            "time": "2019-04-10T05:28:01+00:00"
         },
         {
             "name": "psr/log",
@@ -2436,12 +2436,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/contracts.git",
-                "reference": "2ae87c20fb85e5f71af65adfe39cde9e09a72ed2"
+                "reference": "c96781d350bcf402f3ee578c4d9c7f0d2e1e4605"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/contracts/zipball/2ae87c20fb85e5f71af65adfe39cde9e09a72ed2",
-                "reference": "2ae87c20fb85e5f71af65adfe39cde9e09a72ed2",
+                "url": "https://api.github.com/repos/symfony/contracts/zipball/c96781d350bcf402f3ee578c4d9c7f0d2e1e4605",
+                "reference": "c96781d350bcf402f3ee578c4d9c7f0d2e1e4605",
                 "shasum": ""
             },
             "require": {
@@ -2499,7 +2499,7 @@
                 "interoperability",
                 "standards"
             ],
-            "time": "2019-04-07T08:26:05+00:00"
+            "time": "2019-04-15T17:24:46+00:00"
         },
         {
             "name": "symfony/event-dispatcher",
@@ -2768,7 +2768,7 @@
                 },
                 {
                     "name": "Gert de Pagter",
-                    "email": "BackEndTea@gmail.com"
+                    "email": "backendtea@gmail.com"
                 }
             ],
             "description": "Symfony polyfill for ctype functions",
@@ -3208,6 +3208,7 @@
     "stability-flags": {
         "ircmaxell/php-optimizer": 20,
         "ircmaxell/php-llvm": 20,
+        "pre/plugin": 20,
         "phan/phan": 20
     },
     "prefer-stable": false,
