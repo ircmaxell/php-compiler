@@ -21,6 +21,13 @@ ENV PHP="/usr/local/bin/php", PHP_7_4="/usr/local/bin/php", PHP_CS_FIXER_IGNORE_
 
 COPY php.ini /usr/local/lib/php.ini
 
-WORKDIR compiler
+WORKDIR php-ast
+RUN git clone https://github.com/nikic/php-ast .
+RUN phpize
+RUN ./configure
+RUN make
+RUN make install
+
+WORKDIR ../compiler
 
 CMD ["/bin/bash"]
