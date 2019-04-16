@@ -4,7 +4,7 @@
 composer-install:
 	docker run -v $(shell pwd):/compiler ircmaxell/php-compiler:16.04-dev composer install --no-ansi --no-interaction --no-progress
 	docker run -v $(shell pwd):/compiler ircmaxell/php-compiler:16.04-dev php vendor/pre/plugin/source/environment.php
-	patch -p0 -d vendor/pre/plugin/hidden/vendor/yay/yay/src < Docker/yaypatch.patch
+	docker run -v $(shell pwd):/compiler ircmaxell/php-compiler:16.04-dev patch -p0 -d vendor/pre/plugin/hidden/vendor/yay/yay/src < Docker/yaypatch.patch
 
 .PHONY: composer-update
 composer-update:
@@ -21,7 +21,6 @@ docker-build-clean:
 
 .PHONY: docker-build
 docker-build:
-
 	docker build -t ircmaxell/php-compiler:16.04-dev Docker/dev/ubuntu-16.04
 	docker build --no-cache -t ircmaxell/php-compiler:16.04 -f Docker/ubuntu-16.04/Dockerfile .
 
