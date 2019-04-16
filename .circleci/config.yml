@@ -10,6 +10,8 @@ jobs:
                         - run: make phan
                         - run: make test
                         - run: |
-                              docker login -u $DOCKER_USER -p $DOCKER_PASS
-                              docker push ircmaxell/php-compiler:16.04-dev
-                              docker push ircmaxell/php-compiler:16.04
+                              if [ "${CIRCLE_BRANCH}" == "master" ]; then 
+                                  docker login -u $DOCKER_USER -p $DOCKER_PASS
+                                  docker push ircmaxell/php-compiler:16.04-dev
+                                  docker push ircmaxell/php-compiler:16.04
+                              fi
