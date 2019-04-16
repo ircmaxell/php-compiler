@@ -2,18 +2,26 @@
 
 .PHONY: composer-install
 composer-install:
-	docker run -v $(shell pwd):/compiler ircmaxell/php-compiler:16.04-dev php /composer.phar install --no-ansi --no-interaction --no-progress
+	docker run -v $(shell pwd):/compiler ircmaxell/php-compiler:16.04-dev composer install --no-ansi --no-interaction --no-progress
+	docker run -v $(shell pwd):/compiler ircmaxell/php-compiler:16.04-dev php vendor/pre/plugin/source/environment.php
+	patch -p0 -d vendor/pre/plugin/hidden/yay/yay/src < Docker/yaypatch.patch
 
 .PHONY: composer-update
 composer-update:
-	docker run -v $(shell pwd):/compiler ircmaxell/php-compiler:16.04-dev php /composer.phar update --no-ansi --no-interaction --no-progress
+	docker run -v $(shell pwd):/compiler ircmaxell/php-compiler:16.04-dev composer update --no-ansi --no-interaction --no-progress
 
 .PHONY: shell
 shell:
 	docker run -it --cap-add=SYS_PTRACE --security-opt seccomp=unconfined -v $(shell pwd):/compiler ircmaxell/php-compiler:16.04-dev /bin/bash
 
+.PHONY: docker-build-clean
+docker-build-clean:
+	docker build --no-cache -t ircmaxell/php-compiler:16.04-dev Docker/dev/ubuntu-16.04
+	docker build --no-cache -t ircmaxell/php-compiler:16.04 -f Docker/ubuntu-16.04/Dockerfile .
+
 .PHONY: docker-build
 docker-build:
+
 	docker build -t ircmaxell/php-compiler:16.04-dev Docker/dev/ubuntu-16.04
 	docker build --no-cache -t ircmaxell/php-compiler:16.04 -f Docker/ubuntu-16.04/Dockerfile .
 

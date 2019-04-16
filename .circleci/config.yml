@@ -5,7 +5,7 @@ jobs:
                 machine: true
                 steps:
                         - checkout
-                        - run: make docker-build
+                        - run: make docker-build-clean
                         - run: make build
                         - run: make phan
                         - run: make test

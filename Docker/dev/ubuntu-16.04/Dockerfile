@@ -16,6 +16,7 @@ RUN ./buildconf && \
 WORKDIR ../
 
 RUN curl --silent --show-error https://getcomposer.org/installer | php
+RUN mv composer.phar /usr/local/bin/composer
 
 ENV PHP="/usr/local/bin/php", PHP_7_4="/usr/local/bin/php", PHP_CS_FIXER_IGNORE_ENV="true"
 
