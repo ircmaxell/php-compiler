@@ -19,6 +19,10 @@ benchmark: rebuild-changed
 .PHONY: build
 build: docker-build composer-install rebuild fix test rebuild-examples
 
+.PHONY: phan
+phan:
+	docker run -v $(shell pwd):/compiler php-compiler-16-04 php vendor/bin/phan
+
 .PHONY: test
 test: rebuild-changed
 	docker run -v $(shell pwd):/compiler php-compiler-16-04 php vendor/bin/phpunit
