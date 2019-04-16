@@ -9,3 +9,6 @@ jobs:
                         - run: make build
                         - run: make phan
                         - run: make test
+                        - run: |
+                              docker login -u $DOCKER_USER -p $DOCKER_PASS
+                              docker push ircmaxell/php-compiler:16.04-dev

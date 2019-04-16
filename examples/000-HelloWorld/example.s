@@ -403,13 +403,303 @@ __string__separate:
 	.size	__string__separate, .Lfunc_end12-__string__separate
 	.cfi_endproc
 
+	.globl	__value__valueDelref
+	.p2align	4, 0x90
+	.type	__value__valueDelref,@function
+__value__valueDelref:
+	.cfi_startproc
+	pushq	%rax
+.Lcfi10:
+	.cfi_def_cfa_offset 16
+	movb	(%rdi), %al
+	andb	$-128, %al
+	cmpb	$0, %al
+	movq	%rdi, (%rsp)
+	jne	.LBB13_2
+.LBB13_1:
+	popq	%rax
+	retq
+.LBB13_2:
+	movq	(%rsp), %rax
+	addq	$1, %rax
+	movabsq	$__ref__delref, %rcx
+	movq	%rax, %rdi
+	callq	*%rcx
+	jmp	.LBB13_1
+.Lfunc_end13:
+	.size	__value__valueDelref, .Lfunc_end13-__value__valueDelref
+	.cfi_endproc
+
+	.globl	__value__toNumeric
+	.p2align	4, 0x90
+	.type	__value__toNumeric,@function
+__value__toNumeric:
+	.cfi_startproc
+	pushq	%rbp
+.Lcfi11:
+	.cfi_def_cfa_offset 16
+.Lcfi12:
+	.cfi_offset %rbp, -16
+	movq	%rsp, %rbp
+.Lcfi13:
+	.cfi_def_cfa_register %rbp
+	subq	$80, %rsp
+	movb	(%rdi), %al
+	movb	%al, %cl
+	subb	$-122, %cl
+	movq	%rdi, -8(%rbp)
+	movb	%al, -9(%rbp)
+	movb	%cl, -10(%rbp)
+	je	.LBB14_4
+	jmp	.LBB14_8
+.LBB14_8:
+	movb	-9(%rbp), %al
+	subb	$1, %al
+	movb	%al, -11(%rbp)
+	je	.LBB14_2
+	jmp	.LBB14_9
+.LBB14_9:
+	movb	-9(%rbp), %al
+	subb	$3, %al
+	movb	%al, -12(%rbp)
+	je	.LBB14_3
+	jmp	.LBB14_7
+.LBB14_1:
+	xorl	%eax, %eax
+	movl	%eax, %ecx
+	movq	%rsp, %rdx
+	addq	$-16, %rdx
+	movq	%rdx, %rsp
+	movabsq	$__value__writeLong, %rsi
+	xorl	%eax, %eax
+	movl	%eax, %edi
+	movq	%rdi, -24(%rbp)
+	movq	%rdx, %rdi
+	movq	-24(%rbp), %r8
+	movq	%rsi, -32(%rbp)
+	movq	%r8, %rsi
+	movq	-32(%rbp), %r9
+	movq	%rcx, -40(%rbp)
+	movq	%rdx, -48(%rbp)
+	callq	*%r9
+	movq	-48(%rbp), %rax
+	movq	%rbp, %rsp
+	popq	%rbp
+	retq
+.LBB14_2:
+	movq	-8(%rbp), %rax
+	movabsq	$__ref__addref, %rcx
+	movq	%rax, %rdi
+	callq	*%rcx
+	movq	-8(%rbp), %rax
+	movq	%rbp, %rsp
+	popq	%rbp
+	retq
+.LBB14_3:
+	movq	-8(%rbp), %rax
+	movabsq	$__ref__addref, %rcx
+	movq	%rax, %rdi
+	callq	*%rcx
+	movq	-8(%rbp), %rax
+	movq	%rbp, %rsp
+	popq	%rbp
+	retq
+.LBB14_4:
+	movq	-8(%rbp), %rax
+	addq	$1, %rax
+	movq	%rax, %rcx
+	addq	$8, %rcx
+	movabsq	$__value__toNumeric, %rdx
+	movq	%rcx, %rdi
+	movq	%rax, -56(%rbp)
+	movq	%rcx, -64(%rbp)
+	callq	*%rdx
+	movq	-64(%rbp), %rcx
+	cmpq	%rcx, %rax
+	movq	%rax, -72(%rbp)
+	je	.LBB14_6
+.LBB14_5:
+	movq	-72(%rbp), %rax
+	movq	%rbp, %rsp
+	popq	%rbp
+	retq
+.LBB14_6:
+	movq	-56(%rbp), %rax
+	movabsq	$__ref__addref, %rcx
+	movq	%rax, %rdi
+	callq	*%rcx
+	jmp	.LBB14_5
+.LBB14_7:
+	jmp	.LBB14_1
+.Lfunc_end14:
+	.size	__value__toNumeric, .Lfunc_end14-__value__toNumeric
+	.cfi_endproc
+
+	.globl	__value__readLong
+	.p2align	4, 0x90
+	.type	__value__readLong,@function
+__value__readLong:
+	.cfi_startproc
+	subq	$24, %rsp
+.Lcfi14:
+	.cfi_def_cfa_offset 32
+	movb	(%rdi), %al
+	movb	%al, %cl
+	subb	$-122, %cl
+	movq	%rdi, 16(%rsp)
+	movb	%al, 15(%rsp)
+	movb	%cl, 14(%rsp)
+	je	.LBB15_4
+	jmp	.LBB15_6
+.LBB15_6:
+	movb	15(%rsp), %al
+	subb	$1, %al
+	movb	%al, 13(%rsp)
+	je	.LBB15_2
+	jmp	.LBB15_7
+.LBB15_7:
+	movb	15(%rsp), %al
+	subb	$3, %al
+	movb	%al, 12(%rsp)
+	je	.LBB15_3
+	jmp	.LBB15_5
+.LBB15_1:
+	xorl	%eax, %eax
+	addq	$24, %rsp
+	retq
+.LBB15_2:
+	movq	16(%rsp), %rax
+	movq	1(%rax), %rax
+	addq	$24, %rsp
+	retq
+.LBB15_3:
+	movq	16(%rsp), %rax
+	cvttsd2si	1(%rax), %rax
+	addq	$24, %rsp
+	retq
+.LBB15_4:
+	movq	16(%rsp), %rax
+	addq	$1, %rax
+	addq	$8, %rax
+	movabsq	$__value__readLong, %rcx
+	movq	%rax, %rdi
+	callq	*%rcx
+	addq	$24, %rsp
+	retq
+.LBB15_5:
+	jmp	.LBB15_1
+.Lfunc_end15:
+	.size	__value__readLong, .Lfunc_end15-__value__readLong
+	.cfi_endproc
+
+	.globl	__value__writeLong
+	.p2align	4, 0x90
+	.type	__value__writeLong,@function
+__value__writeLong:
+	.cfi_startproc
+	subq	$24, %rsp
+.Lcfi15:
+	.cfi_def_cfa_offset 32
+	movabsq	$__value__valueDelref, %rax
+	movq	%rdi, 16(%rsp)
+	movq	%rsi, 8(%rsp)
+	callq	*%rax
+	movq	16(%rsp), %rax
+	movb	$1, (%rax)
+	movq	8(%rsp), %rsi
+	movq	%rsi, 1(%rax)
+	addq	$24, %rsp
+	retq
+.Lfunc_end16:
+	.size	__value__writeLong, .Lfunc_end16-__value__writeLong
+	.cfi_endproc
+
+	.globl	__value__readDouble
+	.p2align	4, 0x90
+	.type	__value__readDouble,@function
+__value__readDouble:
+	.cfi_startproc
+	subq	$24, %rsp
+.Lcfi16:
+	.cfi_def_cfa_offset 32
+	movb	(%rdi), %al
+	movb	%al, %cl
+	subb	$-122, %cl
+	movq	%rdi, 16(%rsp)
+	movb	%al, 15(%rsp)
+	movb	%cl, 14(%rsp)
+	je	.LBB17_4
+	jmp	.LBB17_6
+.LBB17_6:
+	movb	15(%rsp), %al
+	subb	$1, %al
+	movb	%al, 13(%rsp)
+	je	.LBB17_2
+	jmp	.LBB17_7
+.LBB17_7:
+	movb	15(%rsp), %al
+	subb	$3, %al
+	movb	%al, 12(%rsp)
+	je	.LBB17_3
+	jmp	.LBB17_5
+.LBB17_1:
+	xorps	%xmm0, %xmm0
+	addq	$24, %rsp
+	retq
+.LBB17_2:
+	movq	16(%rsp), %rax
+	cvtsi2sdq	1(%rax), %xmm0
+	addq	$24, %rsp
+	retq
+.LBB17_3:
+	movq	16(%rsp), %rax
+	movsd	1(%rax), %xmm0
+	addq	$24, %rsp
+	retq
+.LBB17_4:
+	movq	16(%rsp), %rax
+	addq	$1, %rax
+	addq	$8, %rax
+	movabsq	$__value__readDouble, %rcx
+	movq	%rax, %rdi
+	callq	*%rcx
+	addq	$24, %rsp
+	retq
+.LBB17_5:
+	jmp	.LBB17_1
+.Lfunc_end17:
+	.size	__value__readDouble, .Lfunc_end17-__value__readDouble
+	.cfi_endproc
+
+	.globl	__value__writeDouble
+	.p2align	4, 0x90
+	.type	__value__writeDouble,@function
+__value__writeDouble:
+	.cfi_startproc
+	subq	$24, %rsp
+.Lcfi17:
+	.cfi_def_cfa_offset 32
+	movabsq	$__value__valueDelref, %rax
+	movq	%rdi, 16(%rsp)
+	movsd	%xmm0, 8(%rsp)
+	callq	*%rax
+	movq	16(%rsp), %rax
+	movb	$3, (%rax)
+	movsd	8(%rsp), %xmm0
+	movsd	%xmm0, 1(%rax)
+	addq	$24, %rsp
+	retq
+.Lfunc_end18:
+	.size	__value__writeDouble, .Lfunc_end18-__value__writeDouble
+	.cfi_endproc
+
 	.globl	__init__
 	.p2align	4, 0x90
 	.type	__init__,@function
 __init__:
 	.cfi_startproc
 	pushq	%rax
-.Lcfi10:
+.Lcfi18:
 	.cfi_def_cfa_offset 16
 	movabsq	$__unnamed_1, %rsi
 	movabsq	$__string__init, %rax
@@ -428,8 +718,8 @@ __init__:
 	movq	%rax, (%rsi)
 	popq	%rax
 	retq
-.Lfunc_end13:
-	.size	__init__, .Lfunc_end13-__init__
+.Lfunc_end19:
+	.size	__init__, .Lfunc_end19-__init__
 	.cfi_endproc
 
 	.globl	__shutdown__
@@ -438,7 +728,7 @@ __init__:
 __shutdown__:
 	.cfi_startproc
 	pushq	%rax
-.Lcfi11:
+.Lcfi19:
 	.cfi_def_cfa_offset 16
 	movabsq	$string_const_0, %rax
 	movq	(%rax), %rdi
@@ -453,8 +743,8 @@ __shutdown__:
 	callq	*%rax
 	popq	%rax
 	retq
-.Lfunc_end14:
-	.size	__shutdown__, .Lfunc_end14-__shutdown__
+.Lfunc_end20:
+	.size	__shutdown__, .Lfunc_end20-__shutdown__
 	.cfi_endproc
 
 	.globl	str_repeat
@@ -463,7 +753,7 @@ __shutdown__:
 str_repeat:
 	.cfi_startproc
 	subq	$216, %rsp
-.Lcfi12:
+.Lcfi20:
 	.cfi_def_cfa_offset 224
 	leaq	208(%rsp), %rax
 	movq	$0, 208(%rsp)
@@ -498,16 +788,16 @@ str_repeat:
 	movq	%rax, %rdi
 	callq	*%rcx
 	movq	$0, 200(%rsp)
-.LBB15_1:
+.LBB21_1:
 	movq	200(%rsp), %rax
 	cmpq	192(%rsp), %rax
 	setl	%cl
 	andb	$1, %cl
 	movb	%cl, 191(%rsp)
 	testb	$1, 191(%rsp)
-	jne	.LBB15_2
-	jmp	.LBB15_4
-.LBB15_2:
+	jne	.LBB21_2
+	jmp	.LBB21_4
+.LBB21_2:
 	leaq	208(%rsp), %rax
 	movq	208(%rsp), %rcx
 	movq	176(%rsp), %rdx
@@ -562,8 +852,8 @@ str_repeat:
 	movq	%rax, 160(%rsp)
 	movq	160(%rsp), %rax
 	movq	%rax, 200(%rsp)
-	jmp	.LBB15_1
-.LBB15_4:
+	jmp	.LBB21_1
+.LBB21_4:
 	leaq	208(%rsp), %rax
 	movabsq	$__ref__addref, %rcx
 	movq	%rax, %rdi
@@ -587,8 +877,8 @@ str_repeat:
 	movq	8(%rsp), %rax
 	addq	$216, %rsp
 	retq
-.Lfunc_end15:
-	.size	str_repeat, .Lfunc_end15-str_repeat
+.Lfunc_end21:
+	.size	str_repeat, .Lfunc_end21-str_repeat
 	.cfi_endproc
 
 	.globl	internal_1
@@ -597,7 +887,7 @@ str_repeat:
 internal_1:
 	.cfi_startproc
 	pushq	%rax
-.Lcfi13:
+.Lcfi21:
 	.cfi_def_cfa_offset 16
 	movabsq	$string_const_1, %rax
 	movq	(%rax), %rax
@@ -613,8 +903,8 @@ internal_1:
 	movl	%eax, 4(%rsp)
 	popq	%rax
 	retq
-.Lfunc_end16:
-	.size	internal_1, .Lfunc_end16-internal_1
+.Lfunc_end22:
+	.size	internal_1, .Lfunc_end22-internal_1
 	.cfi_endproc
 
 	.type	string_const_0,@object

@@ -1,5 +1,7 @@
 # A compiler for PHP
 
+[![CircleCI](https://circleci.com/gh/ircmaxell/php-compiler.svg?style=svg)](https://circleci.com/gh/ircmaxell/php-compiler)
+
 Ok, so this used to be a dead project. It required calling out to all sorts of hackery to generate PHP extensions, or PHP itself.
 
 Now, thanks to [FFI landing in PHP 7.4](https://wiki.php.net/rfc/ffi), the potential for all sorts of crazy is HUGE. 

@@ -14,7 +14,10 @@ namespace Yay {
     use function Pre\Plugin\addMacro;
 
     // ideally this would happen automatically, but whatever
-    addMacro(__DIR__.'/macros.yay');
+    if (function_exists('Pre\Plugin\addMacro')) {
+        // Guard this so a production deploy will work properly
+        addMacro(__DIR__.'/macros.yay');
+    }
 
     function ctype(): Parser
     {

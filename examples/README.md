@@ -10,5 +10,5 @@ Each example includes a benchmark that compares each mode of operation to just r
 
 |         Example Name |      Native PHP |      bin/vm.php |     bin/jit.php | bin/compile.php |      ./compiled |
 |----------------------|-----------------|-----------------|-----------------|-----------------|-----------------|
-|       000-HelloWorld |         0.01147 |         0.07213 |         0.17435 |         0.20752 |         0.00154 |
+|       000-HelloWorld |         0.01242 |         0.06492 |         0.15396 |         0.18702 |         0.00137 |
 <!-- benchmark table end -->
