@@ -146,7 +146,7 @@ class JIT {
             $lcname = strtolower($funcName);
             $this->context->functions[$lcname] = $func;
             if ($isVarArgs) {
-                $this->context->functionProxies[$lcname] = new JIT\Call\Vararg($func, $funcName, $args, count($args));
+                $this->context->functionProxies[$lcname] = new JIT\Call\Vararg($func, $funcName, count($args));
             } else {
                 $this->context->functionProxies[$lcname] = new JIT\Call\Native($func, $funcName, $args);
             }

@@ -12,6 +12,6 @@ compile {
 --EXPECTF--
 <?php
 
-$result = $this->context->builder->icmp(PHPLLVM\Builder::INT_EQ, $var, $var->typeOf()->constNull());
+$result = $this->context->builder->icmp(\PHPLLVM\Builder::INT_EQ, $var, $var->typeOf()->constNull());
 
 ?>

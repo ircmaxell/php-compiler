@@ -83,7 +83,7 @@ class Refcount extends Builtin {
                 
             );
             $fn___cfcd208495d565ef66e7dff9f98764da = $this->context->module->addFunction('__ref__init', $fntype___cfcd208495d565ef66e7dff9f98764da);
-            $fn___cfcd208495d565ef66e7dff9f98764da->addAttributeAtIndex(PHPLLVM\Attribute::INDEX_FUNCTION, $this->context->attributes['alwaysinline']);
+            $fn___cfcd208495d565ef66e7dff9f98764da->addAttributeAtIndex(\PHPLLVM\Attribute::INDEX_FUNCTION, $this->context->attributes['alwaysinline']);
             
             
             
@@ -101,7 +101,7 @@ class Refcount extends Builtin {
                 
             );
             $fn___cfcd208495d565ef66e7dff9f98764da = $this->context->module->addFunction('__ref__addref', $fntype___cfcd208495d565ef66e7dff9f98764da);
-            $fn___cfcd208495d565ef66e7dff9f98764da->addAttributeAtIndex(PHPLLVM\Attribute::INDEX_FUNCTION, $this->context->attributes['alwaysinline']);
+            $fn___cfcd208495d565ef66e7dff9f98764da->addAttributeAtIndex(\PHPLLVM\Attribute::INDEX_FUNCTION, $this->context->attributes['alwaysinline']);
             
             
             
@@ -118,7 +118,7 @@ class Refcount extends Builtin {
                 
             );
             $fn___cfcd208495d565ef66e7dff9f98764da = $this->context->module->addFunction('__ref__delref', $fntype___cfcd208495d565ef66e7dff9f98764da);
-            $fn___cfcd208495d565ef66e7dff9f98764da->addAttributeAtIndex(PHPLLVM\Attribute::INDEX_FUNCTION, $this->context->attributes['alwaysinline']);
+            $fn___cfcd208495d565ef66e7dff9f98764da->addAttributeAtIndex(\PHPLLVM\Attribute::INDEX_FUNCTION, $this->context->attributes['alwaysinline']);
             
             
             
@@ -135,7 +135,7 @@ class Refcount extends Builtin {
                 
             );
             $fn___cfcd208495d565ef66e7dff9f98764da = $this->context->module->addFunction('__ref__separate', $fntype___cfcd208495d565ef66e7dff9f98764da);
-            $fn___cfcd208495d565ef66e7dff9f98764da->addAttributeAtIndex(PHPLLVM\Attribute::INDEX_FUNCTION, $this->context->attributes['alwaysinline']);
+            $fn___cfcd208495d565ef66e7dff9f98764da->addAttributeAtIndex(\PHPLLVM\Attribute::INDEX_FUNCTION, $this->context->attributes['alwaysinline']);
             
             
             
@@ -153,7 +153,7 @@ class Refcount extends Builtin {
                 
             );
             $fn___cfcd208495d565ef66e7dff9f98764da = $this->context->module->addFunction('__ref__separate_ex', $fntype___cfcd208495d565ef66e7dff9f98764da);
-            $fn___cfcd208495d565ef66e7dff9f98764da->addAttributeAtIndex(PHPLLVM\Attribute::INDEX_FUNCTION, $this->context->attributes['alwaysinline']);
+            $fn___cfcd208495d565ef66e7dff9f98764da->addAttributeAtIndex(\PHPLLVM\Attribute::INDEX_FUNCTION, $this->context->attributes['alwaysinline']);
             
             
             
@@ -214,7 +214,7 @@ class Refcount extends Builtin {
     $this->context->builder->positionAtEnd($block___eccbc87e4b5ce2fe28308fd9f2a7baf3);
     $refVirtual = $fn___eccbc87e4b5ce2fe28308fd9f2a7baf3->getParam(0);
     
-    $isNull = $this->context->builder->icmp(PHPLLVM\Builder::INT_EQ, $refVirtual, $refVirtual->typeOf()->constNull());
+    $isNull = $this->context->builder->icmp(\PHPLLVM\Builder::INT_EQ, $refVirtual, $refVirtual->typeOf()->constNull());
     $bool = $this->context->castToBool($isNull);
                 $prev = $this->context->builder->getInsertBlock();
                 $ifBlock = $prev->insertBasicBlock('ifBlock');
@@ -243,54 +243,54 @@ class Refcount extends Builtin {
                     $__kind = $__type->getKind();
                     $__value = self::TYPE_INFO_REFCOUNTED;
                     switch ($__kind) {
-                        case PHPLLVM\Type::KIND_INTEGER:
+                        case \PHPLLVM\Type::KIND_INTEGER:
                             if (!is_object($__value)) {
                                 $refMask = $__type->constInt($__value, false);
                                 break;
                             }
                             $__other_type = $__value->typeOf();
                             switch ($__other_type->getKind()) {
-                                case PHPLLVM\Type::KIND_INTEGER:
+                                case \PHPLLVM\Type::KIND_INTEGER:
                                     if ($__other_type->getWidth() >= $__type->getWidth()) {
                                         $refMask = $this->context->builder->truncOrBitCast($__value, $__type);
                                     } else {
                                         $refMask = $this->context->builder->zExtOrBitCast($__value, $__type);
                                     }
                                     break;
-                                case PHPLLVM\Type::KIND_DOUBLE:
+                                case \PHPLLVM\Type::KIND_DOUBLE:
                                     
                                     $refMask = $this->context->builder->fpToSi($__value, $__type);
                                     
                                     break;
-                                case PHPLLVM\Type::KIND_ARRAY:
-                                case PHPLLVM\Type::KIND_POINTER:
+                                case \PHPLLVM\Type::KIND_ARRAY:
+                                case \PHPLLVM\Type::KIND_POINTER:
                                     $refMask = $this->context->builder->ptrToInt($__value, $__type);
                                     break;
                                 default:
                                     throw new \LogicException("Unknown how to handle type pair (int, " . $__other_type->toString() . ")");
                             }
                             break;
-                        case PHPLLVM\Type::KIND_DOUBLE:
+                        case \PHPLLVM\Type::KIND_DOUBLE:
                             if (!is_object($__value)) {
                                 $refMask = $__type->constReal(self::TYPE_INFO_REFCOUNTED);
                                 break;
                             }
                             $__other_type = $__value->typeOf();
                             switch ($__other_type->getKind()) {
-                                case PHPLLVM\Type::KIND_INTEGER:
+                                case \PHPLLVM\Type::KIND_INTEGER:
                                     
                                     $refMask = $this->context->builder->siToFp($__value, $__type);
                                     
                                     break;
-                                case PHPLLVM\Type::KIND_DOUBLE:
+                                case \PHPLLVM\Type::KIND_DOUBLE:
                                     $refMask = $this->context->builder->fpCast($__value, $__type);
                                     break;
                                 default:
                                     throw new \LogicException("Unknown how to handle type pair (double, " . $__other_type->toString() . ")");
                             }
                             break;
-                        case PHPLLVM\Type::KIND_ARRAY:
-                        case PHPLLVM\Type::KIND_POINTER:
+                        case \PHPLLVM\Type::KIND_ARRAY:
+                        case \PHPLLVM\Type::KIND_POINTER:
                             if (!is_object($__value)) {
                                 // this is very likely very wrong...
                                 $refMask = $__type->constInt($__value, false);
@@ -298,14 +298,14 @@ class Refcount extends Builtin {
                             }
                             $__other_type = $__value->typeOf();
                             switch ($__other_type->getKind()) {
-                                case PHPLLVM\Type::KIND_INTEGER:
+                                case \PHPLLVM\Type::KIND_INTEGER:
                                     $refMask = $this->context->builder->intToPtr($__value, $__type);
                                     break;
-                                case PHPLLVM\Type::KIND_ARRAY:
+                                case \PHPLLVM\Type::KIND_ARRAY:
                                     // $__tmp = $this->context->builder->($__value, $this->context->context->int64Type());
                                     // $(result) = $this->context->builder->intToPtr($__tmp, $__type);
                                     // break;
-                                case PHPLLVM\Type::KIND_POINTER:
+                                case \PHPLLVM\Type::KIND_POINTER:
                                     $refMask = $this->context->builder->pointerCast($__value, $__type);
                                     break;
                                 default:
@@ -356,7 +356,7 @@ class Refcount extends Builtin {
     $this->context->builder->positionAtEnd($block___8f14e45fceea167a5a36dedd4bea2543);
     $refVirtual = $fn___8f14e45fceea167a5a36dedd4bea2543->getParam(0);
     
-    $isNull = $this->context->builder->icmp(PHPLLVM\Builder::INT_EQ, $refVirtual, $refVirtual->typeOf()->constNull());
+    $isNull = $this->context->builder->icmp(\PHPLLVM\Builder::INT_EQ, $refVirtual, $refVirtual->typeOf()->constNull());
     $bool = $this->context->castToBool($isNull);
                 $prev = $this->context->builder->getInsertBlock();
                 $ifBlock = $prev->insertBasicBlock('ifBlock');
@@ -385,54 +385,54 @@ class Refcount extends Builtin {
                     $__kind = $__type->getKind();
                     $__value = self::TYPE_INFO_REFCOUNTED;
                     switch ($__kind) {
-                        case PHPLLVM\Type::KIND_INTEGER:
+                        case \PHPLLVM\Type::KIND_INTEGER:
                             if (!is_object($__value)) {
                                 $refMask = $__type->constInt($__value, false);
                                 break;
                             }
                             $__other_type = $__value->typeOf();
                             switch ($__other_type->getKind()) {
-                                case PHPLLVM\Type::KIND_INTEGER:
+                                case \PHPLLVM\Type::KIND_INTEGER:
                                     if ($__other_type->getWidth() >= $__type->getWidth()) {
                                         $refMask = $this->context->builder->truncOrBitCast($__value, $__type);
                                     } else {
                                         $refMask = $this->context->builder->zExtOrBitCast($__value, $__type);
                                     }
                                     break;
-                                case PHPLLVM\Type::KIND_DOUBLE:
+                                case \PHPLLVM\Type::KIND_DOUBLE:
                                     
                                     $refMask = $this->context->builder->fpToSi($__value, $__type);
                                     
                                     break;
-                                case PHPLLVM\Type::KIND_ARRAY:
-                                case PHPLLVM\Type::KIND_POINTER:
+                                case \PHPLLVM\Type::KIND_ARRAY:
+                                case \PHPLLVM\Type::KIND_POINTER:
                                     $refMask = $this->context->builder->ptrToInt($__value, $__type);
                                     break;
                                 default:
                                     throw new \LogicException("Unknown how to handle type pair (int, " . $__other_type->toString() . ")");
                             }
                             break;
-                        case PHPLLVM\Type::KIND_DOUBLE:
+                        case \PHPLLVM\Type::KIND_DOUBLE:
                             if (!is_object($__value)) {
                                 $refMask = $__type->constReal(self::TYPE_INFO_REFCOUNTED);
                                 break;
                             }
                             $__other_type = $__value->typeOf();
                             switch ($__other_type->getKind()) {
-                                case PHPLLVM\Type::KIND_INTEGER:
+                                case \PHPLLVM\Type::KIND_INTEGER:
                                     
                                     $refMask = $this->context->builder->siToFp($__value, $__type);
                                     
                                     break;
-                                case PHPLLVM\Type::KIND_DOUBLE:
+                                case \PHPLLVM\Type::KIND_DOUBLE:
                                     $refMask = $this->context->builder->fpCast($__value, $__type);
                                     break;
                                 default:
                                     throw new \LogicException("Unknown how to handle type pair (double, " . $__other_type->toString() . ")");
                             }
                             break;
-                        case PHPLLVM\Type::KIND_ARRAY:
-                        case PHPLLVM\Type::KIND_POINTER:
+                        case \PHPLLVM\Type::KIND_ARRAY:
+                        case \PHPLLVM\Type::KIND_POINTER:
                             if (!is_object($__value)) {
                                 // this is very likely very wrong...
                                 $refMask = $__type->constInt($__value, false);
@@ -440,14 +440,14 @@ class Refcount extends Builtin {
                             }
                             $__other_type = $__value->typeOf();
                             switch ($__other_type->getKind()) {
-                                case PHPLLVM\Type::KIND_INTEGER:
+                                case \PHPLLVM\Type::KIND_INTEGER:
                                     $refMask = $this->context->builder->intToPtr($__value, $__type);
                                     break;
-                                case PHPLLVM\Type::KIND_ARRAY:
+                                case \PHPLLVM\Type::KIND_ARRAY:
                                     // $__tmp = $this->context->builder->($__value, $this->context->context->int64Type());
                                     // $(result) = $this->context->builder->intToPtr($__tmp, $__type);
                                     // break;
-                                case PHPLLVM\Type::KIND_POINTER:
+                                case \PHPLLVM\Type::KIND_POINTER:
                                     $refMask = $this->context->builder->pointerCast($__value, $__type);
                                     break;
                                 default:
@@ -504,7 +504,7 @@ class Refcount extends Builtin {
                         
 
                         
-                            $cmp = PHPLLVM\Builder::INT_SLE;
+                            $cmp = \PHPLLVM\Builder::INT_SLE;
                             
                             $test = $this->context->builder->icmp($cmp, $current, $__right);
     $bool = $this->context->castToBool($test);
@@ -542,7 +542,7 @@ class Refcount extends Builtin {
     $virtualPtr = $fn___c20ad4d76fe97759aa27a0c99bff6710->getParam(0);
     
     $virtual = $this->context->builder->load($virtualPtr);
-    $test = $this->context->builder->icmp(PHPLLVM\Builder::INT_EQ, $virtual, $virtual->typeOf()->constNull());
+    $test = $this->context->builder->icmp(\PHPLLVM\Builder::INT_EQ, $virtual, $virtual->typeOf()->constNull());
     $bool = $this->context->castToBool($test);
                 $prev = $this->context->builder->getInsertBlock();
                 $ifBlock = $prev->insertBasicBlock('ifBlock');
@@ -571,54 +571,54 @@ class Refcount extends Builtin {
                     $__kind = $__type->getKind();
                     $__value = self::TYPE_INFO_REFCOUNTED;
                     switch ($__kind) {
-                        case PHPLLVM\Type::KIND_INTEGER:
+                        case \PHPLLVM\Type::KIND_INTEGER:
                             if (!is_object($__value)) {
                                 $refMask = $__type->constInt($__value, false);
                                 break;
                             }
                             $__other_type = $__value->typeOf();
                             switch ($__other_type->getKind()) {
-                                case PHPLLVM\Type::KIND_INTEGER:
+                                case \PHPLLVM\Type::KIND_INTEGER:
                                     if ($__other_type->getWidth() >= $__type->getWidth()) {
                                         $refMask = $this->context->builder->truncOrBitCast($__value, $__type);
                                     } else {
                                         $refMask = $this->context->builder->zExtOrBitCast($__value, $__type);
                                     }
                                     break;
-                                case PHPLLVM\Type::KIND_DOUBLE:
+                                case \PHPLLVM\Type::KIND_DOUBLE:
                                     
                                     $refMask = $this->context->builder->fpToSi($__value, $__type);
                                     
                                     break;
-                                case PHPLLVM\Type::KIND_ARRAY:
-                                case PHPLLVM\Type::KIND_POINTER:
+                                case \PHPLLVM\Type::KIND_ARRAY:
+                                case \PHPLLVM\Type::KIND_POINTER:
                                     $refMask = $this->context->builder->ptrToInt($__value, $__type);
                                     break;
                                 default:
                                     throw new \LogicException("Unknown how to handle type pair (int, " . $__other_type->toString() . ")");
                             }
                             break;
-                        case PHPLLVM\Type::KIND_DOUBLE:
+                        case \PHPLLVM\Type::KIND_DOUBLE:
                             if (!is_object($__value)) {
                                 $refMask = $__type->constReal(self::TYPE_INFO_REFCOUNTED);
                                 break;
                             }
                             $__other_type = $__value->typeOf();
                             switch ($__other_type->getKind()) {
-                                case PHPLLVM\Type::KIND_INTEGER:
+                                case \PHPLLVM\Type::KIND_INTEGER:
                                     
                                     $refMask = $this->context->builder->siToFp($__value, $__type);
                                     
                                     break;
-                                case PHPLLVM\Type::KIND_DOUBLE:
+                                case \PHPLLVM\Type::KIND_DOUBLE:
                                     $refMask = $this->context->builder->fpCast($__value, $__type);
                                     break;
                                 default:
                                     throw new \LogicException("Unknown how to handle type pair (double, " . $__other_type->toString() . ")");
                             }
                             break;
-                        case PHPLLVM\Type::KIND_ARRAY:
-                        case PHPLLVM\Type::KIND_POINTER:
+                        case \PHPLLVM\Type::KIND_ARRAY:
+                        case \PHPLLVM\Type::KIND_POINTER:
                             if (!is_object($__value)) {
                                 // this is very likely very wrong...
                                 $refMask = $__type->constInt($__value, false);
@@ -626,14 +626,14 @@ class Refcount extends Builtin {
                             }
                             $__other_type = $__value->typeOf();
                             switch ($__other_type->getKind()) {
-                                case PHPLLVM\Type::KIND_INTEGER:
+                                case \PHPLLVM\Type::KIND_INTEGER:
                                     $refMask = $this->context->builder->intToPtr($__value, $__type);
                                     break;
-                                case PHPLLVM\Type::KIND_ARRAY:
+                                case \PHPLLVM\Type::KIND_ARRAY:
                                     // $__tmp = $this->context->builder->($__value, $this->context->context->int64Type());
                                     // $(result) = $this->context->builder->intToPtr($__tmp, $__type);
                                     // break;
-                                case PHPLLVM\Type::KIND_POINTER:
+                                case \PHPLLVM\Type::KIND_POINTER:
                                     $refMask = $this->context->builder->pointerCast($__value, $__type);
                                     break;
                                 default:
@@ -685,7 +685,7 @@ class Refcount extends Builtin {
                         
 
                         
-                            $cmp = PHPLLVM\Builder::INT_SGT;
+                            $cmp = \PHPLLVM\Builder::INT_SGT;
                             
                             $test = $this->context->builder->icmp($cmp, $current, $__right);
     $bool = $this->context->castToBool($test);
@@ -741,54 +741,54 @@ class Refcount extends Builtin {
                     $__kind = $__type->getKind();
                     $__value = self::TYPE_INFO_TYPEMASK;
                     switch ($__kind) {
-                        case PHPLLVM\Type::KIND_INTEGER:
+                        case \PHPLLVM\Type::KIND_INTEGER:
                             if (!is_object($__value)) {
                                 $typeMask = $__type->constInt($__value, false);
                                 break;
                             }
                             $__other_type = $__value->typeOf();
                             switch ($__other_type->getKind()) {
-                                case PHPLLVM\Type::KIND_INTEGER:
+                                case \PHPLLVM\Type::KIND_INTEGER:
                                     if ($__other_type->getWidth() >= $__type->getWidth()) {
                                         $typeMask = $this->context->builder->truncOrBitCast($__value, $__type);
                                     } else {
                                         $typeMask = $this->context->builder->zExtOrBitCast($__value, $__type);
                                     }
                                     break;
-                                case PHPLLVM\Type::KIND_DOUBLE:
+                                case \PHPLLVM\Type::KIND_DOUBLE:
                                     
                                     $typeMask = $this->context->builder->fpToSi($__value, $__type);
                                     
                                     break;
-                                case PHPLLVM\Type::KIND_ARRAY:
-                                case PHPLLVM\Type::KIND_POINTER:
+                                case \PHPLLVM\Type::KIND_ARRAY:
+                                case \PHPLLVM\Type::KIND_POINTER:
                                     $typeMask = $this->context->builder->ptrToInt($__value, $__type);
                                     break;
                                 default:
                                     throw new \LogicException("Unknown how to handle type pair (int, " . $__other_type->toString() . ")");
                             }
                             break;
-                        case PHPLLVM\Type::KIND_DOUBLE:
+                        case \PHPLLVM\Type::KIND_DOUBLE:
                             if (!is_object($__value)) {
                                 $typeMask = $__type->constReal(self::TYPE_INFO_TYPEMASK);
                                 break;
                             }
                             $__other_type = $__value->typeOf();
                             switch ($__other_type->getKind()) {
-                                case PHPLLVM\Type::KIND_INTEGER:
+                                case \PHPLLVM\Type::KIND_INTEGER:
                                     
                                     $typeMask = $this->context->builder->siToFp($__value, $__type);
                                     
                                     break;
-                                case PHPLLVM\Type::KIND_DOUBLE:
+                                case \PHPLLVM\Type::KIND_DOUBLE:
                                     $typeMask = $this->context->builder->fpCast($__value, $__type);
                                     break;
                                 default:
                                     throw new \LogicException("Unknown how to handle type pair (double, " . $__other_type->toString() . ")");
                             }
                             break;
-                        case PHPLLVM\Type::KIND_ARRAY:
-                        case PHPLLVM\Type::KIND_POINTER:
+                        case \PHPLLVM\Type::KIND_ARRAY:
+                        case \PHPLLVM\Type::KIND_POINTER:
                             if (!is_object($__value)) {
                                 // this is very likely very wrong...
                                 $typeMask = $__type->constInt($__value, false);
@@ -796,14 +796,14 @@ class Refcount extends Builtin {
                             }
                             $__other_type = $__value->typeOf();
                             switch ($__other_type->getKind()) {
-                                case PHPLLVM\Type::KIND_INTEGER:
+                                case \PHPLLVM\Type::KIND_INTEGER:
                                     $typeMask = $this->context->builder->intToPtr($__value, $__type);
                                     break;
-                                case PHPLLVM\Type::KIND_ARRAY:
+                                case \PHPLLVM\Type::KIND_ARRAY:
                                     // $__tmp = $this->context->builder->($__value, $this->context->context->int64Type());
                                     // $(result) = $this->context->builder->intToPtr($__tmp, $__type);
                                     // break;
-                                case PHPLLVM\Type::KIND_POINTER:
+                                case \PHPLLVM\Type::KIND_POINTER:
                                     $typeMask = $this->context->builder->pointerCast($__value, $__type);
                                     break;
                                 default:
@@ -825,54 +825,54 @@ class Refcount extends Builtin {
                     $__kind = $__type->getKind();
                     $__value = self::TYPE_INFO_TYPE_STRING;
                     switch ($__kind) {
-                        case PHPLLVM\Type::KIND_INTEGER:
+                        case \PHPLLVM\Type::KIND_INTEGER:
                             if (!is_object($__value)) {
                                 $stringType = $__type->constInt($__value, false);
                                 break;
                             }
                             $__other_type = $__value->typeOf();
                             switch ($__other_type->getKind()) {
-                                case PHPLLVM\Type::KIND_INTEGER:
+                                case \PHPLLVM\Type::KIND_INTEGER:
                                     if ($__other_type->getWidth() >= $__type->getWidth()) {
                                         $stringType = $this->context->builder->truncOrBitCast($__value, $__type);
                                     } else {
                                         $stringType = $this->context->builder->zExtOrBitCast($__value, $__type);
                                     }
                                     break;
-                                case PHPLLVM\Type::KIND_DOUBLE:
+                                case \PHPLLVM\Type::KIND_DOUBLE:
                                     
                                     $stringType = $this->context->builder->fpToSi($__value, $__type);
                                     
                                     break;
-                                case PHPLLVM\Type::KIND_ARRAY:
-                                case PHPLLVM\Type::KIND_POINTER:
+                                case \PHPLLVM\Type::KIND_ARRAY:
+                                case \PHPLLVM\Type::KIND_POINTER:
                                     $stringType = $this->context->builder->ptrToInt($__value, $__type);
                                     break;
                                 default:
                                     throw new \LogicException("Unknown how to handle type pair (int, " . $__other_type->toString() . ")");
                             }
                             break;
-                        case PHPLLVM\Type::KIND_DOUBLE:
+                        case \PHPLLVM\Type::KIND_DOUBLE:
                             if (!is_object($__value)) {
                                 $stringType = $__type->constReal(self::TYPE_INFO_TYPE_STRING);
                                 break;
                             }
                             $__other_type = $__value->typeOf();
                             switch ($__other_type->getKind()) {
-                                case PHPLLVM\Type::KIND_INTEGER:
+                                case \PHPLLVM\Type::KIND_INTEGER:
                                     
                                     $stringType = $this->context->builder->siToFp($__value, $__type);
                                     
                                     break;
-                                case PHPLLVM\Type::KIND_DOUBLE:
+                                case \PHPLLVM\Type::KIND_DOUBLE:
                                     $stringType = $this->context->builder->fpCast($__value, $__type);
                                     break;
                                 default:
                                     throw new \LogicException("Unknown how to handle type pair (double, " . $__other_type->toString() . ")");
                             }
                             break;
-                        case PHPLLVM\Type::KIND_ARRAY:
-                        case PHPLLVM\Type::KIND_POINTER:
+                        case \PHPLLVM\Type::KIND_ARRAY:
+                        case \PHPLLVM\Type::KIND_POINTER:
                             if (!is_object($__value)) {
                                 // this is very likely very wrong...
                                 $stringType = $__type->constInt($__value, false);
@@ -880,14 +880,14 @@ class Refcount extends Builtin {
                             }
                             $__other_type = $__value->typeOf();
                             switch ($__other_type->getKind()) {
-                                case PHPLLVM\Type::KIND_INTEGER:
+                                case \PHPLLVM\Type::KIND_INTEGER:
                                     $stringType = $this->context->builder->intToPtr($__value, $__type);
                                     break;
-                                case PHPLLVM\Type::KIND_ARRAY:
+                                case \PHPLLVM\Type::KIND_ARRAY:
                                     // $__tmp = $this->context->builder->($__value, $this->context->context->int64Type());
                                     // $(result) = $this->context->builder->intToPtr($__tmp, $__type);
                                     // break;
-                                case PHPLLVM\Type::KIND_POINTER:
+                                case \PHPLLVM\Type::KIND_POINTER:
                                     $stringType = $this->context->builder->pointerCast($__value, $__type);
                                     break;
                                 default:
@@ -926,7 +926,7 @@ class Refcount extends Builtin {
 
                         
 
-                        $isString = $this->context->builder->icmp(PHPLLVM\Builder::INT_EQ, $type, $__right);
+                        $isString = $this->context->builder->icmp(\PHPLLVM\Builder::INT_EQ, $type, $__right);
     $bool = $this->context->castToBool($isString);
                 $prev = $this->context->builder->getInsertBlock();
                 $ifBlock = $prev->insertBasicBlock('ifBlock');
@@ -942,54 +942,54 @@ class Refcount extends Builtin {
                     $__kind = $__type->getKind();
                     $__value = $virtual;
                     switch ($__kind) {
-                        case PHPLLVM\Type::KIND_INTEGER:
+                        case \PHPLLVM\Type::KIND_INTEGER:
                             if (!is_object($__value)) {
                                 $string = $__type->constInt($__value, false);
                                 break;
                             }
                             $__other_type = $__value->typeOf();
                             switch ($__other_type->getKind()) {
-                                case PHPLLVM\Type::KIND_INTEGER:
+                                case \PHPLLVM\Type::KIND_INTEGER:
                                     if ($__other_type->getWidth() >= $__type->getWidth()) {
                                         $string = $this->context->builder->truncOrBitCast($__value, $__type);
                                     } else {
                                         $string = $this->context->builder->zExtOrBitCast($__value, $__type);
                                     }
                                     break;
-                                case PHPLLVM\Type::KIND_DOUBLE:
+                                case \PHPLLVM\Type::KIND_DOUBLE:
                                     
                                     $string = $this->context->builder->fpToSi($__value, $__type);
                                     
                                     break;
-                                case PHPLLVM\Type::KIND_ARRAY:
-                                case PHPLLVM\Type::KIND_POINTER:
+                                case \PHPLLVM\Type::KIND_ARRAY:
+                                case \PHPLLVM\Type::KIND_POINTER:
                                     $string = $this->context->builder->ptrToInt($__value, $__type);
                                     break;
                                 default:
                                     throw new \LogicException("Unknown how to handle type pair (int, " . $__other_type->toString() . ")");
                             }
                             break;
-                        case PHPLLVM\Type::KIND_DOUBLE:
+                        case \PHPLLVM\Type::KIND_DOUBLE:
                             if (!is_object($__value)) {
                                 $string = $__type->constReal($virtual);
                                 break;
                             }
                             $__other_type = $__value->typeOf();
                             switch ($__other_type->getKind()) {
-                                case PHPLLVM\Type::KIND_INTEGER:
+                                case \PHPLLVM\Type::KIND_INTEGER:
                                     
                                     $string = $this->context->builder->siToFp($__value, $__type);
                                     
                                     break;
-                                case PHPLLVM\Type::KIND_DOUBLE:
+                                case \PHPLLVM\Type::KIND_DOUBLE:
                                     $string = $this->context->builder->fpCast($__value, $__type);
                                     break;
                                 default:
                                     throw new \LogicException("Unknown how to handle type pair (double, " . $__other_type->toString() . ")");
                             }
                             break;
-                        case PHPLLVM\Type::KIND_ARRAY:
-                        case PHPLLVM\Type::KIND_POINTER:
+                        case \PHPLLVM\Type::KIND_ARRAY:
+                        case \PHPLLVM\Type::KIND_POINTER:
                             if (!is_object($__value)) {
                                 // this is very likely very wrong...
                                 $string = $__type->constInt($__value, false);
@@ -997,14 +997,14 @@ class Refcount extends Builtin {
                             }
                             $__other_type = $__value->typeOf();
                             switch ($__other_type->getKind()) {
-                                case PHPLLVM\Type::KIND_INTEGER:
+                                case \PHPLLVM\Type::KIND_INTEGER:
                                     $string = $this->context->builder->intToPtr($__value, $__type);
                                     break;
-                                case PHPLLVM\Type::KIND_ARRAY:
+                                case \PHPLLVM\Type::KIND_ARRAY:
                                     // $__tmp = $this->context->builder->($__value, $this->context->context->int64Type());
                                     // $(result) = $this->context->builder->intToPtr($__tmp, $__type);
                                     // break;
-                                case PHPLLVM\Type::KIND_POINTER:
+                                case \PHPLLVM\Type::KIND_POINTER:
                                     $string = $this->context->builder->pointerCast($__value, $__type);
                                     break;
                                 default:
@@ -1025,54 +1025,54 @@ class Refcount extends Builtin {
                     $__kind = $__type->getKind();
                     $__value = $stringResult;
                     switch ($__kind) {
-                        case PHPLLVM\Type::KIND_INTEGER:
+                        case \PHPLLVM\Type::KIND_INTEGER:
                             if (!is_object($__value)) {
                                 $result = $__type->constInt($__value, false);
                                 break;
                             }
                             $__other_type = $__value->typeOf();
                             switch ($__other_type->getKind()) {
-                                case PHPLLVM\Type::KIND_INTEGER:
+                                case \PHPLLVM\Type::KIND_INTEGER:
                                     if ($__other_type->getWidth() >= $__type->getWidth()) {
                                         $result = $this->context->builder->truncOrBitCast($__value, $__type);
                                     } else {
                                         $result = $this->context->builder->zExtOrBitCast($__value, $__type);
                                     }
                                     break;
-                                case PHPLLVM\Type::KIND_DOUBLE:
+                                case \PHPLLVM\Type::KIND_DOUBLE:
                                     
                                     $result = $this->context->builder->fpToSi($__value, $__type);
                                     
                                     break;
-                                case PHPLLVM\Type::KIND_ARRAY:
-                                case PHPLLVM\Type::KIND_POINTER:
+                                case \PHPLLVM\Type::KIND_ARRAY:
+                                case \PHPLLVM\Type::KIND_POINTER:
                                     $result = $this->context->builder->ptrToInt($__value, $__type);
                                     break;
                                 default:
                                     throw new \LogicException("Unknown how to handle type pair (int, " . $__other_type->toString() . ")");
                             }
                             break;
-                        case PHPLLVM\Type::KIND_DOUBLE:
+                        case \PHPLLVM\Type::KIND_DOUBLE:
                             if (!is_object($__value)) {
                                 $result = $__type->constReal($stringResult);
                                 break;
                             }
                             $__other_type = $__value->typeOf();
                             switch ($__other_type->getKind()) {
-                                case PHPLLVM\Type::KIND_INTEGER:
+                                case \PHPLLVM\Type::KIND_INTEGER:
                                     
                                     $result = $this->context->builder->siToFp($__value, $__type);
                                     
                                     break;
-                                case PHPLLVM\Type::KIND_DOUBLE:
+                                case \PHPLLVM\Type::KIND_DOUBLE:
                                     $result = $this->context->builder->fpCast($__value, $__type);
                                     break;
                                 default:
                                     throw new \LogicException("Unknown how to handle type pair (double, " . $__other_type->toString() . ")");
                             }
                             break;
-                        case PHPLLVM\Type::KIND_ARRAY:
-                        case PHPLLVM\Type::KIND_POINTER:
+                        case \PHPLLVM\Type::KIND_ARRAY:
+                        case \PHPLLVM\Type::KIND_POINTER:
                             if (!is_object($__value)) {
                                 // this is very likely very wrong...
                                 $result = $__type->constInt($__value, false);
@@ -1080,14 +1080,14 @@ class Refcount extends Builtin {
                             }
                             $__other_type = $__value->typeOf();
                             switch ($__other_type->getKind()) {
-                                case PHPLLVM\Type::KIND_INTEGER:
+                                case \PHPLLVM\Type::KIND_INTEGER:
                                     $result = $this->context->builder->intToPtr($__value, $__type);
                                     break;
-                                case PHPLLVM\Type::KIND_ARRAY:
+                                case \PHPLLVM\Type::KIND_ARRAY:
                                     // $__tmp = $this->context->builder->($__value, $this->context->context->int64Type());
                                     // $(result) = $this->context->builder->intToPtr($__tmp, $__type);
                                     // break;
-                                case PHPLLVM\Type::KIND_POINTER:
+                                case \PHPLLVM\Type::KIND_POINTER:
                                     $result = $this->context->builder->pointerCast($__value, $__type);
                                     break;
                                 default:
@@ -1116,54 +1116,54 @@ class Refcount extends Builtin {
                     $__kind = $__type->getKind();
                     $__value = $value;
                     switch ($__kind) {
-                        case PHPLLVM\Type::KIND_INTEGER:
+                        case \PHPLLVM\Type::KIND_INTEGER:
                             if (!is_object($__value)) {
                                 $virtual = $__type->constInt($__value, false);
                                 break;
                             }
                             $__other_type = $__value->typeOf();
                             switch ($__other_type->getKind()) {
-                                case PHPLLVM\Type::KIND_INTEGER:
+                                case \PHPLLVM\Type::KIND_INTEGER:
                                     if ($__other_type->getWidth() >= $__type->getWidth()) {
                                         $virtual = $this->context->builder->truncOrBitCast($__value, $__type);
                                     } else {
                                         $virtual = $this->context->builder->zExtOrBitCast($__value, $__type);
                                     }
                                     break;
-                                case PHPLLVM\Type::KIND_DOUBLE:
+                                case \PHPLLVM\Type::KIND_DOUBLE:
                                     
                                     $virtual = $this->context->builder->fpToSi($__value, $__type);
                                     
                                     break;
-                                case PHPLLVM\Type::KIND_ARRAY:
-                                case PHPLLVM\Type::KIND_POINTER:
+                                case \PHPLLVM\Type::KIND_ARRAY:
+                                case \PHPLLVM\Type::KIND_POINTER:
                                     $virtual = $this->context->builder->ptrToInt($__value, $__type);
                                     break;
                                 default:
                                     throw new \LogicException("Unknown how to handle type pair (int, " . $__other_type->toString() . ")");
                             }
                             break;
-                        case PHPLLVM\Type::KIND_DOUBLE:
+                        case \PHPLLVM\Type::KIND_DOUBLE:
                             if (!is_object($__value)) {
                                 $virtual = $__type->constReal($value);
                                 break;
                             }
                             $__other_type = $__value->typeOf();
                             switch ($__other_type->getKind()) {
-                                case PHPLLVM\Type::KIND_INTEGER:
+                                case \PHPLLVM\Type::KIND_INTEGER:
                                     
                                     $virtual = $this->context->builder->siToFp($__value, $__type);
                                     
                                     break;
-                                case PHPLLVM\Type::KIND_DOUBLE:
+                                case \PHPLLVM\Type::KIND_DOUBLE:
                                     $virtual = $this->context->builder->fpCast($__value, $__type);
                                     break;
                                 default:
                                     throw new \LogicException("Unknown how to handle type pair (double, " . $__other_type->toString() . ")");
                             }
                             break;
-                        case PHPLLVM\Type::KIND_ARRAY:
-                        case PHPLLVM\Type::KIND_POINTER:
+                        case \PHPLLVM\Type::KIND_ARRAY:
+                        case \PHPLLVM\Type::KIND_POINTER:
                             if (!is_object($__value)) {
                                 // this is very likely very wrong...
                                 $virtual = $__type->constInt($__value, false);
@@ -1171,14 +1171,14 @@ class Refcount extends Builtin {
                             }
                             $__other_type = $__value->typeOf();
                             switch ($__other_type->getKind()) {
-                                case PHPLLVM\Type::KIND_INTEGER:
+                                case \PHPLLVM\Type::KIND_INTEGER:
                                     $virtual = $this->context->builder->intToPtr($__value, $__type);
                                     break;
-                                case PHPLLVM\Type::KIND_ARRAY:
+                                case \PHPLLVM\Type::KIND_ARRAY:
                                     // $__tmp = $this->context->builder->($__value, $this->context->context->int64Type());
                                     // $(result) = $this->context->builder->intToPtr($__tmp, $__type);
                                     // break;
-                                case PHPLLVM\Type::KIND_POINTER:
+                                case \PHPLLVM\Type::KIND_POINTER:
                                     $virtual = $this->context->builder->pointerCast($__value, $__type);
                                     break;
                                 default:
@@ -1200,54 +1200,54 @@ class Refcount extends Builtin {
                     $__kind = $__type->getKind();
                     $__value = self::TYPE_INFO_NONREFCOUNTED_MASK;
                     switch ($__kind) {
-                        case PHPLLVM\Type::KIND_INTEGER:
+                        case \PHPLLVM\Type::KIND_INTEGER:
                             if (!is_object($__value)) {
                                 $notRefc = $__type->constInt($__value, false);
                                 break;
                             }
                             $__other_type = $__value->typeOf();
                             switch ($__other_type->getKind()) {
-                                case PHPLLVM\Type::KIND_INTEGER:
+                                case \PHPLLVM\Type::KIND_INTEGER:
                                     if ($__other_type->getWidth() >= $__type->getWidth()) {
                                         $notRefc = $this->context->builder->truncOrBitCast($__value, $__type);
                                     } else {
                                         $notRefc = $this->context->builder->zExtOrBitCast($__value, $__type);
                                     }
                                     break;
-                                case PHPLLVM\Type::KIND_DOUBLE:
+                                case \PHPLLVM\Type::KIND_DOUBLE:
                                     
                                     $notRefc = $this->context->builder->fpToSi($__value, $__type);
                                     
                                     break;
-                                case PHPLLVM\Type::KIND_ARRAY:
-                                case PHPLLVM\Type::KIND_POINTER:
+                                case \PHPLLVM\Type::KIND_ARRAY:
+                                case \PHPLLVM\Type::KIND_POINTER:
                                     $notRefc = $this->context->builder->ptrToInt($__value, $__type);
                                     break;
                                 default:
                                     throw new \LogicException("Unknown how to handle type pair (int, " . $__other_type->toString() . ")");
                             }
                             break;
-                        case PHPLLVM\Type::KIND_DOUBLE:
+                        case \PHPLLVM\Type::KIND_DOUBLE:
                             if (!is_object($__value)) {
                                 $notRefc = $__type->constReal(self::TYPE_INFO_NONREFCOUNTED_MASK);
                                 break;
                             }
                             $__other_type = $__value->typeOf();
                             switch ($__other_type->getKind()) {
-                                case PHPLLVM\Type::KIND_INTEGER:
+                                case \PHPLLVM\Type::KIND_INTEGER:
                                     
                                     $notRefc = $this->context->builder->siToFp($__value, $__type);
                                     
                                     break;
-                                case PHPLLVM\Type::KIND_DOUBLE:
+                                case \PHPLLVM\Type::KIND_DOUBLE:
                                     $notRefc = $this->context->builder->fpCast($__value, $__type);
                                     break;
                                 default:
                                     throw new \LogicException("Unknown how to handle type pair (double, " . $__other_type->toString() . ")");
                             }
                             break;
-                        case PHPLLVM\Type::KIND_ARRAY:
-                        case PHPLLVM\Type::KIND_POINTER:
+                        case \PHPLLVM\Type::KIND_ARRAY:
+                        case \PHPLLVM\Type::KIND_POINTER:
                             if (!is_object($__value)) {
                                 // this is very likely very wrong...
                                 $notRefc = $__type->constInt($__value, false);
@@ -1255,14 +1255,14 @@ class Refcount extends Builtin {
                             }
                             $__other_type = $__value->typeOf();
                             switch ($__other_type->getKind()) {
-                                case PHPLLVM\Type::KIND_INTEGER:
+                                case \PHPLLVM\Type::KIND_INTEGER:
                                     $notRefc = $this->context->builder->intToPtr($__value, $__type);
                                     break;
-                                case PHPLLVM\Type::KIND_ARRAY:
+                                case \PHPLLVM\Type::KIND_ARRAY:
                                     // $__tmp = $this->context->builder->($__value, $this->context->context->int64Type());
                                     // $(result) = $this->context->builder->intToPtr($__tmp, $__type);
                                     // break;
-                                case PHPLLVM\Type::KIND_POINTER:
+                                case \PHPLLVM\Type::KIND_POINTER:
                                     $notRefc = $this->context->builder->pointerCast($__value, $__type);
                                     break;
                                 default:
@@ -1294,54 +1294,54 @@ class Refcount extends Builtin {
                     $__kind = $__type->getKind();
                     $__value = $typeinfo;
                     switch ($__kind) {
-                        case PHPLLVM\Type::KIND_INTEGER:
+                        case \PHPLLVM\Type::KIND_INTEGER:
                             if (!is_object($__value)) {
                                 $typeinfo = $__type->constInt($__value, false);
                                 break;
                             }
                             $__other_type = $__value->typeOf();
                             switch ($__other_type->getKind()) {
-                                case PHPLLVM\Type::KIND_INTEGER:
+                                case \PHPLLVM\Type::KIND_INTEGER:
                                     if ($__other_type->getWidth() >= $__type->getWidth()) {
                                         $typeinfo = $this->context->builder->truncOrBitCast($__value, $__type);
                                     } else {
                                         $typeinfo = $this->context->builder->zExtOrBitCast($__value, $__type);
                                     }
                                     break;
-                                case PHPLLVM\Type::KIND_DOUBLE:
+                                case \PHPLLVM\Type::KIND_DOUBLE:
                                     
                                     $typeinfo = $this->context->builder->fpToSi($__value, $__type);
                                     
                                     break;
-                                case PHPLLVM\Type::KIND_ARRAY:
-                                case PHPLLVM\Type::KIND_POINTER:
+                                case \PHPLLVM\Type::KIND_ARRAY:
+                                case \PHPLLVM\Type::KIND_POINTER:
                                     $typeinfo = $this->context->builder->ptrToInt($__value, $__type);
                                     break;
                                 default:
                                     throw new \LogicException("Unknown how to handle type pair (int, " . $__other_type->toString() . ")");
                             }
                             break;
-                        case PHPLLVM\Type::KIND_DOUBLE:
+                        case \PHPLLVM\Type::KIND_DOUBLE:
                             if (!is_object($__value)) {
                                 $typeinfo = $__type->constReal($typeinfo);
                                 break;
                             }
                             $__other_type = $__value->typeOf();
                             switch ($__other_type->getKind()) {
-                                case PHPLLVM\Type::KIND_INTEGER:
+                                case \PHPLLVM\Type::KIND_INTEGER:
                                     
                                     $typeinfo = $this->context->builder->siToFp($__value, $__type);
                                     
                                     break;
-                                case PHPLLVM\Type::KIND_DOUBLE:
+                                case \PHPLLVM\Type::KIND_DOUBLE:
                                     $typeinfo = $this->context->builder->fpCast($__value, $__type);
                                     break;
                                 default:
                                     throw new \LogicException("Unknown how to handle type pair (double, " . $__other_type->toString() . ")");
                             }
                             break;
-                        case PHPLLVM\Type::KIND_ARRAY:
-                        case PHPLLVM\Type::KIND_POINTER:
+                        case \PHPLLVM\Type::KIND_ARRAY:
+                        case \PHPLLVM\Type::KIND_POINTER:
                             if (!is_object($__value)) {
                                 // this is very likely very wrong...
                                 $typeinfo = $__type->constInt($__value, false);
@@ -1349,14 +1349,14 @@ class Refcount extends Builtin {
                             }
                             $__other_type = $__value->typeOf();
                             switch ($__other_type->getKind()) {
-                                case PHPLLVM\Type::KIND_INTEGER:
+                                case \PHPLLVM\Type::KIND_INTEGER:
                                     $typeinfo = $this->context->builder->intToPtr($__value, $__type);
                                     break;
-                                case PHPLLVM\Type::KIND_ARRAY:
+                                case \PHPLLVM\Type::KIND_ARRAY:
                                     // $__tmp = $this->context->builder->($__value, $this->context->context->int64Type());
                                     // $(result) = $this->context->builder->intToPtr($__tmp, $__type);
                                     // break;
-                                case PHPLLVM\Type::KIND_POINTER:
+                                case \PHPLLVM\Type::KIND_POINTER:
                                     $typeinfo = $this->context->builder->pointerCast($__value, $__type);
                                     break;
                                 default:
@@ -1382,54 +1382,54 @@ class Refcount extends Builtin {
                     $__kind = $__type->getKind();
                     $__value = $value;
                     switch ($__kind) {
-                        case PHPLLVM\Type::KIND_INTEGER:
+                        case \PHPLLVM\Type::KIND_INTEGER:
                             if (!is_object($__value)) {
                                 $virtual = $__type->constInt($__value, false);
                                 break;
                             }
                             $__other_type = $__value->typeOf();
                             switch ($__other_type->getKind()) {
-                                case PHPLLVM\Type::KIND_INTEGER:
+                                case \PHPLLVM\Type::KIND_INTEGER:
                                     if ($__other_type->getWidth() >= $__type->getWidth()) {
                                         $virtual = $this->context->builder->truncOrBitCast($__value, $__type);
                                     } else {
                                         $virtual = $this->context->builder->zExtOrBitCast($__value, $__type);
                                     }
                                     break;
-                                case PHPLLVM\Type::KIND_DOUBLE:
+                                case \PHPLLVM\Type::KIND_DOUBLE:
                                     
                                     $virtual = $this->context->builder->fpToSi($__value, $__type);
                                     
                                     break;
-                                case PHPLLVM\Type::KIND_ARRAY:
-                                case PHPLLVM\Type::KIND_POINTER:
+                                case \PHPLLVM\Type::KIND_ARRAY:
+                                case \PHPLLVM\Type::KIND_POINTER:
                                     $virtual = $this->context->builder->ptrToInt($__value, $__type);
                                     break;
                                 default:
                                     throw new \LogicException("Unknown how to handle type pair (int, " . $__other_type->toString() . ")");
                             }
                             break;
-                        case PHPLLVM\Type::KIND_DOUBLE:
+                        case \PHPLLVM\Type::KIND_DOUBLE:
                             if (!is_object($__value)) {
                                 $virtual = $__type->constReal($value);
                                 break;
                             }
                             $__other_type = $__value->typeOf();
                             switch ($__other_type->getKind()) {
-                                case PHPLLVM\Type::KIND_INTEGER:
+                                case \PHPLLVM\Type::KIND_INTEGER:
                                     
                                     $virtual = $this->context->builder->siToFp($__value, $__type);
                                     
                                     break;
-                                case PHPLLVM\Type::KIND_DOUBLE:
+                                case \PHPLLVM\Type::KIND_DOUBLE:
                                     $virtual = $this->context->builder->fpCast($__value, $__type);
                                     break;
                                 default:
                                     throw new \LogicException("Unknown how to handle type pair (double, " . $__other_type->toString() . ")");
                             }
                             break;
-                        case PHPLLVM\Type::KIND_ARRAY:
-                        case PHPLLVM\Type::KIND_POINTER:
+                        case \PHPLLVM\Type::KIND_ARRAY:
+                        case \PHPLLVM\Type::KIND_POINTER:
                             if (!is_object($__value)) {
                                 // this is very likely very wrong...
                                 $virtual = $__type->constInt($__value, false);
@@ -1437,14 +1437,14 @@ class Refcount extends Builtin {
                             }
                             $__other_type = $__value->typeOf();
                             switch ($__other_type->getKind()) {
-                                case PHPLLVM\Type::KIND_INTEGER:
+                                case \PHPLLVM\Type::KIND_INTEGER:
                                     $virtual = $this->context->builder->intToPtr($__value, $__type);
                                     break;
-                                case PHPLLVM\Type::KIND_ARRAY:
+                                case \PHPLLVM\Type::KIND_ARRAY:
                                     // $__tmp = $this->context->builder->($__value, $this->context->context->int64Type());
                                     // $(result) = $this->context->builder->intToPtr($__tmp, $__type);
                                     // break;
-                                case PHPLLVM\Type::KIND_POINTER:
+                                case \PHPLLVM\Type::KIND_POINTER:
                                     $virtual = $this->context->builder->pointerCast($__value, $__type);
                                     break;
                                 default:
@@ -1469,54 +1469,54 @@ class Refcount extends Builtin {
                     $__kind = $__type->getKind();
                     $__value = $value;
                     switch ($__kind) {
-                        case PHPLLVM\Type::KIND_INTEGER:
+                        case \PHPLLVM\Type::KIND_INTEGER:
                             if (!is_object($__value)) {
                                 $virtual = $__type->constInt($__value, false);
                                 break;
                             }
                             $__other_type = $__value->typeOf();
                             switch ($__other_type->getKind()) {
-                                case PHPLLVM\Type::KIND_INTEGER:
+                                case \PHPLLVM\Type::KIND_INTEGER:
                                     if ($__other_type->getWidth() >= $__type->getWidth()) {
                                         $virtual = $this->context->builder->truncOrBitCast($__value, $__type);
                                     } else {
                                         $virtual = $this->context->builder->zExtOrBitCast($__value, $__type);
                                     }
                                     break;
-                                case PHPLLVM\Type::KIND_DOUBLE:
+                                case \PHPLLVM\Type::KIND_DOUBLE:
                                     
                                     $virtual = $this->context->builder->fpToSi($__value, $__type);
                                     
                                     break;
-                                case PHPLLVM\Type::KIND_ARRAY:
-                                case PHPLLVM\Type::KIND_POINTER:
+                                case \PHPLLVM\Type::KIND_ARRAY:
+                                case \PHPLLVM\Type::KIND_POINTER:
                                     $virtual = $this->context->builder->ptrToInt($__value, $__type);
                                     break;
                                 default:
                                     throw new \LogicException("Unknown how to handle type pair (int, " . $__other_type->toString() . ")");
                             }
                             break;
-                        case PHPLLVM\Type::KIND_DOUBLE:
+                        case \PHPLLVM\Type::KIND_DOUBLE:
                             if (!is_object($__value)) {
                                 $virtual = $__type->constReal($value);
                                 break;
                             }
                             $__other_type = $__value->typeOf();
                             switch ($__other_type->getKind()) {
-                                case PHPLLVM\Type::KIND_INTEGER:
+                                case \PHPLLVM\Type::KIND_INTEGER:
                                     
                                     $virtual = $this->context->builder->siToFp($__value, $__type);
                                     
                                     break;
-                                case PHPLLVM\Type::KIND_DOUBLE:
+                                case \PHPLLVM\Type::KIND_DOUBLE:
                                     $virtual = $this->context->builder->fpCast($__value, $__type);
                                     break;
                                 default:
                                     throw new \LogicException("Unknown how to handle type pair (double, " . $__other_type->toString() . ")");
                             }
                             break;
-                        case PHPLLVM\Type::KIND_ARRAY:
-                        case PHPLLVM\Type::KIND_POINTER:
+                        case \PHPLLVM\Type::KIND_ARRAY:
+                        case \PHPLLVM\Type::KIND_POINTER:
                             if (!is_object($__value)) {
                                 // this is very likely very wrong...
                                 $virtual = $__type->constInt($__value, false);
@@ -1524,14 +1524,14 @@ class Refcount extends Builtin {
                             }
                             $__other_type = $__value->typeOf();
                             switch ($__other_type->getKind()) {
-                                case PHPLLVM\Type::KIND_INTEGER:
+                                case \PHPLLVM\Type::KIND_INTEGER:
                                     $virtual = $this->context->builder->intToPtr($__value, $__type);
                                     break;
-                                case PHPLLVM\Type::KIND_ARRAY:
+                                case \PHPLLVM\Type::KIND_ARRAY:
                                     // $__tmp = $this->context->builder->($__value, $this->context->context->int64Type());
                                     // $(result) = $this->context->builder->intToPtr($__tmp, $__type);
                                     // break;
-                                case PHPLLVM\Type::KIND_POINTER:
+                                case \PHPLLVM\Type::KIND_POINTER:
                                     $virtual = $this->context->builder->pointerCast($__value, $__type);
                                     break;
                                 default:
@@ -1556,54 +1556,54 @@ class Refcount extends Builtin {
                     $__kind = $__type->getKind();
                     $__value = $value;
                     switch ($__kind) {
-                        case PHPLLVM\Type::KIND_INTEGER:
+                        case \PHPLLVM\Type::KIND_INTEGER:
                             if (!is_object($__value)) {
                                 $virtual = $__type->constInt($__value, false);
                                 break;
                             }
                             $__other_type = $__value->typeOf();
                             switch ($__other_type->getKind()) {
-                                case PHPLLVM\Type::KIND_INTEGER:
+                                case \PHPLLVM\Type::KIND_INTEGER:
                                     if ($__other_type->getWidth() >= $__type->getWidth()) {
                                         $virtual = $this->context->builder->truncOrBitCast($__value, $__type);
                                     } else {
                                         $virtual = $this->context->builder->zExtOrBitCast($__value, $__type);
                                     }
                                     break;
-                                case PHPLLVM\Type::KIND_DOUBLE:
+                                case \PHPLLVM\Type::KIND_DOUBLE:
                                     
                                     $virtual = $this->context->builder->fpToSi($__value, $__type);
                                     
                                     break;
-                                case PHPLLVM\Type::KIND_ARRAY:
-                                case PHPLLVM\Type::KIND_POINTER:
+                                case \PHPLLVM\Type::KIND_ARRAY:
+                                case \PHPLLVM\Type::KIND_POINTER:
                                     $virtual = $this->context->builder->ptrToInt($__value, $__type);
                                     break;
                                 default:
                                     throw new \LogicException("Unknown how to handle type pair (int, " . $__other_type->toString() . ")");
                             }
                             break;
-                        case PHPLLVM\Type::KIND_DOUBLE:
+                        case \PHPLLVM\Type::KIND_DOUBLE:
                             if (!is_object($__value)) {
                                 $virtual = $__type->constReal($value);
                                 break;
                             }
                             $__other_type = $__value->typeOf();
                             switch ($__other_type->getKind()) {
-                                case PHPLLVM\Type::KIND_INTEGER:
+                                case \PHPLLVM\Type::KIND_INTEGER:
                                     
                                     $virtual = $this->context->builder->siToFp($__value, $__type);
                                     
                                     break;
-                                case PHPLLVM\Type::KIND_DOUBLE:
+                                case \PHPLLVM\Type::KIND_DOUBLE:
                                     $virtual = $this->context->builder->fpCast($__value, $__type);
                                     break;
                                 default:
                                     throw new \LogicException("Unknown how to handle type pair (double, " . $__other_type->toString() . ")");
                             }
                             break;
-                        case PHPLLVM\Type::KIND_ARRAY:
-                        case PHPLLVM\Type::KIND_POINTER:
+                        case \PHPLLVM\Type::KIND_ARRAY:
+                        case \PHPLLVM\Type::KIND_POINTER:
                             if (!is_object($__value)) {
                                 // this is very likely very wrong...
                                 $virtual = $__type->constInt($__value, false);
@@ -1611,14 +1611,14 @@ class Refcount extends Builtin {
                             }
                             $__other_type = $__value->typeOf();
                             switch ($__other_type->getKind()) {
-                                case PHPLLVM\Type::KIND_INTEGER:
+                                case \PHPLLVM\Type::KIND_INTEGER:
                                     $virtual = $this->context->builder->intToPtr($__value, $__type);
                                     break;
-                                case PHPLLVM\Type::KIND_ARRAY:
+                                case \PHPLLVM\Type::KIND_ARRAY:
                                     // $__tmp = $this->context->builder->($__value, $this->context->context->int64Type());
                                     // $(result) = $this->context->builder->intToPtr($__tmp, $__type);
                                     // break;
-                                case PHPLLVM\Type::KIND_POINTER:
+                                case \PHPLLVM\Type::KIND_POINTER:
                                     $virtual = $this->context->builder->pointerCast($__value, $__type);
                                     break;
                                 default:
