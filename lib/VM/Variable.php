@@ -107,9 +107,16 @@ final class Variable {
         $this->integer = $value;
     }
 
-    public function isInt(): bool {
-        return $this->type === self::TYPE_INTEGER;
+    public function is(int $type): bool {
+        if ($this->type === $type) {
+            return $type;
+        }
+        if ($this->type === self::TYPE_INDIRECT) {
+            return $this->indirect->is($type);
+        }
+        return false;
     }
+
     public function toInt(): int {
         switch ($this->type) {
             case self::TYPE_NULL:

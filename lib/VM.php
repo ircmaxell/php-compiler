@@ -269,16 +269,16 @@ restart:
                         break;
                     }
                     $key = $frame->scope[$op->arg3]->resolveIndirect();
-                    if ($key->isInt()) {
+                    if ($key->is(Variable::TYPE_INTEGER)) {
                         $ht->addIndex($key->toInt(), $frame->scope[$op->arg2]);
                     } else {
                         $ht->add($key->toString(), $frame->scope[$op->arg2]);
                     }
                     break;
                 case OpCode::TYPE_BOOLEAN_NOT:
-		    $value = !($frame->scope[$op->arg2]->toBool());
-		    $dst = $frame->scope[$op->arg1];
-		    $dst->bool($value);
+                    $value = !($frame->scope[$op->arg2]->toBool());
+                    $dst = $frame->scope[$op->arg1];
+                    $dst->bool($value);
                     break;
                 default:
                     throw new \LogicException("VM OpCode Not Implemented: " . $op->getType());
