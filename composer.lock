@@ -868,12 +868,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/phan/phan.git",
-                "reference": "bf2e5409fbac6a5dc7a6162d8de0ac183f13a962"
+                "reference": "a83cfedbc3708de566fa42f782f7044e42b600db"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phan/phan/zipball/bf2e5409fbac6a5dc7a6162d8de0ac183f13a962",
-                "reference": "bf2e5409fbac6a5dc7a6162d8de0ac183f13a962",
+                "url": "https://api.github.com/repos/phan/phan/zipball/a83cfedbc3708de566fa42f782f7044e42b600db",
+                "reference": "a83cfedbc3708de566fa42f782f7044e42b600db",
                 "shasum": ""
             },
             "require": {
@@ -929,7 +929,7 @@
                 "php",
                 "static"
             ],
-            "time": "2019-04-16T23:45:21+00:00"
+            "time": "2019-04-17T19:41:38+00:00"
         },
         {
             "name": "phar-io/manifest",
@@ -1639,12 +1639,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/preprocess/pre-plugin.git",
-                "reference": "37a67e6b34317ac7c15dbcafe28d2c382e203137"
+                "reference": "40e32a19e3f584cee14edaaa3250ab56b9038bba"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/preprocess/pre-plugin/zipball/37a67e6b34317ac7c15dbcafe28d2c382e203137",
-                "reference": "37a67e6b34317ac7c15dbcafe28d2c382e203137",
+                "url": "https://api.github.com/repos/preprocess/pre-plugin/zipball/40e32a19e3f584cee14edaaa3250ab56b9038bba",
+                "reference": "40e32a19e3f584cee14edaaa3250ab56b9038bba",
                 "shasum": ""
             },
             "require": {
@@ -1666,6 +1666,7 @@
                     "Pre\\Plugin\\": "source"
                 },
                 "files": [
+                    "source/expanders.php",
                     "source/functions.php",
                     "source/autoload.php",
                     "source/macros.php"
@@ -1675,7 +1676,7 @@
             "license": [
                 "MIT"
             ],
-            "time": "2019-04-17T07:01:59+00:00"
+            "time": "2019-04-17T18:54:38+00:00"
         },
         {
             "name": "psr/log",
@@ -3206,12 +3207,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/marcioAlmada/yay.git",
-                "reference": "2eed9af567b4803721f30e7395eaa6f9e166f855"
+                "reference": "08c6490364e5f4c278c04d4eb331e0128290039d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/marcioAlmada/yay/zipball/2eed9af567b4803721f30e7395eaa6f9e166f855",
-                "reference": "2eed9af567b4803721f30e7395eaa6f9e166f855",
+                "url": "https://api.github.com/repos/marcioAlmada/yay/zipball/08c6490364e5f4c278c04d4eb331e0128290039d",
+                "reference": "08c6490364e5f4c278c04d4eb331e0128290039d",
                 "shasum": ""
             },
             "require": {
@@ -3256,7 +3257,7 @@
                 "pre-processor",
                 "syntax"
             ],
-            "time": "2018-11-10T14:00:27+00:00"
+            "time": "2019-04-17T08:14:14+00:00"
         }
     ],
     "aliases": [
