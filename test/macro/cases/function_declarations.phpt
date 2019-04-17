@@ -27,7 +27,7 @@ $fntype___0 = $this->context->context->functionType(
     false
 );
 $fn___0 = $this->context->module->addFunction('bar', $fntype___0);
-$fn___0->addAttributeAtIndex(PHPLLVM\Attribute::INDEX_FUNCTION, $this->context->attributes['alwaysinline']);
+$fn___0->addAttributeAtIndex(\PHPLLVM\Attribute::INDEX_FUNCTION, $this->context->attributes['alwaysinline']);
 $this->context->registerFunction('bar', $fn___0);
 
 $fntype___0 = $this->context->context->functionType(

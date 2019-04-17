@@ -1,7 +1,7 @@
 <?php
 
 # This file is generated, changes you make will be lost.
-# Make your changes in /compiler/script/../lib/JIT/Call/Native.pre instead.
+# Make your changes in /compiler/lib/JIT/Call/Native.pre instead.
 
 /*
  * This file is part of PHP-Compiler, a PHP CFG Compiler for PHP code
