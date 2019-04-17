@@ -109,7 +109,7 @@ final class Variable {
 
     public function is(int $type): bool {
         if ($this->type === $type) {
-            return $type;
+            return true;
         }
         if ($this->type === self::TYPE_INDIRECT) {
             return $this->indirect->is($type);
