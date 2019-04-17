@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "b32fcadf0267ff6cdafcf5a56684d414",
+    "content-hash": "39a321e29f08a3979152c465bf621f3d",
     "packages": [
         {
             "name": "ircmaxell/php-cfg",
@@ -602,12 +602,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/FriendsOfPHP/PHP-CS-Fixer.git",
-                "reference": "e9d66a580baf74a19c72b0457db5329a193f313c"
+                "reference": "c12abbc052b9378c251914b027c0c712e2b63885"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/FriendsOfPHP/PHP-CS-Fixer/zipball/e9d66a580baf74a19c72b0457db5329a193f313c",
-                "reference": "e9d66a580baf74a19c72b0457db5329a193f313c",
+                "url": "https://api.github.com/repos/FriendsOfPHP/PHP-CS-Fixer/zipball/c12abbc052b9378c251914b027c0c712e2b63885",
+                "reference": "c12abbc052b9378c251914b027c0c712e2b63885",
                 "shasum": ""
             },
             "require": {
@@ -687,7 +687,7 @@
                 }
             ],
             "description": "A tool to automatically fix PHP code style",
-            "time": "2019-04-15T09:15:25+00:00"
+            "time": "2019-04-17T10:18:10+00:00"
         },
         {
             "name": "microsoft/tolerant-php-parser",
@@ -868,12 +868,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/phan/phan.git",
-                "reference": "72ea5937c5ecf4daf1e528ec584fe4738b33f2b3"
+                "reference": "bf2e5409fbac6a5dc7a6162d8de0ac183f13a962"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phan/phan/zipball/72ea5937c5ecf4daf1e528ec584fe4738b33f2b3",
-                "reference": "72ea5937c5ecf4daf1e528ec584fe4738b33f2b3",
+                "url": "https://api.github.com/repos/phan/phan/zipball/bf2e5409fbac6a5dc7a6162d8de0ac183f13a962",
+                "reference": "bf2e5409fbac6a5dc7a6162d8de0ac183f13a962",
                 "shasum": ""
             },
             "require": {
@@ -929,7 +929,7 @@
                 "php",
                 "static"
             ],
-            "time": "2019-04-15T18:03:11+00:00"
+            "time": "2019-04-16T23:45:21+00:00"
         },
         {
             "name": "phar-io/manifest",
@@ -1635,24 +1635,25 @@
         },
         {
             "name": "pre/plugin",
-            "version": "dev-master",
+            "version": "dev-develop",
             "source": {
                 "type": "git",
                 "url": "https://github.com/preprocess/pre-plugin.git",
-                "reference": "f58a4ed8ccb664b4932a97cd62355dc67da92c52"
+                "reference": "37a67e6b34317ac7c15dbcafe28d2c382e203137"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/preprocess/pre-plugin/zipball/f58a4ed8ccb664b4932a97cd62355dc67da92c52",
-                "reference": "f58a4ed8ccb664b4932a97cd62355dc67da92c52",
+                "url": "https://api.github.com/repos/preprocess/pre-plugin/zipball/37a67e6b34317ac7c15dbcafe28d2c382e203137",
+                "reference": "37a67e6b34317ac7c15dbcafe28d2c382e203137",
                 "shasum": ""
             },
             "require": {
-                "composer-plugin-api": "^1.1"
+                "composer-plugin-api": "^1.1",
+                "yay/yay": "^0.7.0"
             },
             "require-dev": {
                 "composer/composer": "^1.3",
-                "phpunit/phpunit": "^5.0|^6.0"
+                "phpunit/phpunit": "^5.0|^6.0|^7.0"
             },
             "type": "composer-plugin",
             "extra": {
@@ -1665,9 +1666,6 @@
                     "Pre\\Plugin\\": "source"
                 },
                 "files": [
-                    "source/environment.php",
-                    "source/expanders.php",
-                    "source/parsers.php",
                     "source/functions.php",
                     "source/autoload.php",
                     "source/macros.php"
@@ -1677,7 +1675,7 @@
             "license": [
                 "MIT"
             ],
-            "time": "2019-04-10T05:28:01+00:00"
+            "time": "2019-04-17T07:01:59+00:00"
         },
         {
             "name": "psr/log",
@@ -3201,6 +3199,64 @@
                 "validate"
             ],
             "time": "2018-12-25T11:19:39+00:00"
+        },
+        {
+            "name": "yay/yay",
+            "version": "0.7.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/marcioAlmada/yay.git",
+                "reference": "277f52cf44d78e677cc7dadd1aa48d54cfe9d272"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/marcioAlmada/yay/zipball/277f52cf44d78e677cc7dadd1aa48d54cfe9d272",
+                "reference": "277f52cf44d78e677cc7dadd1aa48d54cfe9d272",
+                "shasum": ""
+            },
+            "require": {
+                "ext-mbstring": "*",
+                "ext-tokenizer": "*",
+                "nikic/php-parser": "^2.1|^3.0|^4.0",
+                "php": "7.*"
+            },
+            "require-dev": {
+                "phpbench/phpbench": "@dev",
+                "phpunit/phpunit": "~6.5"
+            },
+            "bin": [
+                "bin/yay",
+                "bin/yay-pretty"
+            ],
+            "type": "library",
+            "autoload": {
+                "files": [
+                    "src/parsers.php",
+                    "src/parsers_internal.php",
+                    "src/expanders.php"
+                ],
+                "psr-4": {
+                    "Yay\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Márcio Almada",
+                    "email": "marcio3w@gmail.com",
+                    "homepage": "https://github.com/marcioAlmada"
+                }
+            ],
+            "description": "A high level PHP Pre-Processor",
+            "keywords": [
+                "language",
+                "pre-processor",
+                "syntax"
+            ],
+            "time": "2018-06-26T11:52:57+00:00"
         }
     ],
     "aliases": [],

@@ -190,7 +190,6 @@ $(macro :unsafe :recursive) {
     }
 } >> {
     $(stmts ... {
-        $$(trim {
 
             $(assignop ? ... {
                 $(nullcheck ? ... {
@@ -321,19 +320,19 @@ $(macro :unsafe :recursive) {
                             })
                         })
 
-                        $(binary_and ? ... {
+                        $(binary_and ? {
                             $(result) = $this->context->builder->bitwiseAnd($(binary_left), $__right);
                         })
 
-                        $(binary_or ? ... {
+                        $(binary_or ? {
                             $(result) = $this->context->builder->bitwiseOr($(binary_left), $__right);
                         })
 
-                        $(binary_xor ? ... {
+                        $(binary_xor ? {
                             $(result) = $this->context->builder->bitwiseXor($(binary_left), $__right);
                         })
 
-                        $(binary_add ? ... {
+                        $(binary_add ? {
                             $(unsigned ? {
                                 $(result) = $this->context->builder->addNoUnsignedWrap($(binary_left), $__right);
                             })
@@ -342,7 +341,7 @@ $(macro :unsafe :recursive) {
                             })
                         })
 
-                        $(binary_sub ? ... {
+                        $(binary_sub ? {
                             $(unsigned ? {
                                 $(result) = $this->context->builder->subNoUnsignedWrap($(binary_left), $__right);
                             })
@@ -351,7 +350,7 @@ $(macro :unsafe :recursive) {
                             })
                         })
 
-                        $(binary_mul ? ... {
+                        $(binary_mul ? {
                             $(unsigned ? {
                                 $(result) = $this->context->builder->mulNoUnsignedWrap($(binary_left), $__right);
                             })
@@ -360,7 +359,7 @@ $(macro :unsafe :recursive) {
                             })
                         })
 
-                        $(binary_div ? ... {
+                        $(binary_div ? {
                             $(unsigned ? {
                                 $(result) = $this->context->builder->unsignedDiv($(binary_left), $__right);
                             })
@@ -369,7 +368,7 @@ $(macro :unsafe :recursive) {
                             })
                         })
 
-                        $(binary_mod ? ... {
+                        $(binary_mod ? {
                             $(unsigned ? {
                                 $(result) = $this->context->builder->unsignedRem($(binary_left), $__right);
                             })
@@ -378,7 +377,7 @@ $(macro :unsafe :recursive) {
                             })
                         })
 
-                        $(binary_smaller ? ... {
+                        $(binary_smaller ? {
                             $(unsigned ? {
                                 $cmp = PHPLLVM\Builder::INT_ULT;
                             })
@@ -388,7 +387,7 @@ $(macro :unsafe :recursive) {
                             $(result) = $this->context->builder->icmp($cmp, $(binary_left), $__right);
                         })
 
-                        $(binary_smaller_equal ? ... {
+                        $(binary_smaller_equal ? {
                             $(unsigned ? {
                                 $cmp = PHPLLVM\Builder::INT_ULE;
                             })
@@ -398,7 +397,7 @@ $(macro :unsafe :recursive) {
                             $(result) = $this->context->builder->icmp($cmp, $(binary_left), $__right);
                         })
 
-                        $(binary_greater ? ... {
+                        $(binary_greater ? {
                             $(unsigned ? {
                                 $cmp = PHPLLVM\Builder::INT_UGT;
                             })
@@ -408,7 +407,7 @@ $(macro :unsafe :recursive) {
                             $(result) = $this->context->builder->icmp($cmp, $(binary_left), $__right);
                         })
 
-                        $(binary_greater_equal ? ... {
+                        $(binary_greater_equal ? {
                             $(unsigned ? {
                                 $cmp = PHPLLVM\Builder::INT_UGE;
                             })
@@ -418,11 +417,11 @@ $(macro :unsafe :recursive) {
                             $(result) = $this->context->builder->icmp($cmp, $(binary_left), $__right);
                         })
 
-                        $(binary_equals ? ... {
+                        $(binary_equals ? {
                             $(result) = $this->context->builder->icmp(PHPLLVM\Builder::INT_EQ, $(binary_left), $__right);
                         })
 
-                        $(binary_not_equal ? ... {
+                        $(binary_not_equal ? {
                             $(result) = $this->context->builder->icmp(PHPLLVM\Builder::INT_NE, $(binary_left), $__right);
                         })
                     })
@@ -708,6 +707,5 @@ $(macro :unsafe :recursive) {
                 );
             })
 
-        })
     })
 }
