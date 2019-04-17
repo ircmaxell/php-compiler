@@ -1,0 +1,14 @@
+--TEST--
+Basic array indexing
+--FILE--
+<?php
+$scalar = [1, 2, 3];
+
+echo "$scalar[2]\n";
+
+$hashed = ["foo" => 1, "bar" => 2, "baz" => 3];
+
+echo "$hashed[bar]\n";
+--EXPECT--
+3
+2
