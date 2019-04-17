@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "39a321e29f08a3979152c465bf621f3d",
+    "content-hash": "24c14486803311e93ce9d950a4d8274c",
     "packages": [
         {
             "name": "ircmaxell/php-cfg",
@@ -3202,16 +3202,16 @@
         },
         {
             "name": "yay/yay",
-            "version": "0.7.0",
+            "version": "dev-master",
             "source": {
                 "type": "git",
                 "url": "https://github.com/marcioAlmada/yay.git",
-                "reference": "277f52cf44d78e677cc7dadd1aa48d54cfe9d272"
+                "reference": "2eed9af567b4803721f30e7395eaa6f9e166f855"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/marcioAlmada/yay/zipball/277f52cf44d78e677cc7dadd1aa48d54cfe9d272",
-                "reference": "277f52cf44d78e677cc7dadd1aa48d54cfe9d272",
+                "url": "https://api.github.com/repos/marcioAlmada/yay/zipball/2eed9af567b4803721f30e7395eaa6f9e166f855",
+                "reference": "2eed9af567b4803721f30e7395eaa6f9e166f855",
                 "shasum": ""
             },
             "require": {
@@ -3256,16 +3256,24 @@
                 "pre-processor",
                 "syntax"
             ],
-            "time": "2018-06-26T11:52:57+00:00"
+            "time": "2018-11-10T14:00:27+00:00"
         }
     ],
-    "aliases": [],
+    "aliases": [
+        {
+            "alias": "0.7.1",
+            "alias_normalized": "0.7.1.0",
+            "version": "9999999-dev",
+            "package": "yay/yay"
+        }
+    ],
     "minimum-stability": "dev",
     "stability-flags": {
         "ircmaxell/php-optimizer": 20,
         "ircmaxell/php-llvm": 20,
         "pre/plugin": 20,
-        "phan/phan": 20
+        "phan/phan": 20,
+        "yay/yay": 20
     },
     "prefer-stable": false,
     "prefer-lowest": false,

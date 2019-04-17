@@ -20,7 +20,8 @@
         "phpunit/phpunit": "^8.0",
         "friendsofphp/php-cs-fixer": "*",
         "pre/plugin": "dev-develop",
-        "phan/phan": "dev-master"
+        "phan/phan": "dev-master",
+        "yay/yay": "dev-master#08c6490364e5f4c278c04d4eb331e0128290039d as 0.7.1"
     },
     "minimum-stability": "dev",
     "autoload": {

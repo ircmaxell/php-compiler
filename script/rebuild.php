@@ -34,6 +34,7 @@ foreach ($it as $dir) {
         continue;
     }
     foreach (new GlobIterator($dir.'/*.pre', FilesystemIterator::CURRENT_AS_PATHNAME) as $file) {
+        $file = realpath($file);
         echo "Compiling ${file}\n";
         $destination = preg_replace('(\.pre$)', '.php', $file);
         if ($onlyChanged && filemtime($destination) >= filemtime($file)) {
