@@ -1,7 +1,7 @@
 <?php
 
 # This file is generated, changes you make will be lost.
-# Make your changes in /compiler/lib/JIT/Helper.pre instead.
+# Make your changes in /compiler/script/../lib/JIT/Helper.pre instead.
 
 /*
  * This file is part of PHP-Compiler, a PHP CFG Compiler for PHP code
@@ -273,7 +273,7 @@ restart:
                         
 
                         
-                            $cmp = PHPLLVM\Builder::INT_SGE;
+                            $cmp = \PHPLLVM\Builder::INT_SGE;
                             
                             $result = $this->context->builder->icmp($cmp, $leftValue, $__right);
     
@@ -303,7 +303,7 @@ restart:
                         
 
                         
-                            $cmp = PHPLLVM\Builder::INT_SLE;
+                            $cmp = \PHPLLVM\Builder::INT_SLE;
                             
                             $result = $this->context->builder->icmp($cmp, $leftValue, $__right);
     
@@ -335,7 +335,7 @@ restart:
                         
 
                         
-                            $cmp = PHPLLVM\Builder::INT_SGT;
+                            $cmp = \PHPLLVM\Builder::INT_SGT;
                             
                             $result = $this->context->builder->icmp($cmp, $leftValue, $__right);
     
@@ -363,7 +363,7 @@ restart:
                         
 
                         
-                            $cmp = PHPLLVM\Builder::INT_SLT;
+                            $cmp = \PHPLLVM\Builder::INT_SLT;
                             
                             $result = $this->context->builder->icmp($cmp, $leftValue, $__right);
     
@@ -399,7 +399,7 @@ restart:
 
                         
 
-                        $result = $this->context->builder->icmp(PHPLLVM\Builder::INT_EQ, $leftValue, $__right);
+                        $result = $this->context->builder->icmp(\PHPLLVM\Builder::INT_EQ, $leftValue, $__right);
     
                         goto return_bool;
                     case OpCode::TYPE_NOT_EQUAL:
@@ -434,7 +434,7 @@ restart:
 
                         
 
-                        $result = $this->context->builder->icmp(PHPLLVM\Builder::INT_NE, $leftValue, $__right);
+                        $result = $this->context->builder->icmp(\PHPLLVM\Builder::INT_NE, $leftValue, $__right);
     
                         goto return_bool;
                 }
