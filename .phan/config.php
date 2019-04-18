@@ -12,11 +12,9 @@ return [
 	'suppress_issue_types' => [
 		'PhanTypeInvalidBitwiseBinaryOperator',
 		'PhanTypeObjectUnsetDeclaredProperty',
-		'PhanUnreferencedUseNormal',
 		'PhanUndeclaredClassMethod',
 		'PhanTypeMismatchProperty',
 		'PhanTypeExpectedObjectPropAccessButGotNull',
-		'PhanUnreferencedUseNormal',
 		'PhanTypeMismatchDimFetchNullable',
 		'PhanUndeclaredMethod',
 		'PhanTypeMismatchArgument',

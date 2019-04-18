@@ -9,9 +9,10 @@
 
 namespace PHPCompiler;
 
+// used as a property type.
+// @phan-suppress-next-line PhanUnreferencedUseNormal
 use PHPCfg\Func;
 use PHPCfg\Block as CfgBlock;
-use PHPCfg\Op\Expr;
 use PHPCfg\Operand;
 use PHPCompiler\VM\Context;
 use PHPCompiler\VM\Variable;

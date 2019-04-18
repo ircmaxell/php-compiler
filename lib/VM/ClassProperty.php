@@ -9,8 +9,6 @@
 
 namespace PHPCompiler\VM;
 
-use PHPCompiler\Block;
-
 class ClassProperty {
 
     public string $name;

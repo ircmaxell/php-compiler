@@ -14,15 +14,11 @@ namespace PHPCompiler;
 
 use PHPCfg\Operand;
 use PHPCfg\Op;
-use PHPCfg\Block as CfgBlock;
 use PHPTypes\Type;
-use PHPCompiler\JIT\Analyzer;
 use PHPCompiler\JIT\Context;
 use PHPCompiler\JIT\Variable;
 
 use PHPCompiler\Func as CoreFunc;
-use PHPCompiler\JIT\Func as JITFunc;
-use PHPCompiler\NativeType\NativeArray as NativeArray;
 
 use PHPLLVM;
 

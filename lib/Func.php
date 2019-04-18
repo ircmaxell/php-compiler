@@ -10,7 +10,6 @@
 namespace PHPCompiler;
 
 use PHPCompiler\VM\Context;
-use PHPCompiler\VM\Variable;
 
 abstract class Func {
 

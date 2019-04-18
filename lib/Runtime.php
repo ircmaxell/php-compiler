@@ -14,7 +14,6 @@ use PHPCfg\Parser;
 use PHPCfg\Traverser;
 use PHPCfg\LivenessDetector;
 use PHPCfg\Visitor;
-use PHPCfg\Printer as CfgPrinter;
 use PHPCfg\Script;
 use PHPTypes\TypeReconstructor;
 use PhpParser\NodeTraverser;

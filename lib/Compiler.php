@@ -9,6 +9,8 @@
 
 namespace PHPCompiler;
 
+// This is used as a property type, phan is confused.
+// @phan-suppress-next-line PhanUnreferencedUseNormal
 use SplObjectStorage;
 use PHPCfg\Func as CfgFunc;
 use PHPCfg\Op;
@@ -17,7 +19,6 @@ use PHPCfg\Operand;
 use PHPCfg\Script;
 use PHPTypes\Type;
 use PHPCompiler\VM\Variable;
-use PHPCompiler\NativeType\NativeArray;
 
 class Compiler {
 

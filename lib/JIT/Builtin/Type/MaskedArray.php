@@ -9,12 +9,8 @@
 
 namespace PHPCompiler\JIT\Builtin\Type;
 
-use PHPCfg\Operand;
-use PHPCfg\Operand\Literal;
 use PHPCompiler\JIT\Builtin\Type;
 use PHPCompiler\JIT\Builtin\Refcount;
-use PHPCompiler\JIT\Variable;
-use PHPCompiler\JIT\Func;
 
 class MaskedArray extends Type {
     private \gcc_jit_struct_ptr $struct;

@@ -10,8 +10,6 @@
 namespace PHPCompiler\JIT\Builtin\Type;
 
 use PHPCompiler\JIT\Builtin\Type;
-use PHPCompiler\JIT\Builtin\Refcount;
-use PHPCompiler\JIT\Variable;
 
 class HashTable extends Type {
     private \gcc_jit_struct_ptr $struct;
