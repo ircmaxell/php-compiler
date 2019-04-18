@@ -42,6 +42,7 @@ class PHP extends MemoryManager
         );
     }
 
+    /*
     public function malloc(\gcc_jit_rvalue_ptr $size, \gcc_jit_type_ptr $type): \gcc_jit_rvalue_ptr
     {
         $void = $this->context->helper->call(
@@ -94,6 +95,7 @@ class PHP extends MemoryManager
         );
     }
 
+     */
     private function expandDebugDecl(): array
     {
         if (\PHP_DEBUG) {

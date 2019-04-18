@@ -23,6 +23,7 @@ class HashTable extends Type {
     protected array $bucketFields;
 
     public function register(): void {
+        /*
         $this->struct = \gcc_jit_context_new_opaque_struct(
             $this->context->context,
             null,
@@ -43,9 +44,11 @@ class HashTable extends Type {
         );
         $this->pointer = $this->context->getTypeFromString('__ht__*');
         $this->bucketPointer = $this->context->getTypeFromString('__htbucket__*');
+        */
     }
 
     public function implement(): void {
+        /*
         $this->size = \gcc_jit_context_new_global(
             $this->context->context,
             null,
@@ -81,5 +84,6 @@ class HashTable extends Type {
             count($this->bucketFields),
             \gcc_jit_field_ptr_ptr::fromArray(...array_values($this->bucketFields))
         );
+        */
     }
 }

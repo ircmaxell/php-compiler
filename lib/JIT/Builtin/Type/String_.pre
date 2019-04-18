@@ -150,6 +150,7 @@ class String_ extends Type {
         throw new \LogicException("Unknown if it's a string due to type comparisons...");
     }
 
+    /*
     public function size(Variable $var): \gcc_jit_rvalue_ptr {
         switch ($var->type) {
             case Variable::TYPE_STRING:
@@ -169,6 +170,7 @@ class String_ extends Type {
                 );
         }
     }
+    */
 
     public function value(Variable $var): \gcc_jit_rvalue_ptr {
         switch ($var->type) {
@@ -209,6 +211,7 @@ class String_ extends Type {
     }
 
     private function copy(\gcc_jit_block_ptr $block, Variable $dest, Variable $other, \gcc_jit_rvalue_ptr $offset): void {
+        /*
         $addr = \gcc_jit_lvalue_get_address(
             \gcc_jit_context_new_array_access(
                 $this->context->context,
@@ -236,8 +239,10 @@ class String_ extends Type {
             default:
                 throw new \LogicException("Unhandled type for copy $other->type");
         }
+        */
     }
 
+    /*
     public function dimFetch(\gcc_jit_rvalue_ptr $str, \gcc_jit_rvalue_ptr $dim): \gcc_jit_rvalue_ptr {
         return \gcc_jit_lvalue_get_address(\gcc_jit_context_new_array_access(
             $this->context->context,
@@ -257,5 +262,5 @@ class String_ extends Type {
             )
         ), $this->context->location());
     }
-
+    */
 }
