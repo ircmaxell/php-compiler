@@ -18,7 +18,6 @@ return [
 		'PhanTypeMismatchDimFetchNullable',
 		'PhanUndeclaredMethod',
 		'PhanTypeMismatchArgument',
-		'PhanUndeclaredFunction',
 		'PhanUndeclaredStaticMethod',
 		'PhanUndeclaredConstant',
 		'PhanTypeExpectedObjectPropAccess',

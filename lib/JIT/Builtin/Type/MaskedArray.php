@@ -10,7 +10,6 @@
 namespace PHPCompiler\JIT\Builtin\Type;
 
 use PHPCompiler\JIT\Builtin\Type;
-use PHPCompiler\JIT\Builtin\Refcount;
 
 class MaskedArray extends Type {
     private \gcc_jit_struct_ptr $struct;
@@ -19,6 +18,7 @@ class MaskedArray extends Type {
     protected array $fields;
 
     public function register(): void {
+        /*
         $this->struct = \gcc_jit_context_new_opaque_struct(
             $this->context->context,
             null,
@@ -50,9 +50,11 @@ class MaskedArray extends Type {
                 '__maskedarray__*'
             )
         );
+        */
     }
 
     public function implement(): void {
+        /*
         $this->size = \gcc_jit_context_new_global(
             $this->context->context,
             null,
@@ -74,6 +76,7 @@ class MaskedArray extends Type {
         );
         $this->implementAlloc();
         $this->implementGrow();
+        */
     }
 
     private function computeAllocSize(\gcc_jit_rvalue_ptr $size): \gcc_jit_rvalue_ptr {
@@ -92,6 +95,7 @@ class MaskedArray extends Type {
     }
 
     private function implementAlloc(): void {
+	/*
         $alloc = $this->context->lookupFunction('__maskedarray__alloc');
         $block = \gcc_jit_function_new_block($alloc->func, 'main');
         $size = $this->context->helper->binaryOp(
@@ -128,9 +132,11 @@ class MaskedArray extends Type {
             Refcount::TYPE_INFO_REFCOUNTED | Refcount::TYPE_INFO_TYPE_MASKED_ARRAY
         );
         \gcc_jit_block_end_with_return($block,  null, $local->asRValue());
+        */
     }
 
     private function implementGrow(): void {
+        /*
         $grow = $this->context->lookupFunction('__maskedarray__grow');
         $block = \gcc_jit_function_new_block($grow->func, 'main');
         $size = $this->context->helper->binaryOp(
@@ -162,15 +168,18 @@ class MaskedArray extends Type {
             )
         );
         \gcc_jit_block_end_with_return($block,  null, $local->asRValue());
+        */
     }
 
     public function initialize(): void {
+        /*
         \gcc_jit_block_add_assignment(
             $this->context->initBlock,
             null,
             $this->size,
             $this->sizeof($this->context->getTypeFromString('__maskedarray__'))
         );
+	*/
     }
 
     public function allocate(
@@ -202,6 +211,7 @@ class MaskedArray extends Type {
         );
     }
 
+    /*
     public function read(\gcc_jit_rvalue_ptr $ptr, \gcc_jit_rvalue_ptr $offset, string $type): \gcc_jit_rvalue_ptr {
         $data = $this->readField('data', $ptr);
         return \gcc_jit_context_new_array_access(
@@ -250,6 +260,7 @@ class MaskedArray extends Type {
     public function size(\gcc_jit_rvalue_ptr $ptr): \gcc_jit_rvalue_ptr {
         return $this->readField('size', $ptr);
     }
+    */
     
 
 }

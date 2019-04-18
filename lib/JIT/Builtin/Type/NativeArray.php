@@ -11,14 +11,13 @@ declare(strict_types=1);
 
 namespace PHPCompiler\JIT\Builtin\Type;
 
-use PHPCompiler\JIT\Builtin\ErrorHandler;
-
 use PHPCompiler\JIT\Builtin\Type;
 
 class NativeArray extends Type
 {
     public function register(): void
     {
+        /*
         $this->context->registerFunction(
             '__nativearray__boundscheck',
             $this->context->helper->createNativeFunction(
@@ -30,10 +29,12 @@ class NativeArray extends Type
                 'long long'
             )
         );
+        */
     }
 
     public function initialize(): void
     {
+	/*
         $bounds = $this->context->lookupFunction('__nativearray__boundscheck');
         $block = \gcc_jit_function_new_block($bounds->func, 'main');
         $good = \gcc_jit_function_new_block($bounds->func, 'good');
@@ -54,5 +55,6 @@ class NativeArray extends Type
         \gcc_jit_block_end_with_void_return($good, $this->context->location());
         $this->context->error->error($bad, ErrorHandler::E_ERROR, 'Invalid bounds access');
         \gcc_jit_block_end_with_void_return($bad, $this->context->location());
+        */
     }
 }

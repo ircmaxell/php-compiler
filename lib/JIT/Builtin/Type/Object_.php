@@ -12,7 +12,7 @@ namespace PHPCompiler\JIT\Builtin\Type;
 use PHPCfg\Operand;
 use PHPCfg\Operand\Literal;
 use PHPCompiler\JIT\Builtin\Type;
-use PHPCompiler\JIT\Builtin\Refcount;
+// use PHPCompiler\JIT\Builtin\Refcount;
 use PHPCompiler\JIT\Variable;
 
 class Object_ extends Type {
@@ -25,6 +25,7 @@ class Object_ extends Type {
     private array $propNameMap = [];
 
     public function register(): void {
+	/*
         $this->struct = \gcc_jit_context_new_opaque_struct(
             $this->context->context,
             null,
@@ -61,9 +62,11 @@ class Object_ extends Type {
                 'size_t'
             )
         );
+        */
     }
 
     public function implement(): void {
+	/*
         $this->size = \gcc_jit_context_new_global(
             $this->context->context,
             null,
@@ -82,9 +85,11 @@ class Object_ extends Type {
             \gcc_jit_field_ptr_ptr::fromArray(...array_values($this->fields))
         );
         $this->implementAlloc();
+         */
     }
 
     private function implementAlloc(): void {
+        /*
         $alloc = $this->context->lookupFunction('__object__alloc');
         $block = \gcc_jit_function_new_block($alloc->func, 'main');
         $return = \gcc_jit_function_new_block($alloc->func, 'return');
@@ -178,15 +183,18 @@ class Object_ extends Type {
         \gcc_jit_block_end_with_jump($block, $this->context->location(), $conditional);
         \gcc_jit_block_end_with_jump($loop, $this->context->location(), $conditional);
         \gcc_jit_block_end_with_return($return,  null, $local->asRValue());
+        */
     }
 
     public function initialize(): void {
+        /*
         \gcc_jit_block_add_assignment(
             $this->context->initBlock,
             null,
             $this->size,
             $this->sizeof($this->context->getTypeFromString('__object__'))
         );
+        */
     }
 
     public function shutdown(): void {
@@ -194,6 +202,7 @@ class Object_ extends Type {
     }
 
     private function implementPropFetch(): void {
+        /*
         $fetch = $this->context->lookupFunction('__object__propfetch');
         $block = \gcc_jit_function_new_block($fetch->func, 'main');
         $defaultBlock = \gcc_jit_function_new_block($fetch->func, 'default_');
@@ -222,8 +231,10 @@ class Object_ extends Type {
             count($cases),
             \gcc_jit_case_ptr_ptr::fromArray(...$cases)
         );
+        */
     }
 
+    /*
     private function implementPropFetchForPropset(\gcc_jit_function_ptr $func, \gcc_jit_block_ptr $block, \gcc_jit_rvalue_ptr $obj, \gcc_jit_rvalue_ptr $param, int $classId, array $properties): void {
         $cast = $this->context->helper->cast($obj, 'char*');
         $defaultBlock = \gcc_jit_function_new_block($func, 'default_' . $classId);
@@ -289,6 +300,7 @@ class Object_ extends Type {
         );
 
     }
+    */
 
     public function declareClass(Operand $name): int {
         if (!$name instanceof Literal) {
@@ -348,6 +360,7 @@ class Object_ extends Type {
         throw new \LogicException("Could not find property $name for class $classId");
     }
 
+    /*
     private function fetchAndCast(\gcc_jit_rvalue_ptr $obj, int $nameId, int $type): \gcc_jit_lvalue_ptr {
         $void = $this->context->helper->call(
             '__object__propfetch',
@@ -367,6 +380,7 @@ class Object_ extends Type {
             $this->context->constantFromInteger(0, 'size_t')
         );
     }
+    */
 
 
 }

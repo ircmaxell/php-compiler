@@ -1,7 +1,7 @@
 <?php
 
 # This file is generated, changes you make will be lost.
-# Make your changes in /compiler/ext/types/strlen.pre instead.
+# Make your changes in /home/driusan/Code/php-compiler/ext/types/strlen.pre instead.
 
 /*
  * This file is part of PHP-Compiler, a PHP CFG Compiler for PHP code
@@ -43,10 +43,82 @@ class strlen extends Internal {
         $argValue = $context->helper->loadValue($args[0]);
         switch ($args[0]->type) {
             case Variable::TYPE_STRING:
+                
+
+                
+
+                
+
+                
+
+                
+                
+
+                
+
+                
+
                 $offset = $this->context->structFieldMap[$argValue->typeOf()->getElementType()->getName()]['length'];
                     $result = $this->context->builder->load(
                         $this->context->builder->structGep($argValue, $offset)
                     );
+                
+
+                
+
+                
+
+                
+
+                
+
+                
+
+                
+
+                
+
+                
+
+                
+
+                
+
+                
+            
+
+            
+
+            
+
+            
+
+            
+
+            
+
+            
+
+            
+
+            
+
+            
+
+            
+
+            
+
+            
+
+            
+
+            
+
+            
+
+            
+
     
                 return $result;
         }
