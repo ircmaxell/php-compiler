@@ -28,7 +28,6 @@ return [
 		'PhanUndeclaredProperty',
 		'PhanTypeNonVarPassByRef',
 		'PhanUnusedGotoLabel',
-		'PhanTypeMismatchArgumentInternal',
 		'PhanTypeMismatchDimFetch',
 		'PhanTypeMismatchDimAssignment',
 		'PhanTypeMismatchDimFetch',
