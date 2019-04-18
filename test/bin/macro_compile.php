@@ -13,9 +13,11 @@ namespace Yay {
     /**
      * Abusing namespaces to make Cycle->id() predictable during tests only!
      */
-    function md5($foo) { return (string) $foo; }
+    function md5($foo)
+    {
+        return (string) $foo;
+    }
 }
-            
 namespace {
     require __DIR__.'/../../vendor/autoload.php';
 

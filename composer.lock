@@ -54,12 +54,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/ircmaxell/php-llvm.git",
-                "reference": "7c14fe931537fdcb1d8ddf99b773ff8676ad72b0"
+                "reference": "0f0b6fc9f14b4cb45fecb1551d6c17f6b7bfa875"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/ircmaxell/php-llvm/zipball/7c14fe931537fdcb1d8ddf99b773ff8676ad72b0",
-                "reference": "7c14fe931537fdcb1d8ddf99b773ff8676ad72b0",
+                "url": "https://api.github.com/repos/ircmaxell/php-llvm/zipball/0f0b6fc9f14b4cb45fecb1551d6c17f6b7bfa875",
+                "reference": "0f0b6fc9f14b4cb45fecb1551d6c17f6b7bfa875",
                 "shasum": ""
             },
             "require": {
@@ -87,7 +87,7 @@
                 }
             ],
             "description": "A lightweight abstraction around LLVM-C",
-            "time": "2019-04-15T02:24:04+00:00"
+            "time": "2019-04-18T18:28:27+00:00"
         },
         {
             "name": "ircmaxell/php-optimizer",
@@ -868,12 +868,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/phan/phan.git",
-                "reference": "a83cfedbc3708de566fa42f782f7044e42b600db"
+                "reference": "aa746280d8c8ff8a6b236701e7d0b7d94694badd"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phan/phan/zipball/a83cfedbc3708de566fa42f782f7044e42b600db",
-                "reference": "a83cfedbc3708de566fa42f782f7044e42b600db",
+                "url": "https://api.github.com/repos/phan/phan/zipball/aa746280d8c8ff8a6b236701e7d0b7d94694badd",
+                "reference": "aa746280d8c8ff8a6b236701e7d0b7d94694badd",
                 "shasum": ""
             },
             "require": {
@@ -929,7 +929,7 @@
                 "php",
                 "static"
             ],
-            "time": "2019-04-17T19:41:38+00:00"
+            "time": "2019-04-18T15:09:36+00:00"
         },
         {
             "name": "phar-io/manifest",
