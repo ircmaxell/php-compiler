@@ -60,6 +60,8 @@ class Result {
         $cb = FFI::new($callbackType);
         FFI::memcpy(
             FFI::addr($cb),
+	    // Incorrectly flagged due to https://github.com/phan/phan/issues/2659
+	    // @phan-suppress-next-line PhanTypeMismatchArgumentInternal
             FFI::addr($code),
             FFI::sizeof($cb)
         );
