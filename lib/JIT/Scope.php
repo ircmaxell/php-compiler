@@ -9,10 +9,6 @@
 
 namespace PHPCompiler\JIT;
 
-use PHPCfg\Operand;
-
-use PHPLLVM;
-
 class Scope {
     public int $classId = 0;
     public \SplObjectStorage $blockStorage;

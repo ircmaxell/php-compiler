@@ -9,6 +9,8 @@
 
 namespace PHPCompiler\VM;
 
+// bug in phan: https://github.com/phan/phan/issues/2661
+// @phan-suppress-next-line PhanUnreferencedUseNormal
 use PHPCompiler\Block;
 
 class ClassEntry {

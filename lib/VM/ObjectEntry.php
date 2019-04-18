@@ -9,12 +9,8 @@
 
 namespace PHPCompiler\VM;
 
-use PHPCfg\Func;
-use PHPCfg\Op;
-use PHPCfg\Block as CfgBlock;
-use PHPCfg\Operand;
-use PHPCfg\Script;
-use PHPTypes\Type;
+// Bug in phan: https://github.com/phan/phan/issues/2661
+// @phan-suppress-next-line PhanUnreferencedUseNormal
 use PHPCompiler\Block;
 
 class ObjectEntry {

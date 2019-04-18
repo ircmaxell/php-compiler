@@ -11,10 +11,8 @@ namespace PHPCompiler\JIT;
 
 use PHPCfg\Operand;
 use PHPCompiler\Runtime;
-use PHPCompiler\Handler;
 use PHPCompiler\Block;
 use PHPCompiler\VM\Variable as VMVariable;
-use PHPCompiler\Handler\Builtins;
 use PHPTypes\Type;
 
 use PHPLLVM;

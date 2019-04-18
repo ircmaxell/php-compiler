@@ -9,7 +9,6 @@
 
 namespace PHPCompiler;
 
-use PHPTypes\Type;
 use PHPCompiler\VM\Context;
 use PHPCompiler\VM\ClassEntry;
 use PHPCompiler\VM\ObjectEntry;

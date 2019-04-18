@@ -11,8 +11,6 @@ namespace PHPCompiler\JIT\Builtin;
 
 use PHPCompiler\JIT\Builtin;
 
-use PHPLLVM;
-
 class Type extends Builtin {
 
     public Type\String_ $string;

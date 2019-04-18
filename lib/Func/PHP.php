@@ -13,7 +13,6 @@ use PHPCompiler\Func;
 use PHPCompiler\Frame;
 use PHPCompiler\Block;
 use PHPCompiler\VM\Context;
-use PHPCompiler\VM\Variable;
 
 final class PHP extends Func {
 

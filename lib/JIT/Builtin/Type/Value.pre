@@ -10,10 +10,7 @@
 namespace PHPCompiler\JIT\Builtin\Type;
 
 use PHPCompiler\JIT\Builtin\Type;
-use PHPCompiler\JIT\Builtin\Refcount;
 use PHPCompiler\JIT\Variable;
-
-use PHPLLVM;
 
 class Value extends Type {
 

@@ -12,8 +12,6 @@ namespace PHPCompiler\VM;
 use PHPCompiler\Frame;
 use PHPCompiler\Func;
 use PHPCompiler\Runtime;
-use PHPCompiler\Handler\Builtins;
-use PHPTypes\Type;
 
 class Context {
     public array $functions = [];
