@@ -448,6 +448,13 @@ class Context {
             }
             // convert to PHP variable
             switch ($phpVar->type) {
+                case VMVariable::TYPE_NULL:
+                    return new Variable(
+                        $this,
+                        Variable::TYPE_NULL,
+                        Variable::KIND_VALUE,
+                        $this->getTypeFromString('__value__*')->constNull()
+                    );
                 case VMVariable::TYPE_INTEGER:
                     $type = $this->getTypeFromString('int64');
                     $global = $this->module->addGlobal($type, $name);

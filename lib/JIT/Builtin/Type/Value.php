@@ -143,6 +143,17 @@ class Value extends Type
         $fn___cfcd208495d565ef66e7dff9f98764da->addAttributeAtIndex(\PHPLLVM\Attribute::INDEX_FUNCTION, $this->context->attributes['alwaysinline']);
 
         $this->context->registerFunction('__value__writeString', $fn___cfcd208495d565ef66e7dff9f98764da);
+
+        $fntype___cfcd208495d565ef66e7dff9f98764da = $this->context->context->functionType(
+                $this->context->getTypeFromString('void'),
+                false,
+                $this->context->getTypeFromString('__value__*')
+
+            );
+        $fn___cfcd208495d565ef66e7dff9f98764da = $this->context->module->addFunction('__value__writeNull', $fntype___cfcd208495d565ef66e7dff9f98764da);
+        $fn___cfcd208495d565ef66e7dff9f98764da->addAttributeAtIndex(\PHPLLVM\Attribute::INDEX_FUNCTION, $this->context->attributes['alwaysinline']);
+
+        $this->context->registerFunction('__value__writeNull', $fn___cfcd208495d565ef66e7dff9f98764da);
     }
 
     public function implement(): void
@@ -152,6 +163,7 @@ class Value extends Type
         $this->implementValueWriteLong();
         $this->implementValueReadDouble();
         $this->implementValueWriteDouble();
+        $this->implementValueWriteNull();
         $this->implementValueDelref();
     }
 
@@ -858,6 +870,116 @@ class Value extends Type
         $offset = $this->context->structFieldMap[$value->typeOf()->getElementType()->getName()]['value'];
         $this->context->builder->store(
                     $string,
+                    $this->context->builder->structGep($value, $offset)
+                );
+        $this->context->builder->returnVoid();
+
+        $this->context->builder->clearInsertionPosition();
+    }
+
+    public function implementValueWriteNull(): void
+    {
+        $fn___34173cb38f07f89ddbebc2ac9128303f = $this->context->lookupFunction('__value__writeNull');
+        $block___34173cb38f07f89ddbebc2ac9128303f = $fn___34173cb38f07f89ddbebc2ac9128303f->appendBasicBlock('main');
+        $this->context->builder->positionAtEnd($block___34173cb38f07f89ddbebc2ac9128303f);
+        $value = $fn___34173cb38f07f89ddbebc2ac9128303f->getParam(0);
+
+        $this->context->builder->call(
+                    $this->context->lookupFunction('__value__valueDelref'),
+                    $value
+
+                );
+        $__type = $this->context->getTypeFromString('int8');
+
+        $__kind = $__type->getKind();
+        $__value = Variable::TYPE_NULL;
+        switch ($__kind) {
+                        case \PHPLLVM\Type::KIND_INTEGER:
+                            if (! is_object($__value)) {
+                                $type = $__type->constInt($__value, false);
+
+                                break;
+                            }
+                            $__other_type = $__value->typeOf();
+                            switch ($__other_type->getKind()) {
+                                case \PHPLLVM\Type::KIND_INTEGER:
+                                    if ($__other_type->getWidth() >= $__type->getWidth()) {
+                                        $type = $this->context->builder->truncOrBitCast($__value, $__type);
+                                    } else {
+                                        $type = $this->context->builder->zExtOrBitCast($__value, $__type);
+                                    }
+
+                                    break;
+                                case \PHPLLVM\Type::KIND_DOUBLE:
+
+                                    $type = $this->context->builder->fpToSi($__value, $__type);
+
+                                    break;
+                                case \PHPLLVM\Type::KIND_ARRAY:
+                                case \PHPLLVM\Type::KIND_POINTER:
+                                    $type = $this->context->builder->ptrToInt($__value, $__type);
+
+                                    break;
+                                default:
+                                    throw new \LogicException('Unknown how to handle type pair (int, '.$__other_type->toString().')');
+                            }
+
+                            break;
+                        case \PHPLLVM\Type::KIND_DOUBLE:
+                            if (! is_object($__value)) {
+                                $type = $__type->constReal(Variable::TYPE_NULL);
+
+                                break;
+                            }
+                            $__other_type = $__value->typeOf();
+                            switch ($__other_type->getKind()) {
+                                case \PHPLLVM\Type::KIND_INTEGER:
+
+                                    $type = $this->context->builder->siToFp($__value, $__type);
+
+                                    break;
+                                case \PHPLLVM\Type::KIND_DOUBLE:
+                                    $type = $this->context->builder->fpCast($__value, $__type);
+
+                                    break;
+                                default:
+                                    throw new \LogicException('Unknown how to handle type pair (double, '.$__other_type->toString().')');
+                            }
+
+                            break;
+                        case \PHPLLVM\Type::KIND_ARRAY:
+                        case \PHPLLVM\Type::KIND_POINTER:
+                            if (! is_object($__value)) {
+                                // this is very likely very wrong...
+                                $type = $__type->constInt($__value, false);
+
+                                break;
+                            }
+                            $__other_type = $__value->typeOf();
+                            switch ($__other_type->getKind()) {
+                                case \PHPLLVM\Type::KIND_INTEGER:
+                                    $type = $this->context->builder->intToPtr($__value, $__type);
+
+                                    break;
+                                case \PHPLLVM\Type::KIND_ARRAY:
+                                    // $__tmp = $this->context->builder->($__value, $this->context->context->int64Type());
+                                    // $(result) = $this->context->builder->intToPtr($__tmp, $__type);
+                                    // break;
+                                case \PHPLLVM\Type::KIND_POINTER:
+                                    $type = $this->context->builder->pointerCast($__value, $__type);
+
+                                    break;
+                                default:
+                                    throw new \LogicException('Unknown how to handle type pair (double, '.$__other_type->toString().')');
+                            }
+
+                            break;
+                        default:
+                            throw new \LogicException('Unsupported type cast: '.$__type->toString());
+                    }
+        $offset = $this->context->structFieldMap[$value->typeOf()->getElementType()->getName()]['type'];
+        $this->context->builder->store(
+                    $type,
                     $this->context->builder->structGep($value, $offset)
                 );
         $this->context->builder->returnVoid();

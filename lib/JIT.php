@@ -281,7 +281,7 @@ class JIT {
                     $argValue = $this->context->helper->loadValue($arg);
                     switch ($arg->type) {
                         case Variable::TYPE_VALUE:
-                            $ptr = $this->context->builder->call(
+                            $argValue = $this->context->builder->call(
                         $this->context->lookupFunction('__value__readString') , 
                         $argValue
                         
@@ -550,6 +550,40 @@ class JIT {
             );
             $result->addref();
             return;
+        } elseif ($result->type === Variable::TYPE_VALUE) {
+            // wrap
+            $valueRef = $result->value;
+            $valueFrom = $value->value;
+            switch ($value->type) {
+                case Variable::TYPE_NULL:
+                    $this->context->builder->call(
+                    $this->context->lookupFunction('__value__writeNull') , 
+                    $valueRef
+                    
+                );
+    
+                    return;
+                case Variable::TYPE_NATIVE_LONG:
+                    $this->context->builder->call(
+                    $this->context->lookupFunction('__value__writeLong') , 
+                    $valueRef
+                    , $valueFrom
+                    
+                );
+    
+                    return;
+                case Variable::TYPE_NATIVE_DOUBLE:
+                    $this->context->builder->call(
+                    $this->context->lookupFunction('__value__writeDouble') , 
+                    $valueRef
+                    , $valueFrom
+                    
+                );
+    
+                    return;
+                default:
+                    throw new \LogicException("Source type: {$value->type}");
+            }
         }
         throw new \LogicException("Cannot assign operands of different types (yet): {$value->type}, {$result->type}");
     }

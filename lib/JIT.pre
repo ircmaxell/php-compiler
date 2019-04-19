@@ -272,7 +272,7 @@ class JIT {
                     switch ($arg->type) {
                         case Variable::TYPE_VALUE:
                             compile {
-                                $ptr = __value__readString($argValue);
+                                $argValue = __value__readString($argValue);
                             }
                             // Fall through intentional                
                         case Variable::TYPE_STRING:            
@@ -490,6 +490,29 @@ class JIT {
             );
             $result->addref();
             return;
+        } elseif ($result->type === Variable::TYPE_VALUE) {
+            // wrap
+            $valueRef = $result->value;
+            $valueFrom = $value->value;
+            switch ($value->type) {
+                case Variable::TYPE_NULL:
+                    compile {
+                        __value__writeNull($valueRef);
+                    }
+                    return;
+                case Variable::TYPE_NATIVE_LONG:
+                    compile {
+                        __value__writeLong($valueRef, $valueFrom);
+                    }
+                    return;
+                case Variable::TYPE_NATIVE_DOUBLE:
+                    compile {
+                        __value__writeDouble($valueRef, $valueFrom);
+                    }
+                    return;
+                default:
+                    throw new \LogicException("Source type: {$value->type}");
+            }
         }
         throw new \LogicException("Cannot assign operands of different types (yet): {$value->type}, {$result->type}");
     }
