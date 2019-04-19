@@ -84,9 +84,9 @@ if (empty($execCode)) {
     $execCode = stream_get_contents(\STDIN);
 }
 
-if (function_exists("run")) {
-	// @phan-suppress-next-line PhanUndeclaredFunction yes it is we just made a function_exists call
-	run($execFile, $execCode, $options);
+if (function_exists('run')) {
+    // @phan-suppress-next-line PhanUndeclaredFunction yes it is we just made a function_exists call
+    run($execFile, $execCode, $options);
 } else {
-	throw new \RuntimeException("Must define run before including cli.php");
+    throw new \RuntimeException('Must define run before including cli.php');
 }

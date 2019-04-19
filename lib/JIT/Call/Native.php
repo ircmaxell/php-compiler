@@ -1,7 +1,7 @@
 <?php
 
-# This file is generated, changes you make will be lost.
-# Make your changes in /home/driusan/Code/php-compiler/lib/JIT/Call/Native.pre instead.
+// This file is generated and changes you make will be lost.
+// Change /compiler/lib/JIT/Call/Native.pre instead.
 
 /*
  * This file is part of PHP-Compiler, a PHP CFG Compiler for PHP code
@@ -51,83 +51,11 @@ class Native implements Call {
                     case Variable::TYPE_STRING:
                         return $value;
                     case Variable::TYPE_VALUE:
-                        
-
-                
-
-                
-
-                
-
-                
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                $str = $this->context->builder->call(
+                        $str = $this->context->builder->call(
                         $this->context->lookupFunction('__value__readString') , 
                         $value
                         
                     );
-                
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
     
                         return $str;
                 }
@@ -143,83 +71,11 @@ class Native implements Call {
                     case Variable::TYPE_NATIVE_LONG:
                         return $value;
                     case Variable::TYPE_VALUE:
-                        
-
-                
-
-                
-
-                
-
-                
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                $int = $this->context->builder->call(
+                        $int = $this->context->builder->call(
                         $this->context->lookupFunction('__value__readLong') , 
                         $value
                         
                     );
-                
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
     
                         return $int;
                 }
@@ -229,13 +85,7 @@ class Native implements Call {
                     case Variable::TYPE_NATIVE_DOUBLE:
                         return $value;
                     case Variable::TYPE_NATIVE_LONG:
-                        
-
-                
-
-                
-
-                $__type = $this->context->context->doubleType();
+                        $__type = $this->context->context->doubleType();
                         
                         
                     
@@ -314,152 +164,14 @@ class Native implements Call {
                         default:
                             throw new \LogicException("Unsupported type cast: " . $__type->toString());
                     }
-                
-
-                
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
     
                         return $double;
                     case Variable::TYPE_VALUE:
-                        
-
-                
-
-                
-
-                
-
-                
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                $double = $this->context->builder->call(
+                        $double = $this->context->builder->call(
                         $this->context->lookupFunction('__value__readDouble') , 
                         $value
                         
                     );
-                
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
     
                         return $double;
                 }

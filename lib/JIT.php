@@ -1,7 +1,7 @@
 <?php
 
-# This file is generated, changes you make will be lost.
-# Make your changes in /home/driusan/Code/php-compiler/lib/JIT.pre instead.
+// This file is generated and changes you make will be lost.
+// Change /compiler/lib/JIT.pre instead.
 
 /*
  * This file is part of PHP-Compiler, a PHP CFG Compiler for PHP code
@@ -233,19 +233,7 @@ class JIT {
                     } else {
                         $value = $this->context->castToBool($this->context->helper->loadValue($from));
                     }
-                    
-
-                
-
-                
-
-                
-
-                
-                
-
-                
-                            $__right = $value->typeOf()->constInt(1, false);
+                    $__right = $value->typeOf()->constInt(1, false);
                             
                         
 
@@ -254,91 +242,6 @@ class JIT {
                         
 
                         $result = $this->context->builder->bitwiseXor($value, $__right);
-                        
-
-                        
-
-                        
-
-                        
-
-                        
-
-                        
-
-                        
-
-                        
-
-                        
-
-                        
-
-                        
-
-                        
-                    
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
     
 
                     $this->assignOperandValue($block->getOperand($op->arg1), $result);
@@ -378,607 +281,61 @@ class JIT {
                     $argValue = $this->context->helper->loadValue($arg);
                     switch ($arg->type) {
                         case Variable::TYPE_VALUE:
-                            
-
-                
-
-                
-
-                
-
-                
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                $ptr = $this->context->builder->call(
+                            $ptr = $this->context->builder->call(
                         $this->context->lookupFunction('__value__readString') , 
                         $argValue
                         
                     );
-                
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
     
                             // Fall through intentional                
                         case Variable::TYPE_STRING:            
-                            
-
-                
-
-                $fmt = $this->context->builder->pointerCast(
+                            $fmt = $this->context->builder->pointerCast(
                         $this->context->constantFromString("%.*s"),
                         $this->context->getTypeFromString('char*')
                     );
-                
-
-                
-
-                
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-    
-
-                
-
-                
-
-                
-
-                
-                
-
-                
-
-                
-
-                $offset = $this->context->structFieldMap[$argValue->typeOf()->getElementType()->getName()]['length'];
+    $offset = $this->context->structFieldMap[$argValue->typeOf()->getElementType()->getName()]['length'];
                     $__str__length = $this->context->builder->load(
                         $this->context->builder->structGep($argValue, $offset)
                     );
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-    
-
-                
-
-                
-
-                
-
-                
-                
-
-                
-
-                
-
-                
-
-                
-
-                $offset = $this->context->structFieldMap[$argValue->typeOf()->getElementType()->getName()]['value'];
+    $offset = $this->context->structFieldMap[$argValue->typeOf()->getElementType()->getName()]['value'];
                     $__str__value = $this->context->builder->structGep($argValue, $offset);
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-    
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            $this->context->builder->call(
+    $this->context->builder->call(
                     $this->context->lookupFunction('printf') , 
                     $fmt
                     , $__str__length
                     , $__str__value
                     
                 );
-            
-
     
                             break;
                         case Variable::TYPE_NATIVE_LONG:
-                            
-
-                
-
-                $fmt = $this->context->builder->pointerCast(
+                            $fmt = $this->context->builder->pointerCast(
                         $this->context->constantFromString("%lld"),
                         $this->context->getTypeFromString('char*')
                     );
-                
-
-                
-
-                
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-    
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            $this->context->builder->call(
+    $this->context->builder->call(
                     $this->context->lookupFunction('printf') , 
                     $fmt
                     , $argValue
                     
                 );
-            
-
     
                             break;
                         case Variable::TYPE_NATIVE_DOUBLE:
-                            
-
-                
-
-                $fmt = $this->context->builder->pointerCast(
+                            $fmt = $this->context->builder->pointerCast(
                         $this->context->constantFromString("%G"),
                         $this->context->getTypeFromString('char*')
                     );
-                
-
-                
-
-                
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-    
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            $this->context->builder->call(
+    $this->context->builder->call(
                     $this->context->lookupFunction('printf') , 
                     $fmt
                     , $argValue
                     
                 );
-            
-
     
                             break;
                         case Variable::TYPE_NATIVE_BOOL:
-                            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            $bool = $this->context->castToBool($argValue);
+                            $bool = $this->context->castToBool($argValue);
                 $prev = $this->context->builder->getInsertBlock();
                 $ifBlock = $prev->insertBasicBlock('ifBlock');
                 $prev->moveBefore($ifBlock);
@@ -987,149 +344,21 @@ class JIT {
                     $this->context->builder->branchIf($bool, $ifBlock, $tmp);
                 
                 $this->context->builder->positionAtEnd($ifBlock);
-                { 
-
-                
-
-                $fmt = $this->context->builder->pointerCast(
+                { $fmt = $this->context->builder->pointerCast(
                         $this->context->constantFromString("1"),
                         $this->context->getTypeFromString('char*')
                     );
-                
-
-                
-
-                
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-    
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            $this->context->builder->call(
+    $this->context->builder->call(
                     $this->context->lookupFunction('printf') , 
                     $fmt
                     
                 );
-            
-
     }
                 if ($this->context->builder->getInsertBlock()->getTerminator() === null) {
                     $this->context->builder->branch(end($endBlock));
                 }
                 
                 $this->context->builder->positionAtEnd(array_pop($endBlock));
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
     
                             break;
 
@@ -1197,41 +426,7 @@ class JIT {
                     return $origBasicBlock;
                 case OpCode::TYPE_RETURN_VOID:
                     $this->context->freeDeadVariables($func, $basicBlock, $block);
-                    
-
-            $this->context->builder->returnVoid();
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
+                    $this->context->builder->returnVoid();
     
                     return $origBasicBlock;
                 case OpCode::TYPE_RETURN:
@@ -1239,41 +434,7 @@ class JIT {
                     $return->addref();
                     $retval = $this->context->helper->loadValue($return);
                     $this->context->freeDeadVariables($func, $basicBlock, $block);
-                    
-
-            
-
-            $this->context->builder->returnValue($retval);
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
+                    $this->context->builder->returnValue($retval);
     
                     return $origBasicBlock;
                 case OpCode::TYPE_FUNCDEF:

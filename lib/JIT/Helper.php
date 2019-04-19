@@ -1,7 +1,7 @@
 <?php
 
-# This file is generated, changes you make will be lost.
-# Make your changes in /home/driusan/Code/php-compiler/lib/JIT/Helper.pre instead.
+// This file is generated and changes you make will be lost.
+// Change /compiler/lib/JIT/Helper.pre instead.
 
 /*
  * This file is part of PHP-Compiler, a PHP CFG Compiler for PHP code
@@ -112,18 +112,7 @@ restart:
             case TYPE_PAIR_NATIVE_LONG_NATIVE_LONG:
                 switch ($opcode->type) {
                     case OpCode::TYPE_MUL:
-                        
-
-                
-
-                
-
-                
-
-                
-                
-
-                $__right = $this->context->builder->intCast($rightValue, $leftValue->typeOf());
+                        $__right = $this->context->builder->intCast($rightValue, $leftValue->typeOf());
                             
                             
                         
@@ -140,101 +129,10 @@ restart:
 
                         
                             $result = $this->context->builder->mulNoSignedWrap($leftValue, $__right);
-                            
-                        
-
-                        
-
-                        
-
-                        
-
-                        
-
-                        
-
-                        
-
-                        
-
-                        
-                    
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
     
                         goto return_long;
                     case OpCode::TYPE_PLUS:
-                        
-
-                
-
-                
-
-                
-
-                
-                
-
-                $__right = $this->context->builder->intCast($rightValue, $leftValue->typeOf());
+                        $__right = $this->context->builder->intCast($rightValue, $leftValue->typeOf());
                             
                             
                         
@@ -247,105 +145,10 @@ restart:
 
                         
                             $result = $this->context->builder->addNoSignedWrap($leftValue, $__right);
-                            
-                        
-
-                        
-
-                        
-
-                        
-
-                        
-
-                        
-
-                        
-
-                        
-
-                        
-
-                        
-
-                        
-                    
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
     
                         goto return_long;
                     case OpCode::TYPE_MINUS:
-                        
-
-                
-
-                
-
-                
-
-                
-                
-
-                $__right = $this->context->builder->intCast($rightValue, $leftValue->typeOf());
+                        $__right = $this->context->builder->intCast($rightValue, $leftValue->typeOf());
                             
                             
                         
@@ -360,103 +163,10 @@ restart:
 
                         
                             $result = $this->context->builder->subNoSignedWrap($leftValue, $__right);
-                            
-                        
-
-                        
-
-                        
-
-                        
-
-                        
-
-                        
-
-                        
-
-                        
-
-                        
-
-                        
-                    
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
     
                         goto return_long;
                     case OpCode::TYPE_DIV:
-                        
-
-                
-
-                
-
-                
-
-                
-                
-
-                $__right = $this->context->builder->intCast($rightValue, $leftValue->typeOf());
+                        $__right = $this->context->builder->intCast($rightValue, $leftValue->typeOf());
                             
                             
                         
@@ -475,99 +185,10 @@ restart:
 
                         
                             $result = $this->context->builder->signedDiv($leftValue, $__right);
-                            
-                        
-
-                        
-
-                        
-
-                        
-
-                        
-
-                        
-
-                        
-
-                        
-                    
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
     
                         goto return_long;
                     case OpCode::TYPE_MODULO:
-                        
-
-                
-
-                
-
-                
-
-                
-                
-
-                $__right = $this->context->builder->intCast($rightValue, $leftValue->typeOf());
+                        $__right = $this->context->builder->intCast($rightValue, $leftValue->typeOf());
                             
                             
                         
@@ -588,206 +209,19 @@ restart:
 
                         
                             $result = $this->context->builder->signedRem($leftValue, $__right);
-                            
-                        
-
-                        
-
-                        
-
-                        
-
-                        
-
-                        
-
-                        
-                    
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
     
                         goto return_long;
                     case OpCode::TYPE_BITWISE_AND:
-                        
-
-                
-
-                
-
-                
-
-                
-                
-
-                $__right = $this->context->builder->intCast($rightValue, $leftValue->typeOf());
+                        $__right = $this->context->builder->intCast($rightValue, $leftValue->typeOf());
                             
                             
                         
 
                         $result = $this->context->builder->bitwiseAnd($leftValue, $__right);
-                        
-
-                        
-
-                        
-
-                        
-
-                        
-
-                        
-
-                        
-
-                        
-
-                        
-
-                        
-
-                        
-
-                        
-
-                        
-
-                        
-                    
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
     
                         goto return_long;
                     case OpCode::TYPE_BITWISE_OR:
-                        
-
-                
-
-                
-
-                
-
-                
-                
-
-                $__right = $this->context->builder->intCast($rightValue, $leftValue->typeOf());
+                        $__right = $this->context->builder->intCast($rightValue, $leftValue->typeOf());
                             
                             
                         
@@ -795,108 +229,10 @@ restart:
                         
 
                         $result = $this->context->builder->bitwiseOr($leftValue, $__right);
-                        
-
-                        
-
-                        
-
-                        
-
-                        
-
-                        
-
-                        
-
-                        
-
-                        
-
-                        
-
-                        
-
-                        
-
-                        
-                    
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
     
                         goto return_long;
                     case OpCode::TYPE_BITWISE_XOR:
-                        
-
-                
-
-                
-
-                
-
-                
-                
-
-                $__right = $this->context->builder->intCast($rightValue, $leftValue->typeOf());
+                        $__right = $this->context->builder->intCast($rightValue, $leftValue->typeOf());
                             
                             
                         
@@ -906,106 +242,10 @@ restart:
                         
 
                         $result = $this->context->builder->bitwiseXor($leftValue, $__right);
-                        
-
-                        
-
-                        
-
-                        
-
-                        
-
-                        
-
-                        
-
-                        
-
-                        
-
-                        
-
-                        
-
-                        
-                    
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
     
                         goto return_long;
                     case OpCode::TYPE_GREATER_OR_EQUAL:
-                        
-
-                
-
-                
-
-                
-
-                
-                
-
-                $__right = $this->context->builder->intCast($rightValue, $leftValue->typeOf());
+                        $__right = $this->context->builder->intCast($rightValue, $leftValue->typeOf());
                             
                             
                         
@@ -1036,88 +276,10 @@ restart:
                             $cmp = \PHPLLVM\Builder::INT_SGE;
                             
                             $result = $this->context->builder->icmp($cmp, $leftValue, $__right);
-                        
-
-                        
-
-                        
-                    
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
     
                         goto return_bool;
                     case OpCode::TYPE_SMALLER_OR_EQUAL:
-                        
-
-                
-
-                
-
-                
-
-                
-                
-
-                $__right = $this->context->builder->intCast($rightValue, $leftValue->typeOf());
+                        $__right = $this->context->builder->intCast($rightValue, $leftValue->typeOf());
                             
                             
                         
@@ -1144,92 +306,10 @@ restart:
                             $cmp = \PHPLLVM\Builder::INT_SLE;
                             
                             $result = $this->context->builder->icmp($cmp, $leftValue, $__right);
-                        
-
-                        
-
-                        
-
-                        
-
-                        
-                    
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
     
                         goto return_bool;
                     case OpCode::TYPE_GREATER:
-                        
-
-                
-
-                
-
-                
-
-                
-                
-
-                $__right = $this->context->builder->intCast($rightValue, $leftValue->typeOf());
+                        $__right = $this->context->builder->intCast($rightValue, $leftValue->typeOf());
                             
                             
                         
@@ -1258,90 +338,10 @@ restart:
                             $cmp = \PHPLLVM\Builder::INT_SGT;
                             
                             $result = $this->context->builder->icmp($cmp, $leftValue, $__right);
-                        
-
-                        
-
-                        
-
-                        
-                    
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
     
                         goto return_bool;
                     case OpCode::TYPE_SMALLER:
-                        
-
-                
-
-                
-
-                
-
-                
-                
-
-                $__right = $this->context->builder->intCast($rightValue, $leftValue->typeOf());
+                        $__right = $this->context->builder->intCast($rightValue, $leftValue->typeOf());
                             
                             
                         
@@ -1366,95 +366,11 @@ restart:
                             $cmp = \PHPLLVM\Builder::INT_SLT;
                             
                             $result = $this->context->builder->icmp($cmp, $leftValue, $__right);
-                        
-
-                        
-
-                        
-
-                        
-
-                        
-
-                        
-                    
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
     
                         goto return_bool;
                     case OpCode::TYPE_IDENTICAL:
                     case OpCode::TYPE_EQUAL:
-                        
-
-                
-
-                
-
-                
-
-                
-                
-
-                $__right = $this->context->builder->intCast($rightValue, $leftValue->typeOf());
+                        $__right = $this->context->builder->intCast($rightValue, $leftValue->typeOf());
                             
                             
                         
@@ -1484,86 +400,10 @@ restart:
                         
 
                         $result = $this->context->builder->icmp(\PHPLLVM\Builder::INT_EQ, $leftValue, $__right);
-                        
-
-                        
-                    
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
     
                         goto return_bool;
                     case OpCode::TYPE_NOT_EQUAL:
-                        
-
-                
-
-                
-
-                
-
-                
-                
-
-                $__right = $this->context->builder->intCast($rightValue, $leftValue->typeOf());
+                        $__right = $this->context->builder->intCast($rightValue, $leftValue->typeOf());
                             
                             
                         
@@ -1595,69 +435,6 @@ restart:
                         
 
                         $result = $this->context->builder->icmp(\PHPLLVM\Builder::INT_NE, $leftValue, $__right);
-                        
-                    
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-
-                
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
-            
-
     
                         goto return_bool;
                 }

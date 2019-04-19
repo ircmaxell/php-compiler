@@ -34,27 +34,27 @@ class NativeArray extends Type
 
     public function initialize(): void
     {
-	/*
-        $bounds = $this->context->lookupFunction('__nativearray__boundscheck');
-        $block = \gcc_jit_function_new_block($bounds->func, 'main');
-        $good = \gcc_jit_function_new_block($bounds->func, 'good');
-        $bad = \gcc_jit_function_new_block($bounds->func, 'bad');
-        \gcc_jit_block_end_with_conditional(
-            $block,
-            $this->context->location(),
-            \gcc_jit_context_new_comparison(
-                $this->context->context,
+        /*
+            $bounds = $this->context->lookupFunction('__nativearray__boundscheck');
+            $block = \gcc_jit_function_new_block($bounds->func, 'main');
+            $good = \gcc_jit_function_new_block($bounds->func, 'good');
+            $bad = \gcc_jit_function_new_block($bounds->func, 'bad');
+            \gcc_jit_block_end_with_conditional(
+                $block,
                 $this->context->location(),
-                \GCC_JIT_COMPARISON_GE,
-                $bounds->params[0]->asRValue(),
-                $bounds->params[1]->asRValue()
-            ),
-            $bad,
-            $good
-        );
-        \gcc_jit_block_end_with_void_return($good, $this->context->location());
-        $this->context->error->error($bad, ErrorHandler::E_ERROR, 'Invalid bounds access');
-        \gcc_jit_block_end_with_void_return($bad, $this->context->location());
-        */
+                \gcc_jit_context_new_comparison(
+                    $this->context->context,
+                    $this->context->location(),
+                    \GCC_JIT_COMPARISON_GE,
+                    $bounds->params[0]->asRValue(),
+                    $bounds->params[1]->asRValue()
+                ),
+                $bad,
+                $good
+            );
+            \gcc_jit_block_end_with_void_return($good, $this->context->location());
+            $this->context->error->error($bad, ErrorHandler::E_ERROR, 'Invalid bounds access');
+            \gcc_jit_block_end_with_void_return($bad, $this->context->location());
+            */
     }
 }
