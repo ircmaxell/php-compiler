@@ -190,7 +190,7 @@ $(macro :unsafe :recursive) {
     }
 } >> {
     $(stmts ... {
-
+        $$(trim {
             $(assignop ? ... {
                 $(nullcheck ? ... {
                     $(result) = $this->context->builder->icmp(\PHPLLVM\Builder::INT_EQ, $(nullcheck_var), $(nullcheck_var)->typeOf()->constNull());
@@ -706,6 +706,6 @@ $(macro :unsafe :recursive) {
                     })
                 );
             })
-
+        })
     })
 }
