@@ -21,9 +21,12 @@ docker-build-clean:
 
 .PHONY: docker-build
 docker-build:
-
 	docker build -t ircmaxell/php-compiler:16.04-dev Docker/dev/ubuntu-16.04
 	docker build --no-cache -t ircmaxell/php-compiler:16.04 -f Docker/ubuntu-16.04/Dockerfile .
+
+.PHONY: docker-build-18
+docker-build-18:
+	docker build -t ircmaxell/php-compiler:18.04-dev Docker/dev/ubuntu-18.04
 
 .PHONY: benchmark
 benchmark: rebuild-changed
