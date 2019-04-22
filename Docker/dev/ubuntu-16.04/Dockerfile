@@ -23,6 +23,13 @@ RUN git clone https://github.com/nikic/php-ast . && \
     make && \
     make install
 
+WORKDIR ../sample_prof
+RUN git clone https://github.com/nikic/sample_prof.git . && \
+    phpize && \
+    ./configure && \
+    make && \
+    make install
+
 COPY php.ini /usr/local/lib/php.ini
 
 RUN curl --silent --show-error https://getcomposer.org/installer | php -- --no-ansi --install-dir=/usr/local/bin --filename=composer
