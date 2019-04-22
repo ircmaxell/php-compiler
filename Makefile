@@ -27,10 +27,10 @@ docker-build:
 
 .PHONY: benchmark
 benchmark: rebuild-changed
-	docker run -v $(shell pwd):/compiler ircmaxell/php-compiler:16.04-dev php script/bench.php
+	docker run -v $(shell pwd):/compiler --entrypoint php -e PHP_7_4=php ircmaxell/php-compiler:16.04 script/bench.php
 
 .PHONY: build
-build: composer-install rebuild rebuild-examples
+build: composer-install rebuild fix rebuild-examples
 
 .PHONY: rebuild
 rebuild:
