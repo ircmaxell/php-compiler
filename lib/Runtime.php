@@ -55,10 +55,7 @@ class Runtime {
 
         $this->preprocessor = new Traverser;
         $this->preprocessor->addVisitor(new Visitor\Simplifier);
-        $this->preprocessor->addVisitor(new Visitor\CallFinder);
         $this->preprocessor->addVisitor(new Visitor\DeadBlockEliminator);
-        $this->preprocessor->addVisitor(new Visitor\DeclarationFinder);
-        $this->preprocessor->addVisitor(new Visitor\VariableFinder);
         $this->postprocessor = new Traverser;
         $this->postprocessor->addVisitor(new Visitor\PhiResolver);
         $this->detector = new LivenessDetector;
