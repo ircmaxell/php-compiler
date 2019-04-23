@@ -63,7 +63,7 @@ final class HashTable {
         }
     }
 
-    public function findVariable(Variable $index, bool $forWrite): Variable {
+    public function findVariable(Variable $index, bool $forWrite): ?Variable {
         switch ($index->type) {
             case Variable::TYPE_INTEGER:
                 $result = $this->findIndex($index->toInt());
