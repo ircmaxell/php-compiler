@@ -36,7 +36,9 @@ class PHP extends MemoryManager {
             // These variables are a hack because compile{}
             // blocks currently only accept variables as arguments.
             $jit = $this->context->constantFromString("jit");
-            $two = 2;
+            compile {
+                $two = (int32) 2;
+            }
 
             compile {
                 function __mm__malloc($size) {

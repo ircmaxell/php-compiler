@@ -167,12 +167,90 @@ class PHP extends MemoryManager {
             // These variables are a hack because compile{}
             // blocks currently only accept variables as arguments.
             $jit = $this->context->constantFromString("jit");
-            $two = 2;
+            $__type = $this->context->getTypeFromString('int32');
+                        
+                    
+                    $__kind = $__type->getKind();
+                    $__value = 2;
+                    switch ($__kind) {
+                        case \PHPLLVM\Type::KIND_INTEGER:
+                            if (!is_object($__value)) {
+                                $two = $__type->constInt($__value, false);
+                                break;
+                            }
+                            $__other_type = $__value->typeOf();
+                            switch ($__other_type->getKind()) {
+                                case \PHPLLVM\Type::KIND_INTEGER:
+                                    if ($__other_type->getWidth() >= $__type->getWidth()) {
+                                        $two = $this->context->builder->truncOrBitCast($__value, $__type);
+                                    } else {
+                                        $two = $this->context->builder->zExtOrBitCast($__value, $__type);
+                                    }
+                                    break;
+                                case \PHPLLVM\Type::KIND_DOUBLE:
+                                    
+                                    $two = $this->context->builder->fpToSi($__value, $__type);
+                                    
+                                    break;
+                                case \PHPLLVM\Type::KIND_ARRAY:
+                                case \PHPLLVM\Type::KIND_POINTER:
+                                    $two = $this->context->builder->ptrToInt($__value, $__type);
+                                    break;
+                                default:
+                                    throw new \LogicException("Unknown how to handle type pair (int, " . $__other_type->toString() . ")");
+                            }
+                            break;
+                        case \PHPLLVM\Type::KIND_DOUBLE:
+                            if (!is_object($__value)) {
+                                $two = $__type->constReal(2);
+                                break;
+                            }
+                            $__other_type = $__value->typeOf();
+                            switch ($__other_type->getKind()) {
+                                case \PHPLLVM\Type::KIND_INTEGER:
+                                    
+                                    $two = $this->context->builder->siToFp($__value, $__type);
+                                    
+                                    break;
+                                case \PHPLLVM\Type::KIND_DOUBLE:
+                                    $two = $this->context->builder->fpCast($__value, $__type);
+                                    break;
+                                default:
+                                    throw new \LogicException("Unknown how to handle type pair (double, " . $__other_type->toString() . ")");
+                            }
+                            break;
+                        case \PHPLLVM\Type::KIND_ARRAY:
+                        case \PHPLLVM\Type::KIND_POINTER:
+                            if (!is_object($__value)) {
+                                // this is very likely very wrong...
+                                $two = $__type->constInt($__value, false);
+                                break;
+                            }
+                            $__other_type = $__value->typeOf();
+                            switch ($__other_type->getKind()) {
+                                case \PHPLLVM\Type::KIND_INTEGER:
+                                    $two = $this->context->builder->intToPtr($__value, $__type);
+                                    break;
+                                case \PHPLLVM\Type::KIND_ARRAY:
+                                    // $__tmp = $this->context->builder->($__value, $this->context->context->int64Type());
+                                    // $(result) = $this->context->builder->intToPtr($__tmp, $__type);
+                                    // break;
+                                case \PHPLLVM\Type::KIND_POINTER:
+                                    $two = $this->context->builder->pointerCast($__value, $__type);
+                                    break;
+                                default:
+                                    throw new \LogicException("Unknown how to handle type pair (double, " . $__other_type->toString() . ")");
+                            }
+                            break;
+                        default:
+                            throw new \LogicException("Unsupported type cast: " . $__type->toString());
+                    }
+    
 
-            $fn___c81e728d9d4c2f636f067f89cc14862c = $this->context->lookupFunction('__mm__malloc');
-    $block___c81e728d9d4c2f636f067f89cc14862c = $fn___c81e728d9d4c2f636f067f89cc14862c->appendBasicBlock('main');
-    $this->context->builder->positionAtEnd($block___c81e728d9d4c2f636f067f89cc14862c);
-    $size = $fn___c81e728d9d4c2f636f067f89cc14862c->getParam(0);
+            $fn___eccbc87e4b5ce2fe28308fd9f2a7baf3 = $this->context->lookupFunction('__mm__malloc');
+    $block___eccbc87e4b5ce2fe28308fd9f2a7baf3 = $fn___eccbc87e4b5ce2fe28308fd9f2a7baf3->appendBasicBlock('main');
+    $this->context->builder->positionAtEnd($block___eccbc87e4b5ce2fe28308fd9f2a7baf3);
+    $size = $fn___eccbc87e4b5ce2fe28308fd9f2a7baf3->getParam(0);
     
     $result = $this->context->builder->call(
                         $this->context->lookupFunction('_emalloc') , 
@@ -186,11 +264,11 @@ class PHP extends MemoryManager {
     $this->context->builder->returnValue($result);
     
     $this->context->builder->clearInsertionPosition();
-            $fn___a87ff679a2f3e71d9181a67b7542122c = $this->context->lookupFunction('__mm__realloc');
-    $block___a87ff679a2f3e71d9181a67b7542122c = $fn___a87ff679a2f3e71d9181a67b7542122c->appendBasicBlock('main');
-    $this->context->builder->positionAtEnd($block___a87ff679a2f3e71d9181a67b7542122c);
-    $void = $fn___a87ff679a2f3e71d9181a67b7542122c->getParam(0);
-    $size = $fn___a87ff679a2f3e71d9181a67b7542122c->getParam(1);
+            $fn___e4da3b7fbbce2345d7772b0674a318d5 = $this->context->lookupFunction('__mm__realloc');
+    $block___e4da3b7fbbce2345d7772b0674a318d5 = $fn___e4da3b7fbbce2345d7772b0674a318d5->appendBasicBlock('main');
+    $this->context->builder->positionAtEnd($block___e4da3b7fbbce2345d7772b0674a318d5);
+    $void = $fn___e4da3b7fbbce2345d7772b0674a318d5->getParam(0);
+    $size = $fn___e4da3b7fbbce2345d7772b0674a318d5->getParam(1);
     
     $result = $this->context->builder->call(
                         $this->context->lookupFunction('_erealloc') , 
@@ -205,10 +283,10 @@ class PHP extends MemoryManager {
     $this->context->builder->returnValue($result);
     
     $this->context->builder->clearInsertionPosition();
-            $fn___1679091c5a880faf6fb5e6087eb1b2dc = $this->context->lookupFunction('__mm__free');
-    $block___1679091c5a880faf6fb5e6087eb1b2dc = $fn___1679091c5a880faf6fb5e6087eb1b2dc->appendBasicBlock('main');
-    $this->context->builder->positionAtEnd($block___1679091c5a880faf6fb5e6087eb1b2dc);
-    $void = $fn___1679091c5a880faf6fb5e6087eb1b2dc->getParam(0);
+            $fn___8f14e45fceea167a5a36dedd4bea2543 = $this->context->lookupFunction('__mm__free');
+    $block___8f14e45fceea167a5a36dedd4bea2543 = $fn___8f14e45fceea167a5a36dedd4bea2543->appendBasicBlock('main');
+    $this->context->builder->positionAtEnd($block___8f14e45fceea167a5a36dedd4bea2543);
+    $void = $fn___8f14e45fceea167a5a36dedd4bea2543->getParam(0);
     
     $this->context->builder->call(
                     $this->context->lookupFunction('_efree') , 
@@ -223,10 +301,10 @@ class PHP extends MemoryManager {
     
     $this->context->builder->clearInsertionPosition();
         } else {
-            $fn___c9f0f895fb98ab9159f51fd0297e236d = $this->context->lookupFunction('__mm__malloc');
-    $block___c9f0f895fb98ab9159f51fd0297e236d = $fn___c9f0f895fb98ab9159f51fd0297e236d->appendBasicBlock('main');
-    $this->context->builder->positionAtEnd($block___c9f0f895fb98ab9159f51fd0297e236d);
-    $size = $fn___c9f0f895fb98ab9159f51fd0297e236d->getParam(0);
+            $fn___45c48cce2e2d7fbdea1afc51c7c6ad26 = $this->context->lookupFunction('__mm__malloc');
+    $block___45c48cce2e2d7fbdea1afc51c7c6ad26 = $fn___45c48cce2e2d7fbdea1afc51c7c6ad26->appendBasicBlock('main');
+    $this->context->builder->positionAtEnd($block___45c48cce2e2d7fbdea1afc51c7c6ad26);
+    $size = $fn___45c48cce2e2d7fbdea1afc51c7c6ad26->getParam(0);
     
     $result = $this->context->builder->call(
                         $this->context->lookupFunction('_emalloc') , 
@@ -236,11 +314,11 @@ class PHP extends MemoryManager {
     $this->context->builder->returnValue($result);
     
     $this->context->builder->clearInsertionPosition();
-            $fn___d3d9446802a44259755d38e6d163e820 = $this->context->lookupFunction('__mm__realloc');
-    $block___d3d9446802a44259755d38e6d163e820 = $fn___d3d9446802a44259755d38e6d163e820->appendBasicBlock('main');
-    $this->context->builder->positionAtEnd($block___d3d9446802a44259755d38e6d163e820);
-    $void = $fn___d3d9446802a44259755d38e6d163e820->getParam(0);
-    $size = $fn___d3d9446802a44259755d38e6d163e820->getParam(1);
+            $fn___6512bd43d9caa6e02c990b0a82652dca = $this->context->lookupFunction('__mm__realloc');
+    $block___6512bd43d9caa6e02c990b0a82652dca = $fn___6512bd43d9caa6e02c990b0a82652dca->appendBasicBlock('main');
+    $this->context->builder->positionAtEnd($block___6512bd43d9caa6e02c990b0a82652dca);
+    $void = $fn___6512bd43d9caa6e02c990b0a82652dca->getParam(0);
+    $size = $fn___6512bd43d9caa6e02c990b0a82652dca->getParam(1);
     
     $result = $this->context->builder->call(
                         $this->context->lookupFunction('_erealloc') , 
@@ -251,10 +329,10 @@ class PHP extends MemoryManager {
     $this->context->builder->returnValue($result);
     
     $this->context->builder->clearInsertionPosition();
-            $fn___c20ad4d76fe97759aa27a0c99bff6710 = $this->context->lookupFunction('__mm__free');
-    $block___c20ad4d76fe97759aa27a0c99bff6710 = $fn___c20ad4d76fe97759aa27a0c99bff6710->appendBasicBlock('main');
-    $this->context->builder->positionAtEnd($block___c20ad4d76fe97759aa27a0c99bff6710);
-    $void = $fn___c20ad4d76fe97759aa27a0c99bff6710->getParam(0);
+            $fn___c51ce410c124a10e0db5e4b97fc2af39 = $this->context->lookupFunction('__mm__free');
+    $block___c51ce410c124a10e0db5e4b97fc2af39 = $fn___c51ce410c124a10e0db5e4b97fc2af39->appendBasicBlock('main');
+    $this->context->builder->positionAtEnd($block___c51ce410c124a10e0db5e4b97fc2af39);
+    $void = $fn___c51ce410c124a10e0db5e4b97fc2af39->getParam(0);
     
     $this->context->builder->call(
                     $this->context->lookupFunction('_efree') , 
