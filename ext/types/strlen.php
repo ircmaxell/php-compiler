@@ -1,7 +1,7 @@
 <?php
 
-// This file is generated and changes you make will be lost.
-// Change /compiler/ext/types/strlen.pre instead.
+# This file is generated, changes you make will be lost.
+# Make your changes in /compiler/ext/types/strlen.pre instead.
 
 /*
  * This file is part of PHP-Compiler, a PHP CFG Compiler for PHP code

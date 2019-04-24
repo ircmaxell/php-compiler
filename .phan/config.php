@@ -31,8 +31,6 @@ return [
 		'PhanNonClassMethodCall',
 		'PhanUndeclaredTypeReturnType',
 		'PhanUndeclaredVariableDim',
-		'PhanParamSignatureRealMismatchTooManyRequiredParameters',
-		'PhanParamSignatureMismatch',
 		'PhanTypeInvalidDimOffset',
 	],
 ];

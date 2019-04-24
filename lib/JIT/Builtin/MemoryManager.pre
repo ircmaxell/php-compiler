@@ -10,10 +10,18 @@
 namespace PHPCompiler\JIT\Builtin;
 
 use PHPCompiler\JIT\Builtin;
+use PHPCompiler\JIT\Context;
+
 
 use PHPLLVM;
 
 abstract class MemoryManager extends Builtin {
+    static public function load(Context $context, int $loadtype) : self {
+        if ($loadtype === Builtin::LOAD_TYPE_STANDALONE) {
+            return new MemoryManager\Native($context, $loadtype);
+        }
+        return new MemoryManager\PHP($context, $loadtype);
+    }
 
     public function register(): void {
         declare {

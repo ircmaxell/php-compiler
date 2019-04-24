@@ -1,0 +1,80 @@
+<?php
+
+/*
+ * This file is part of PHP-Compiler, a PHP CFG Compiler for PHP code
+ *
+ * @copyright 2015 Anthony Ferrara. All rights reserved
+ * @license MIT See LICENSE at the root of the project for more info
+ */
+
+namespace PHPCompiler\JIT\Builtin\MemoryManager;
+
+use PHPCompiler\JIT\Builtin\MemoryManager;
+
+class PHP extends MemoryManager {
+    public function register(): void {
+        parent::register();
+        if (\PHP_DEBUG) {
+            declare {
+                function _emalloc(size_t, const char*, uint32, const char*, uint32): int8*;
+                function _erealloc(int8*, size_t, const char*, uint32, const char*, uint32): int8*;
+                function _efree(int8*, const char*, uint32, const char*, uint32): void;
+            }
+        } else {
+           declare {
+                function _emalloc(size_t): int8*;
+                function _erealloc(int8*, size_t): int8*;
+                function _efree(int8*): void;
+           }
+        }
+    }
+
+    public function implement(): void {
+        if (\PHP_DEBUG) {
+            // FIXME: Use real values here, not constants.
+
+            // These variables are a hack because compile{}
+            // blocks currently only accept variables as arguments.
+            $jit = $this->context->constantFromString("jit");
+            $two = 2;
+
+            compile {
+                function __mm__malloc($size) {
+                    $result = _emalloc($size, $jit, $two, $jit, $two);
+                    return $result;
+                }
+            }
+            compile {
+                function __mm__realloc($void, $size) {
+                    $result = _erealloc($void, $size, $jit, $two, $jit, $two);
+                    return $result;
+                }
+            }
+            compile {
+                function __mm__free($void) {
+                    _efree($void, $jit, $two, $jit, $two);
+                    return;
+                }
+            }
+        } else {
+            compile {
+                function __mm__malloc($size) {
+                    $result = _emalloc($size);
+                    return $result;
+                }
+            }
+            compile {
+                function __mm__realloc($void, $size) {
+                    $result = _erealloc($void, $size);
+                    return $result;
+                }
+            }
+            compile {
+                function __mm__free($void) {
+                    _efree($void);
+                    return;
+                }
+            }
+        }
+    }
+}
