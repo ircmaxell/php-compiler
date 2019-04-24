@@ -12,6 +12,7 @@ namespace PHPCompiler\JIT;
 use PHPCfg\Operand;
 use PHPCompiler\Runtime;
 use PHPCompiler\Block;
+use PHPCompiler\Module;
 use PHPCompiler\VM\Variable as VMVariable;
 use PHPTypes\Type;
 
@@ -43,6 +44,7 @@ class Context {
     private array $stringConstant = [];
     private array $builtins;
     private array $stringConstantMap = [];
+    private array $modules = [];
     
     private ?Result $result = null;
     public Builtin\MemoryManager $memory;
@@ -115,6 +117,11 @@ class Context {
     public function popScope(): void {
         assert(!empty($this->scopeStack));
         $this->scope = array_pop($this->scopeStack);
+    }
+
+    public function registerModule(Module $module): void {
+        $this->modules[] = $module;
+        $module->jitInit($this);
     }
 
     public function registerBuiltin(Builtin $builtin): void {
@@ -196,6 +203,9 @@ class Context {
     }
 
     private function compileCommon() {
+        foreach ($this->modules as $module) {
+            $module->jitShutdown($this);
+        }
         foreach ($this->builtins as $builtin) {
             $builtin->shutdown();
         }

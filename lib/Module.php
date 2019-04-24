@@ -19,5 +19,9 @@ interface Module
 
     public function init(Runtime $runtime): void;
 
+    public function jitInit(JIT\Context $context): void;
+
+    public function jitShutdown(JIT\Context $context): void;
+
     public function shutdown(): void;
 }

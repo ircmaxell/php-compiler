@@ -107,6 +107,9 @@ class Runtime {
             if (!is_null($this->debugFile)) {
                 $this->jitContext->setDebugFile($this->debugFile);
             }
+            foreach ($this->modules as $module) {
+                $this->jitContext->registerModule($module);
+            }
         }
         return $this->jitContext;
     }

@@ -30,6 +30,14 @@ abstract class ModuleAbstract implements Module {
         
     }
 
+    public function jitInit(JIT\Context $context): void {
+        
+    }
+
+    public function jitShutdown(JIT\Context $context): void {
+
+    }
+
     protected function parseAndCompileFunction(string $name, string $filename): Func {
         $script = $this->runtime->parse(file_get_contents($filename), $filename);
         $func = $this->findFunction($name, $script);

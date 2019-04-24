@@ -54,12 +54,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/ircmaxell/php-llvm.git",
-                "reference": "000910a47e3e15d134502b689e02ba03f5f2ecd1"
+                "reference": "fb89dc0253d0f2c2875007706a551d00490a0920"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/ircmaxell/php-llvm/zipball/000910a47e3e15d134502b689e02ba03f5f2ecd1",
-                "reference": "000910a47e3e15d134502b689e02ba03f5f2ecd1",
+                "url": "https://api.github.com/repos/ircmaxell/php-llvm/zipball/fb89dc0253d0f2c2875007706a551d00490a0920",
+                "reference": "fb89dc0253d0f2c2875007706a551d00490a0920",
                 "shasum": ""
             },
             "require": {
@@ -87,7 +87,7 @@
                 }
             ],
             "description": "A lightweight abstraction around LLVM-C",
-            "time": "2019-04-23T13:14:13+00:00"
+            "time": "2019-04-24T14:19:43+00:00"
         },
         {
             "name": "ircmaxell/php-optimizer",
@@ -868,12 +868,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/phan/phan.git",
-                "reference": "d35a00ccb90cdd3d69863d46f148dcebd831b5ec"
+                "reference": "2559d2b49ed4052e484eb948a67cfb6b30666a25"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phan/phan/zipball/d35a00ccb90cdd3d69863d46f148dcebd831b5ec",
-                "reference": "d35a00ccb90cdd3d69863d46f148dcebd831b5ec",
+                "url": "https://api.github.com/repos/phan/phan/zipball/2559d2b49ed4052e484eb948a67cfb6b30666a25",
+                "reference": "2559d2b49ed4052e484eb948a67cfb6b30666a25",
                 "shasum": ""
             },
             "require": {
@@ -929,7 +929,7 @@
                 "php",
                 "static"
             ],
-            "time": "2019-04-22T18:18:05+00:00"
+            "time": "2019-04-23T19:32:45+00:00"
         },
         {
             "name": "phar-io/manifest",
@@ -1557,12 +1557,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/sebastianbergmann/phpunit.git",
-                "reference": "45e92883d7818bb7fb351cefea873d65e48fc275"
+                "reference": "21ee615b3e8ce3f3e7282956555b1491debb55a6"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/sebastianbergmann/phpunit/zipball/45e92883d7818bb7fb351cefea873d65e48fc275",
-                "reference": "45e92883d7818bb7fb351cefea873d65e48fc275",
+                "url": "https://api.github.com/repos/sebastianbergmann/phpunit/zipball/21ee615b3e8ce3f3e7282956555b1491debb55a6",
+                "reference": "21ee615b3e8ce3f3e7282956555b1491debb55a6",
                 "shasum": ""
             },
             "require": {
@@ -1631,7 +1631,7 @@
                 "testing",
                 "xunit"
             ],
-            "time": "2019-04-23T08:34:08+00:00"
+            "time": "2019-04-24T14:08:52+00:00"
         },
         {
             "name": "pre/plugin",
