@@ -496,6 +496,11 @@ class Compiler {
                     );
                 }
                 return $return;
+            case Op\Expr\Include_::class:
+                return [new OpCode(
+                     OpCode::TYPE_INCLUDE,
+		     $this->compileOperand($expr->expr, $block, true),
+		)];
         }
         throw new \LogicException("Unsupported expression: " . $expr->getType());
     }
