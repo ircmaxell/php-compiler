@@ -10,7 +10,6 @@
 namespace PHPCompiler;
 
 // This is used as a property type, phan is confused.
-// @phan-suppress-next-line PhanUnreferencedUseNormal
 use SplObjectStorage;
 use PHPCfg\Func as CfgFunc;
 use PHPCfg\Op;
@@ -26,7 +25,7 @@ class Compiler {
     protected ?SplObjectStorage $funcs;
 
     public function compile(Script $script): ?Block {
-        $this->seen = new \SplObjectStorage;
+        $this->seen = new SplObjectStorage;
 
         $main = $this->compileCfgBlock($script->main->cfg);
 
@@ -35,7 +34,7 @@ class Compiler {
     }
 
     public function compileFunc(string $name, CfgFunc $func): Func {
-        $this->seen = new \SplObjectStorage;
+        $this->seen = new SplObjectStorage;
 
         $funcBlock = $this->compileCfgBlock($func->cfg, $func->params);
         $funcBlock->func = $func;
