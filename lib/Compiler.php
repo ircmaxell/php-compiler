@@ -9,7 +9,6 @@
 
 namespace PHPCompiler;
 
-// This is used as a property type, phan is confused.
 use SplObjectStorage;
 use PHPCfg\Func as CfgFunc;
 use PHPCfg\Op;
