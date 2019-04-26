@@ -282,7 +282,10 @@ restart:
                 case OpCode::TYPE_INCLUDE:
                     $file = $frame->scope[$op->arg1]->toString();
                     $parsed = $this->context->runtime->parseAndCompileFile($file);
-		    $this->context->runtime->run($parsed);
+		    $new = $parsed->getFrame($this->context);
+		    $this->context->push($frame);
+		    $frame = $new;
+		    goto restart;
                     break;
                 default:
                     throw new \LogicException("VM OpCode Not Implemented: " . $op->getType());
