@@ -2,6 +2,7 @@
 
 $(macro) {
     declare {
+        $! // syntax error if no match
         $(repeat(either(
             chain(
                 optional(buffer('static') as static),
@@ -112,7 +113,7 @@ $(macro) {
 
 $(macro) {
     compile {
-        function $(llvmidentifier() as name) ($(optional(ls(
+        function $(llvmidentifier() as name) $! ($(optional(ls(
             T_VARIABLE as param,
             token(',')
         )) as params)) {
@@ -134,6 +135,7 @@ $(macro) {
 
 $(macro :unsafe :recursive) {
     $(optional(buffer('unsigned')) as unsigned) compile {
+        $!
         $(repeat(either(
             chain(T_VARIABLE as result, token('='), either(
                 chain(T_VARIABLE as nullcheck_var, token(T_IS_EQUAL), buffer('null')) as nullcheck,
