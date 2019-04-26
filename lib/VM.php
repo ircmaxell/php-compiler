@@ -286,7 +286,6 @@ restart:
 		    $this->context->push($frame);
 		    $frame = $new;
 		    goto restart;
-                    break;
                 default:
                     throw new \LogicException("VM OpCode Not Implemented: " . $op->getType());
             }
