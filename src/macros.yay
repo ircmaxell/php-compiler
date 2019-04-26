@@ -187,7 +187,7 @@ $(macro :unsafe :recursive) {
             chain(buffer('free'), T_VARIABLE as free_var, token(';')) as free,
             chain(buffer('memcpy'), T_VARIABLE as memcpy_dest, T_VARIABLE as memcpy_src, T_VARIABLE as memcpy_length, token(';')) as memcpy,
             chain(buffer('memset'), T_VARIABLE as memset_dest, T_LNUMBER as memset_value, T_VARIABLE as memset_length, token(';')) as memset,
-            chain(llvmidentifier() as voidcall_func, token('('), ls(T_VARIABLE as voidcall_arg, token(',')) as voidcall_args, token(')'), token(';')) as voidcall
+            chain(llvmidentifier() as voidcall_func, token('('), optional(ls(T_VARIABLE as voidcall_arg, token(',')) as voidcall_args), token(')'), token(';')) as voidcall
         )) as stmts)
     }
 } >> {
