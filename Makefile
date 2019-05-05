@@ -67,8 +67,8 @@ phan:
 
 .PHONY: test
 test: rebuild-changed
-	docker run -v $(shell pwd):/compiler ircmaxell/php-compiler:16.04-dev php vendor/bin/phpunit
+	docker run -v $(shell pwd):/compiler ircmaxell/php-compiler:16.04-dev vendor/bin/phpunit
 
 .PHONY: test-18
 test-18: rebuild-changed
-	docker run -v $(shell pwd):/compiler ircmaxell/php-compiler:18.04-dev php vendor/bin/phpunit
+	docker run -v $(shell pwd):/compiler ircmaxell/php-compiler:18.04-dev vendor/bin/phpunit
