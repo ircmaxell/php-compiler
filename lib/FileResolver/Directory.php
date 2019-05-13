@@ -13,8 +13,26 @@ use RecursiveIteratorIterator;
 use RecursiveDirectoryIterator;
 use PHPCompiler\FileResolver;
 
-class Composer implements FileResolver {
+class Directory implements FileResolver {
 
     protected array $extensions = ['php'];
 
     public function resolve(string $dir): array {
+        $results = [];
+        if (!is_dir($dir)) {
+            return [];
+        }
+        $it = new RecursiveIteratorIterator(
+            new RecursiveDirectoryIterator(
+                $dir
+            )
+        );
+        foreach ($it as $file) {
+            if (in_array($file->getExtension(), $this->extensions)) {
+                $result[] = realpath($file->getPathname());
+            }
+        }
+        return $results;
+    }
+
+}
