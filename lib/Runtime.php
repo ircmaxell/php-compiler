@@ -20,29 +20,22 @@ use PhpParser\NodeTraverser;
 use PhpParser\NodeVisitor;
 use PhpParser\ParserFactory;
 use PHPTypes\State;
-use PHPCompiler\VM\Optimizer;
-use PHPCompiler\VM\Context as VMContext;
-use PHPCompiler\JIT\Context as JITContext;
 
 class Runtime {
-    const MODE_NORMAL   = 0b0001;
-    const MODE_AOT      = 0b0010;
+    const MODE_EXECUTABLE       = 0b0001;
+    const MODE_SHARED_OBJECT    = 0b0010;
 
     public Compiler $compiler;
     public Parser $parser;
     public Traverser $preprocessor;
     public Traverser $postprocessor;
     public LivenessDetector $detector;
-    public Optimizer $assignOpResolver;
-    public VMContext $vmContext;
-    public VM $vm;
-    private ?JITContext $jitContext = null;
-    private ?JIT $jit = null;
+    public Context $context;
     public array $modules = [];
     public int $mode;
     public ?string $debugFile = null;
 
-    public function __construct(int $mode = self::MODE_NORMAL) {
+    public function __construct(int $mode = self::MODE_EXECUTABLE) {
         $this->mode = $mode;
         $astTraverser = new NodeTraverser;
         $astTraverser->addVisitor(
@@ -59,13 +52,9 @@ class Runtime {
         $this->postprocessor = new Traverser;
         $this->postprocessor->addVisitor(new Visitor\PhiResolver);
         $this->detector = new LivenessDetector;
-        $this->assignOpResolver = new Optimizer\AssignOp;
 
         $this->typeReconstructor = new TypeReconstructor;
-        $this->compiler = new Compiler;
 
-        $this->vmContext = new VMContext($this);
-        $this->vm = new VM($this->vmContext);
         $this->loadCoreModules();
     }
 
@@ -84,42 +73,9 @@ class Runtime {
         $this->load(new ext\standard\Module);
     }
 
-    public function loadJit(): JIT {
-        if (is_null($this->jit)) {
-            $this->jit = new JIT(
-                $this->loadJitContext()
-            );
-            foreach ($this->modules as $module) {
-                foreach ($module->getFunctions() as $func) {
-                    $this->jit->compileFunc($func);
-                }
-            }
-        }
-        return $this->jit;
-    }
-
-    public function loadJitContext(): JITContext {
-        if (is_null($this->jitContext)) {
-            $this->jitContext = new JITContext(
-                $this,
-                $this->mode === self::MODE_NORMAL ? JIT\Builtin::LOAD_TYPE_EMBED : JIT\Builtin::LOAD_TYPE_STANDALONE
-            );
-            if (!is_null($this->debugFile)) {
-                $this->jitContext->setDebugFile($this->debugFile);
-            }
-            foreach ($this->modules as $module) {
-                $this->jitContext->registerModule($module);
-            }
-        }
-        return $this->jitContext;
-    }
-
     public function load(Module $module): void {
         $this->modules[] = $module;
         $module->init($this);
-        foreach ($module->getFunctions() as $function) {
-            $this->vmContext->declareFunction($function);
-        }
     }
 
     public function parse(string $code, string $filename): Script {
@@ -132,39 +88,9 @@ class Runtime {
         return $script;
     }
 
-    public function compile(Script $script): ?Block {
-        $block = $this->compiler->compile($script);
-        $this->assignOpResolver->optimize($block);
-        return $block;
-    }
-
-    public function compileFunc(string $name, CfgFunc $func): Func {
-        $compiled = $this->compiler->compileFunc($name, $func);
-        $this->assignOpResolver->optimize($compiled->block);
-        return $compiled;
-    }
-
-    public function jit(?Block $block) {
-        $this->loadJit()->compile($block);
-        $this->loadJitContext()->compileInPlace();
-    }
-
-    public function standalone(?Block $block, string $outfile) {
-        $context = $this->loadJitContext();
-        $context->setMain($this->loadJit()->compile($block));
-        $context->compileToFile($outfile);
-    }
-
-    public function parseAndCompile(string $code, string $filename): ?Block {
-        return $this->compile($this->parse($code, $filename));
-    }
-
-    public function parseAndCompileFile(string $filename): ?Block {
-        return $this->compile($this->parse(file_get_contents($filename), $filename));
-    }
-
-    public function run(?Block $block) {
-        return $this->vm->run($block);
+    public function compile(string $entrypoint, string $dir, FileResolver $resolver): void {
+        $files = $resolver->resolve($dir);
+        var_dump($files);
     }
 
 }

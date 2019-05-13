@@ -1,8 +1,5 @@
 <?php
 
-// This file is generated and changes you make will be lost.
-// Change /compiler/lib/Compiler.pre instead.
-
 /*
  * This file is part of PHP-Compiler, a PHP CFG Compiler for PHP code
  *
@@ -15,10 +12,8 @@ namespace PHPCompiler;
 use PHPCfg\Operand;
 use PHPCfg\Op;
 use PHPTypes\Type;
-use PHPCompiler\JIT\Context;
-use PHPCompiler\JIT\Variable;
-
-use PHPCompiler\Func as CoreFunc;
+use PHPCompiler\Context;
+use PHPCompiler\Variable;
 
 use PHPLLVM;
 
@@ -233,16 +228,9 @@ class Compiler {
                     } else {
                         $value = $this->context->castToBool($this->context->helper->loadValue($from));
                     }
-                    $__right = $value->typeOf()->constInt(1, false);
-                            
-                        
-
-                        
-
-                        
-
-                        $result = $this->context->builder->bitwiseXor($value, $__right);
-    
+                    compile {
+                        $result = $value ^ 1;
+                    }
 
                     $this->assignOperandValue($block->getOperand($op->arg1), $result);
                     break;
@@ -281,85 +269,37 @@ class Compiler {
                     $argValue = $this->context->helper->loadValue($arg);
                     switch ($arg->type) {
                         case Variable::TYPE_VALUE:
-                            $argValue = $this->context->builder->call(
-                        $this->context->lookupFunction('__value__readString') , 
-                        $argValue
-                        
-                    );
-    
+                            compile {
+                                $argValue = __value__readString($argValue);
+                            }
                             // Fall through intentional                
                         case Variable::TYPE_STRING:            
-                            $fmt = $this->context->builder->pointerCast(
-                        $this->context->constantFromString("%.*s"),
-                        $this->context->getTypeFromString('char*')
-                    );
-    $offset = $this->context->structFieldMap[$argValue->typeOf()->getElementType()->getName()]['length'];
-                    $__str__length = $this->context->builder->load(
-                        $this->context->builder->structGep($argValue, $offset)
-                    );
-    $offset = $this->context->structFieldMap[$argValue->typeOf()->getElementType()->getName()]['value'];
-                    $__str__value = $this->context->builder->structGep($argValue, $offset);
-    $this->context->builder->call(
-                    $this->context->lookupFunction('printf') , 
-                    $fmt
-                    , $__str__length
-                    , $__str__value
-                    
-                );
-    
+                            compile {
+                                $fmt = "%.*s";
+                                $__str__length = $argValue->length;
+                                $__str__value = &$argValue->value;
+                                printf($fmt, $__str__length, $__str__value);
+                            }
                             break;
                         case Variable::TYPE_NATIVE_LONG:
-                            $fmt = $this->context->builder->pointerCast(
-                        $this->context->constantFromString("%lld"),
-                        $this->context->getTypeFromString('char*')
-                    );
-    $this->context->builder->call(
-                    $this->context->lookupFunction('printf') , 
-                    $fmt
-                    , $argValue
-                    
-                );
-    
+                            compile {
+                                $fmt = "%lld";
+                                printf($fmt, $argValue);
+                            }
                             break;
                         case Variable::TYPE_NATIVE_DOUBLE:
-                            $fmt = $this->context->builder->pointerCast(
-                        $this->context->constantFromString("%G"),
-                        $this->context->getTypeFromString('char*')
-                    );
-    $this->context->builder->call(
-                    $this->context->lookupFunction('printf') , 
-                    $fmt
-                    , $argValue
-                    
-                );
-    
+                            compile {
+                                $fmt = "%G";
+                                printf($fmt, $argValue);
+                            }
                             break;
                         case Variable::TYPE_NATIVE_BOOL:
-                            $bool = $this->context->castToBool($argValue);
-                $prev = $this->context->builder->getInsertBlock();
-                $ifBlock = $prev->insertBasicBlock('ifBlock');
-                $prev->moveBefore($ifBlock);
-                
-                $endBlock[] = $tmp = $ifBlock->insertBasicBlock('endBlock');
-                    $this->context->builder->branchIf($bool, $ifBlock, $tmp);
-                
-                $this->context->builder->positionAtEnd($ifBlock);
-                { $fmt = $this->context->builder->pointerCast(
-                        $this->context->constantFromString("1"),
-                        $this->context->getTypeFromString('char*')
-                    );
-    $this->context->builder->call(
-                    $this->context->lookupFunction('printf') , 
-                    $fmt
-                    
-                );
-    }
-                if ($this->context->builder->getInsertBlock()->getTerminator() === null) {
-                    $this->context->builder->branch(end($endBlock));
-                }
-                
-                $this->context->builder->positionAtEnd(array_pop($endBlock));
-    
+                            compile {
+                                if ($argValue) {
+                                    $fmt = "1";
+                                    printf($fmt);
+                                }
+                            }
                             break;
 
                         default: 
@@ -426,16 +366,14 @@ class Compiler {
                     return $origBasicBlock;
                 case OpCode::TYPE_RETURN_VOID:
                     $this->context->freeDeadVariables($func, $basicBlock, $block);
-                    $this->context->builder->returnVoid();
-    
+                    compile { return; }
                     return $origBasicBlock;
                 case OpCode::TYPE_RETURN:
                     $return = $this->context->getVariableFromOp($block->getOperand($op->arg1));
                     $return->addref();
                     $retval = $this->context->helper->loadValue($return);
                     $this->context->freeDeadVariables($func, $basicBlock, $block);
-                    $this->context->builder->returnValue($retval);
-    
+                    compile { return $retval; }
                     return $origBasicBlock;
                 case OpCode::TYPE_FUNCDEF:
                     $nameOp = $block->getOperand($op->arg1);
@@ -556,30 +494,19 @@ class Compiler {
             $valueFrom = $value->value;
             switch ($value->type) {
                 case Variable::TYPE_NULL:
-                    $this->context->builder->call(
-                    $this->context->lookupFunction('__value__writeNull') , 
-                    $valueRef
-                    
-                );
-    
+                    compile {
+                        __value__writeNull($valueRef);
+                    }
                     return;
                 case Variable::TYPE_NATIVE_LONG:
-                    $this->context->builder->call(
-                    $this->context->lookupFunction('__value__writeLong') , 
-                    $valueRef
-                    , $valueFrom
-                    
-                );
-    
+                    compile {
+                        __value__writeLong($valueRef, $valueFrom);
+                    }
                     return;
                 case Variable::TYPE_NATIVE_DOUBLE:
-                    $this->context->builder->call(
-                    $this->context->lookupFunction('__value__writeDouble') , 
-                    $valueRef
-                    , $valueFrom
-                    
-                );
-    
+                    compile {
+                        __value__writeDouble($valueRef, $valueFrom);
+                    }
                     return;
                 default:
                     throw new \LogicException("Source type: {$value->type}");

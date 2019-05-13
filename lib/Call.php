@@ -11,13 +11,9 @@ declare(strict_types=1);
 
 namespace PHPCompiler;
 
-interface Module
+use PHPLLVM\Value;
+
+interface Call
 {
-    public function getName(): string;
-
-    public function getFunctions(): array;
-
-    public function init(Runtime $runtime): void;
-
-    public function shutdown(): void;
+    public function call(Context $context, Variable ...$args): Value;
 }
